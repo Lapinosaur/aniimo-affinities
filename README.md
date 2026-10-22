@@ -1,8 +1,12 @@
-# Aniimo Affinities
+# Affinisaur
+
+Unofficial Aniimo companion by Lapinosaur. Formerly Aniimo Affinities.
+
+The repository URL, executable asset name `AniimoAffinities.exe` and local preference folder keep their existing names for update and settings compatibility.
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
 
-![Aniimo Affinities](docs/images/preview.png)
+![Affinisaur](docs/images/preview.png)
 
 ## Features
 
