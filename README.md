@@ -51,6 +51,14 @@ The checked-in `types.txt`, `matchups.txt` and `matrix-emphasis.txt` are the bui
 
 Type icons originate from [ManuelGraf/AniimoWeaknessCalculator](https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg). They are community traces of game artwork. The source repository did not declare a license when retrieved; redistribution rights have not been established. No license grant for these third-party assets is implied.
 
-Unofficial fan tool, not affiliated with or endorsed by Aniimo or its rights holders. No blanket open-source license has been assigned to this initial publication.
+Unofficial fan tool, not affiliated with or endorsed by Aniimo or its rights holders.
+
+## License
+
+Original code, scripts and documentation are licensed under [MIT](LICENSE), copyright 2026 Lapinosaur. Third-party assets and game content are not relicensed: see [resource rights and notices](THIRD_PARTY_NOTICES.md). The bundled artwork review remains unresolved.
+
+## Code signing policy
+
+Releases are currently unsigned. See the [code signing policy and preparation](docs/code-signing.md) and [privacy and removal information](docs/privacy.md). A [SignPath application draft](docs/signpath-application.md) is prepared, but has not been submitted or accepted.
 
 See [1.0 readiness](docs/1.0-readiness.md) for remaining manual acceptance checks and the CI publication procedure.

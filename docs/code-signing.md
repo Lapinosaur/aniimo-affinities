@@ -1,10 +1,12 @@
 # Code signing preparation
 
-Current releases are unsigned. No certificate, signing account or license grant is implied by this document.
+Current releases are unsigned. No certificate or signing account is configured. Original code is MIT licensed; third-party resource rights remain under review in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+
+Proposed signing roles: Lapinosaur as author, reviewer and approver. MFA and manual signing approval must be verified before activation. See [privacy and removal](privacy.md) for automatic update-check traffic and local storage. We do not claim SignPath sponsorship before acceptance.
 
 ## Before applying
 
-- Choose an OSI-approved license for original code with the owner's approval; a public repository alone is not a license.
+- MIT has been selected for original code with the owner's approval.
 - Resolve redistribution permissions for `assets` type icons from ManuelGraf/AniimoWeaknessCalculator. Attribution alone is not permission.
 - Review branding artwork and embedded matchup data provenance separately; document permissions or replace resources as needed.
 - Keep source, build instructions and release notes public and reproducible. SignPath Foundation acceptance is not guaranteed.

@@ -2,6 +2,7 @@
   "name": "aniimo-affinities",
   "version": "0.4.2",
   "private": true,
+  "license": "MIT",
   "description": "Portable Windows type matchup companion",
   "type": "module",
   "engines": {
