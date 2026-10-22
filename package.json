@@ -6,7 +6,7 @@
   "description": "Portable Windows type matchup companion",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": ">=24.22.1"
   },
   "scripts": {
     "build": "node scripts/cli.mjs build",

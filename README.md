@@ -33,7 +33,7 @@ The app does not perform screen capture or recognition. Preferences are stored i
 
 ## Build and develop
 
-Install Node.js 22 or later on Windows, then run:
+Install Node.js 24.22.1 LTS or later on Windows, then run:
 
 ```powershell
 npm run check
