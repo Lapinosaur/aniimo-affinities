@@ -22,6 +22,7 @@ namespace AniimoAffinities
         }
         internal string Glyph = "";
         internal bool GlyphWithText;
+        internal Color Brand = Color.Empty;
         private bool hover, pressed;
         internal SettingsButton()
         {
@@ -78,7 +79,11 @@ namespace AniimoAffinities
             g.Clear(Theme.Background);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             Color fill = Primary ? (pressed ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? Theme.Background : Theme.Surface;
+            if (!Brand.IsEmpty)
+                fill = Theme.BrandSurface(Brand, hover || pressed);
             Color border = Focused && ShowFocusCues ? Theme.Accent : Primary ? fill : Quiet ? fill : Theme.Border;
+            if (!Brand.IsEmpty)
+                border = Theme.BrandInk(Brand, fill);
             if (!Enabled)
             {
                 fill = Theme.Surface;
@@ -108,7 +113,7 @@ namespace AniimoAffinities
             if (Glyph.Length > 0 && GlyphWithText)
             {
                 Color ink = !Enabled ? Theme.Muted : Primary ? Theme.AccentInk : Theme.TextColor;
-                Glyphs.Draw(g, Glyph, new RectangleF(14, (Height - 18) / 2f, 18, 18), ink);
+                Glyphs.Draw(g, Glyph, new RectangleF(14, (Height - 18) / 2f, 18, 18), Brand.IsEmpty || !Enabled ? ink : Theme.BrandInk(Brand, fill));
                 Drawing.Text(g, Text, Font, ink, new RectangleF(40, 0, Width - 46, Height), true);
             }
             else if (Glyph.Length > 0)

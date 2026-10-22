@@ -115,6 +115,27 @@ namespace AniimoAffinities
         {
             return value >= .999 && value <= 1.001 ? Border : Blend(Surface, MultiplierInk(value), value < .5 || value > 2 ? .55f : .32f);
         }
+        internal static Color BrandSurface(Color brand, bool hover)
+        {
+            return Blend(Surface, brand, hover ? .18f : .10f);
+        }
+        internal static Color BrandInk(Color brand, Color background)
+        {
+            Color ink = brand;
+            for (int i = 0; i < 10 && Contrast(ink, background) < 3; i++)
+                ink = Blend(ink, TextColor, .2f);
+            return ink;
+        }
+        private static double Contrast(Color a, Color b)
+        {
+            Func<Color, double> luminance = color =>
+            {
+                Func<byte, double> channel = value => value / 255.0 <= .04045 ? value / 255.0 / 12.92 : Math.Pow((value / 255.0 + .055) / 1.055, 2.4);
+                return .2126 * channel(color.R) + .7152 * channel(color.G) + .0722 * channel(color.B);
+            };
+            double first = luminance(a), second = luminance(b);
+            return (Math.Max(first, second) + .05) / (Math.Min(first, second) + .05);
+        }
         private static Color Blend(Color background, Color foreground, float amount)
         {
             return Color.FromArgb((int)(background.R + (foreground.R - background.R) * amount), (int)(background.G + (foreground.G - background.G) * amount), (int)(background.B + (foreground.B - background.B) * amount));

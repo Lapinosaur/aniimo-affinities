@@ -17,6 +17,13 @@ namespace AniimoAffinities
             {
                 Theme.Appearance = mode;
                 Theme.ApplyAppearance();
+                foreach (var brand in new[] { Color.FromArgb(145, 70, 255), Color.FromArgb(255, 0, 51), Color.FromArgb(255, 221, 0), Color.FromArgb(110, 118, 129) })
+                    foreach (bool hover in new[] { false, true })
+                    {
+                        Color fill = Theme.BrandSurface(brand, hover);
+                        if (Contrast(Theme.TextColor, fill) < 4.5 || Contrast(Theme.BrandInk(brand, fill), fill) < 3)
+                            throw new Exception("Social button contrast failed.");
+                    }
                 foreach (double multiplier in new[] { .390625, .625, 1, 1.6, 2.56 })
                     if (Contrast(Theme.MultiplierInk(multiplier), Theme.MultiplierFill(multiplier)) < 4.5)
                         throw new Exception("Matrix multiplier contrast below 4.5:1");

@@ -156,7 +156,7 @@ namespace AniimoAffinities
             tips.SetToolTip(about, "About & Credits � Creator, links and acknowledgements");
             var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
             var guideText = new Label { Text = "Discover the controls, views and overlay in a guided tour.", Location = new Point(0, 8), Size = new Size(412, 38), ForeColor = Theme.Muted };
-            var hideTour = new CheckBox { Text = "Don't show this tutorial again", Checked = TutorialPreferences.Hidden, Location = new Point(0, 52), Size = new Size(412, 28), ForeColor = Theme.TextColor, TabIndex = 0 };
+            var hideTour = new RoundCheckBox { Text = "Don't show this tutorial again", Checked = TutorialPreferences.Hidden, Location = new Point(0, 52), Size = new Size(412, 28), ForeColor = Theme.TextColor, TabIndex = 0 };
             var guideStatus = new Label { Location = new Point(0, 82), Size = new Size(412, 24), ForeColor = Theme.Error };
             hideTour.CheckedChanged += (s, e) =>
             {

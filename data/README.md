@@ -1,6 +1,6 @@
 # Embedded matchup projections
 
-These versioned files are the portable snapshot exported from the SaveOverride Aniimo matchup model. Runtime and diagnostics embed the same files with their basename as resource identifier.
+These versioned files are the portable snapshot exported from the internal Aniimo matchup model. Runtime and diagnostics embed the same files with their basename as resource identifier.
 
 - `types.txt`: one `Name|#RRGGBB` entry per type; the order defines type indices throughout the app.
 - `matchups.txt`: `main:secondary|values`, with `-1` for no secondary. Each row has nine outgoing factors (best available attack), then nine incoming factors (combined defender factors). There are 81 valid selections.

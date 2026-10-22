@@ -40,4 +40,4 @@ The native app still targets the .NET Framework 4.x APIs and C# 5 compiler avail
 
 ## Data ownership
 
-The text projections were exported from the SaveOverride Aniimo model. This standalone repository does not contain that private parent application. Preserve the type order and resource filenames when updating data: the native model uses the order for all 81 selections. Tests verify single/dual-type factor parity and matrix consistency. See `data/README.md` for the formats.
+The text projections were exported from the internal Aniimo model. This standalone repository does not contain that private parent application. Preserve the type order and resource filenames when updating data: the native model uses the order for all 81 selections. Tests verify single/dual-type factor parity and matrix consistency. See `data/README.md` for the formats.

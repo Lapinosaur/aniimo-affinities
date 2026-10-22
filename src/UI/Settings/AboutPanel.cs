@@ -20,7 +20,7 @@ namespace AniimoAffinities
             AddLink("YouTube", "Videos & tutorials", "https://www.youtube.com/@LapinosaurMedia", 0, 170);
             AddLink("Buy Me a Coffee", "Support my work", "https://buymeacoffee.com/lapinosaur", 212, 170);
             AddText("CREDITS", 250, 20, 8, true, Theme.Muted);
-            AddText("Design & development: Lapinosaur\nMatchup data: SaveOverride Aniimo models", 276, 44, 9, false, Theme.TextColor);
+            AddText("Design & development: Lapinosaur\nMatchup data: Aniimo type affinities", 276, 44, 9, false, Theme.TextColor);
             var source = new SettingsButton { Text = "Type icons · ManuelGraf / AniimoWeaknessCalculator", Location = new Point(0, 324), Size = new Size(412, 32), AccessibleName = "Open type icon source on GitHub" };
             source.Click += (s, e) => OpenLink("https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg");
             Controls.Add(source);
@@ -46,7 +46,7 @@ namespace AniimoAffinities
         }
         private void AddLink(string name, string description, string url, int left, int top)
         {
-            var button = new SettingsButton { Text = name, GlyphWithText = true, Glyph = name == "Twitch" ? "twitch" : name == "GitHub" ? "github" : name == "YouTube" ? "youtube" : "coffee", Location = new Point(left, top), Size = new Size(200, 34), AccessibleName = name + " · " + description };
+            var button = new SettingsButton { Text = name, Brand = name == "Twitch" ? Color.FromArgb(145, 70, 255) : name == "YouTube" ? Color.FromArgb(255, 0, 51) : name == "Buy Me a Coffee" ? Color.FromArgb(255, 221, 0) : Color.FromArgb(110, 118, 129), GlyphWithText = true, Glyph = name == "Twitch" ? "twitch" : name == "GitHub" ? "github" : name == "YouTube" ? "youtube" : "coffee", Location = new Point(left, top), Size = new Size(200, 34), AccessibleName = name + " · " + description };
             button.Click += (s, e) => OpenLink(url);
             tips.SetToolTip(button, "Open in your browser · " + url);
             Controls.Add(button);

@@ -42,7 +42,7 @@ namespace AniimoAffinities
         private readonly Dictionary<string, Frame> frames = new Dictionary<string, Frame>();
         private readonly DrawingPanel bubble = new DrawingPanel();
         private readonly Label counter = new Label(), heading = new Label(), body = new Label(), error = new Label();
-        private readonly CheckBox dontShow = new CheckBox();
+        private readonly CheckBox dontShow = new RoundCheckBox();
         private readonly SettingsButton previous = new SettingsButton(), next = new SettingsButton(), skip = new SettingsButton();
         private int index;
         private bool loading;
