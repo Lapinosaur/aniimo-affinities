@@ -23,7 +23,7 @@ The app does not perform screen capture or recognition. Preferences are stored i
 
 ## Community
 
-[Join the Lapinosaur Discord community](https://discord.gg/gPSAhnUbvP) for updates, feedback and support. This invitation never expires, has no usage limit and assigns the **Member** role when you join.
+[Join the Lapinosaur Discord community](https://discord.gg/qdsWumFaZz) for updates, feedback and support. This invitation never expires, has no usage limit and assigns the **Member** and **GitHub** roles when you join.
 
 ## Build and develop
 
