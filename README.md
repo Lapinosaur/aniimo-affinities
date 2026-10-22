@@ -2,7 +2,7 @@
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
 
-![Aniimo Affinities](preview.png)
+![Aniimo Affinities](docs/images/preview.png)
 
 ## Features
 
@@ -21,22 +21,29 @@ Download `AniimoAffinities.exe` from the repository release and run it. No insta
 
 The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. The support button opens a browser only when clicked.
 
-## Build and test
+## Build and develop
 
 Install Node.js 22 or later on Windows, then run:
 
 ```powershell
-node build.mjs
+npm run check
+npm run build
+npm run preview -- radar-separate
 ```
 
-No npm dependencies are required. The build uses the Windows .NET Framework C# compiler and runs the embedded self-tests. Output: `dist/AniimoAffinities.exe` and `dist/tests.txt`.
+No npm dependencies are required. The canonical build uses the Windows .NET Framework compiler. The runtime is written to `dist/AniimoAffinities.exe`; tests and preview tools are compiled separately and use isolated temporary preferences. `node build.mjs` remains a build-and-test shortcut.
 
-```powershell
-.\dist\AniimoAffinities.exe --self-test report.txt
-.\dist\AniimoAffinities.exe --preview preview.png
+See [CONTRIBUTING.md](CONTRIBUTING.md) for commands and IDE setup, and [the architecture guide](docs/architecture.md) for ownership and dependency rules.
+
+```text
+src/       Application, domain, data, infrastructure and UI
+assets/    Type icons and branding
+data/     Versioned matchup projections
+tests/    Behavior regression suites
+tools/    Isolated diagnostics and previews
+scripts/  Build and architecture checks
+docs/     Architecture and screenshots
 ```
-
-This is an initial native prototype. Tests cover 81 type selections, vector resources, selection behavior, preference handling and keyboard capture. Display changes applied from Settings have a timed rollback confirmation.
 
 ## Data and credits
 

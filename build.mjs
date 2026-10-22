@@ -1,24 +1,3 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
-if(process.platform!=='win32')throw new Error('Build requires Windows and .NET Framework 4.x.');
-const source=path.dirname(fileURLToPath(import.meta.url));
-const output=path.join(source,'dist');
-await fs.mkdir(output,{recursive:true});
-const names=(await fs.readFile(path.join(source,'types.txt'),'utf8')).trim().split(/\r?\n/).map(line=>line.split('|')[0]);
-  const exe=path.join(output,'AniimoAffinities.exe');
-  const files=['Program.cs','Tutorial.cs','SessionState.cs','WindowZoom.cs','RadarDialog.cs','MatrixDialog.cs','KeyBindings.cs','KeyCapture.cs','SettingsButton.cs','SettingsDialog.cs','ApplicationTips.cs','PortableWindow.cs','MainForm.cs','Chrome.cs','Selection.cs','OriginGroups.cs','Model.cs','VectorIcon.cs'].map(name=>path.join(source,name));
-  files.push(path.join(source,'DisplayDialog.cs'));
-  const resources=['types.txt','matchups.txt','matrix-emphasis.txt'].map(name=>`/resource:${path.join(source,name)},${name}`);
-  for(const name of names)resources.push(`/resource:${path.join(source,name.toLowerCase()+'.svg')},${name.toLowerCase()}.svg`);
-  resources.push(`/resource:${path.join(source,'app.ico')},app.ico`);
-  resources.push(`/resource:${path.join(source,'buy-me-a-coffee.png')},buy-me-a-coffee.png`);
-  const compiler=path.join(process.env.WINDIR,'Microsoft.NET/Framework64/v4.0.30319/csc.exe');
-  const result=spawnSync(compiler,['/nologo','/target:winexe','/platform:x64','/optimize+','/codepage:65001',`/win32icon:${path.join(source,'app.ico')}`,`/out:${exe}`,'/reference:System.Windows.Forms.dll','/reference:System.Drawing.dll','/reference:System.Core.dll','/reference:System.Xml.dll',...resources,...files],{encoding:'utf8'});
-  if(result.status!==0)throw new Error(result.stdout+result.stderr);
-  const report=path.join(output,'tests.txt');
-  const test=spawnSync(exe,['--self-test',report],{encoding:'utf8'});
-  console.log(await fs.readFile(report,'utf8'));
-  if(test.status!==0)throw new Error('Native product tests failed');
-  console.log(exe);
+// Compatibility entry point: build the app and run isolated regression tests.
+import { test } from './scripts/build.mjs';
+await test();
