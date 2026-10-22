@@ -12,6 +12,41 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            using (var settings = new SettingsDialog(KeyBindings.Defaults()))
+            {
+                settings.Show();
+                Application.DoEvents();
+                var captures = settings.Controls.OfType<KeyCapture>().ToArray();
+                settings.TestShortcut(Keys.D2, true);
+                if (captures.Count(f => f.TestHeld) != 1 || !captures.Single(f => f.Binding == Keys.D2).TestHeld)
+                    throw new Exception("Shortcut test must highlight only its assigned row");
+                settings.TestShortcut(Keys.D2, false);
+                settings.TestShortcut(Keys.NumPad3, true);
+                if (!captures.Single(f => f.Binding == Keys.D3).TestHeld)
+                    throw new Exception("Numpad shortcut test must normalize digits");
+                settings.TestShortcut(Keys.NumPad3, false);
+                if (captures.Any(f => f.TestHeld || f.Invalid) || !captures.Select(f => f.Binding).SequenceEqual(KeyBindings.Defaults()))
+                    throw new Exception("Testing shortcuts must not alter bindings or leave an error");
+                foreach (string choice in new[] { "Cancel", "Swap shortcuts", "Unbind other & assign" })
+                {
+                    var defaults = KeyBindings.Defaults();
+                    for (int i = 0; i < captures.Length; i++)
+                        captures[i].Binding = defaults[i];
+                    var target = captures.Single(f => f.Binding == Keys.D1);
+                    var other = captures.Single(f => f.Binding == Keys.D2);
+                    target.Focus();
+                    var handler = typeof(KeyCapture).GetMethod("ProcessCmdKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    var message = Message.Create(IntPtr.Zero, 0x100, IntPtr.Zero, IntPtr.Zero);
+                    handler.Invoke(target, new object[] { message, Keys.Enter });
+                    settings.BeginInvoke(new Action(() => Application.OpenForms.OfType<ShortcutConflictWindow>().Single().Controls.OfType<SettingsButton>().Single(b => b.Text == choice).PerformClick()));
+                    handler.Invoke(target, new object[] { message, Keys.D2 });
+                    if (target.Binding != (choice == "Cancel" ? Keys.D1 : Keys.D2) || other.Binding != (choice == "Cancel" ? Keys.D2 : choice == "Swap shortcuts" ? Keys.D1 : Keys.None))
+                        throw new Exception("Conflict resolution failed: " + choice);
+                    if (!KeyBindings.Valid(captures.Select(f => f.Binding).ToArray()))
+                        throw new Exception("Conflict resolution produced invalid bindings");
+                }
+                settings.Close();
+            }
             var custom = KeyBindings.Defaults();
             custom[1] = Keys.Q;
             var unbound = KeyBindings.Defaults();
@@ -89,6 +124,13 @@ namespace AniimoAffinities
                 capture.ReleaseCapturedKey(Keys.NumPad3);
                 if (capture.Binding != Keys.D3)
                     throw new Exception("Numpad release failed");
+                handler.Invoke(capture, new object[] { message, Keys.Enter });
+                handler.Invoke(capture, new object[] { message, Keys.Control | Keys.ControlKey });
+                capture.ReleaseCapturedKey(Keys.ControlKey);
+                handler.Invoke(capture, new object[] { message, Keys.J });
+                capture.ReleaseCapturedKey(Keys.J);
+                if (capture.Binding != Keys.J)
+                    throw new Exception("Enter capture and released modifier must allow a plain key");
             }
             if (WindowZoom.Step(1, 1) != 1.25f || WindowZoom.Step(1, -1) != .75f || WindowZoom.Step(.5f, -1) != .5f || WindowZoom.Step(1.5f, 1) != 1.5f)
                 throw new Exception("Window scale stepping failed");
@@ -202,7 +244,7 @@ namespace AniimoAffinities
                 ready.SetPinned(false);
                 if (ready.TopMost || ready.TransparencyKey != Color.Empty)
                     throw new Exception("Unpin must restore the opaque window");
-                var close = ready.Controls.OfType<Panel>().SelectMany(panel => panel.Controls.OfType<Button>()).SingleOrDefault(button => button.AccessibleName == "Close (Alt+F4)");
+                var close = ((Panel)typeof(PortableWindow).GetField("captionPanel", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ready)).Controls.OfType<Button>().SingleOrDefault(button => button.AccessibleName == "Close (Alt+F4)");
                 if (close == null || ready.FormBorderStyle != FormBorderStyle.None)
                     throw new Exception("Caption not ready");
                 close.PerformClick();

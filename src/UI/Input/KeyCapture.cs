@@ -9,18 +9,31 @@ namespace AniimoAffinities
     {
         private Keys binding;
         private bool listening, hover;
+        internal bool Listening
+        {
+            get
+            {
+                return listening;
+            }
+        }
+        internal bool TestHeld;
+        private string rejectedKey;
         private Keys pending, heldModifiers, primaryKey;
         private bool primaryReleased;
         private void BeginCapture()
         {
+            ShowValidation(false, false);
             pending = Keys.None;
+            heldModifiers = Keys.None;
+            primaryReleased = false;
             listening = true;
+            rejectedKey = null;
+            if (Feedback != null)
+                Feedback("Press a key, then release it. Esc cancels.");
             Invalidate();
         }
         internal void ReleaseCapturedKey(Keys key)
         {
-            if (pending == Keys.None)
-                return;
             if (key == primaryKey)
                 primaryReleased = true;
             if (key == Keys.ControlKey || key == Keys.LControlKey || key == Keys.RControlKey)
@@ -29,14 +42,15 @@ namespace AniimoAffinities
                 heldModifiers &= ~Keys.Shift;
             if (key == Keys.Menu || key == Keys.LMenu || key == Keys.RMenu)
                 heldModifiers &= ~Keys.Alt;
-            if (primaryReleased && heldModifiers == Keys.None)
+            Invalidate();
+            if (pending != Keys.None && primaryReleased && heldModifiers == Keys.None)
             {
                 Keys result = pending;
                 pending = Keys.None;
                 Binding = result;
                 ShowValidation(false, true);
                 if (Feedback != null)
-                    Feedback("");
+                    Feedback("Shortcut updated. Click Save to keep your changes.");
             }
         }
         public bool PreFilterMessage(ref Message message)
@@ -46,7 +60,7 @@ namespace AniimoAffinities
                 RefreshLabel();
                 return false;
             }
-            if (pending == Keys.None || !ContainsFocus)
+            if (!listening || !ContainsFocus)
                 return false;
             if (message.Msg == 0x101 || message.Msg == 0x105)
             {
@@ -101,9 +115,11 @@ namespace AniimoAffinities
         private void RefreshLabel()
         {
             pending = Keys.None;
+            heldModifiers = Keys.None;
             listening = false;
             Invalid = false;
             CaptureValidated = false;
+            rejectedKey = null;
             Text = binding == Keys.None ? "Unassigned" : KeyBindings.Label(binding);
             Invalidate();
         }
@@ -152,10 +168,11 @@ namespace AniimoAffinities
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
-            g.Clear(Theme.Background);
+            g.Clear(TestHeld ? Theme.AccentSurface : Theme.Background);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), listening ? Theme.AccentSurface : Theme.Surface, listening ? Theme.AccentForeground : Focused ? Theme.AccentForeground : hover ? Theme.StrongBorder : Theme.Border, 6);
-            Drawing.Text(g, pending != Keys.None ? KeyBindings.Label(pending) + " …" : listening ? "Press a key…" : Text, Font, listening ? Theme.AccentForeground : binding == Keys.None ? Theme.Muted : Theme.TextColor, new RectangleF(8, 0, Width - 16, Height), true);
+            Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), listening || TestHeld ? Theme.AccentSurface : Theme.Surface, listening || TestHeld ? Theme.AccentForeground : Focused ? Theme.AccentForeground : hover ? Theme.StrongBorder : Theme.Border, 6);
+            string modifiers = (heldModifiers.HasFlag(Keys.Control) ? "Ctrl + " : "") + (heldModifiers.HasFlag(Keys.Shift) ? "Shift + " : "") + (heldModifiers.HasFlag(Keys.Alt) ? "Alt + " : "");
+            Drawing.Text(g, Invalid && rejectedKey != null ? rejectedKey + " · Not assigned" : pending != Keys.None ? KeyBindings.Label(pending) + " · Release" : listening ? modifiers + "Press a key…" : Text, Font, Invalid ? Theme.Error : listening || TestHeld ? Theme.AccentForeground : binding == Keys.None ? Theme.Muted : Theme.TextColor, new RectangleF(8, 0, Width - (Invalid || CaptureValidated ? 34 : 16), Height), true);
             if (Invalid || CaptureValidated)
             {
                 Color color = Invalid ? Theme.Error : Theme.AccentForeground;
@@ -182,7 +199,7 @@ namespace AniimoAffinities
                 return base.ProcessCmdKey(ref message, keyData);
             if ((message.LParam.ToInt64() & (1L << 30)) != 0)
                 return true;
-            if (key == Keys.Space && modifiers == Keys.None)
+            if ((key == Keys.Space || key == Keys.Enter) && modifiers == Keys.None && !listening)
             {
                 BeginCapture();
                 return true;
@@ -197,7 +214,11 @@ namespace AniimoAffinities
             if (!listening)
                 return base.ProcessCmdKey(ref message, keyData);
             if (key == Keys.ControlKey || key == Keys.ShiftKey || key == Keys.Menu)
+            {
+                heldModifiers = modifiers;
+                Invalidate();
                 return true;
+            }
             if (key == Keys.F4 && modifiers == Keys.Alt)
                 return base.ProcessCmdKey(ref message, keyData);
             Keys physicalKey = key;
@@ -209,17 +230,27 @@ namespace AniimoAffinities
                     key |= modifiers;
                 if (ValidateBinding != null && !ValidateBinding(key))
                 {
+                    if (!listening)
+                        return true;
+                    rejectedKey = KeyBindings.Label(key);
                     ShowValidation(true, false);
                     return true;
                 }
                 pending = key;
+                ShowValidation(false, false);
+                rejectedKey = null;
                 primaryKey = physicalKey;
                 heldModifiers = modifiers;
                 primaryReleased = false;
                 Invalidate();
             }
             else
+            {
+                rejectedKey = KeyBindings.Label(keyData);
                 ShowValidation(true, false);
+                if (Feedback != null)
+                    Feedback(AllowModifiers ? "Use a letter, number or function key, optionally with Ctrl, Alt or Shift." : "Use a single letter, number or function key for this action.");
+            }
             return true;
         }
     }

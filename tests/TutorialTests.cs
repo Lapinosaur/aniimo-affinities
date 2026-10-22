@@ -25,6 +25,40 @@ namespace AniimoAffinities
                     throw new Exception("Tutorial opt-in was not saved");
             }
             finally { if (File.Exists(tutorialTestPath)) File.Delete(tutorialTestPath); }
+            try
+            {
+                new TutorialProgress { Sections = 18, Step = 2, Pending = true }.Save(tutorialTestPath);
+                var saved = TutorialProgress.Load(tutorialTestPath);
+                if (saved.Sections != 18 || saved.Step != 2 || !saved.Pending)
+                    throw new Exception("Selected tutorial progress was not restored");
+                File.WriteAllText(tutorialTestPath, "tour-v1\n0\n999\npending");
+                if (TutorialProgress.Load(tutorialTestPath).Pending || TutorialProgress.Load(tutorialTestPath).Sections != TutorialProgress.All)
+                    throw new Exception("Invalid tutorial progress must safely reset");
+            }
+            finally { if (File.Exists(tutorialTestPath)) File.Delete(tutorialTestPath); }
+            using (var source = new MainForm())
+            {
+                new TutorialProgress { Sections = 2 }.Save();
+                using (var first = new TutorialOverlay(source, true))
+                {
+                    first.Show(source);
+                    first.NavigateStep(1);
+                    if (first.StepCount != 3)
+                        throw new Exception("Only matrix steps and completion should be included");
+                    first.Close();
+                }
+                using (var resumed = new TutorialOverlay(source, true))
+                {
+                    if (resumed.StepIndex != 1)
+                        throw new Exception("Paused tour did not resume at the last step");
+                    resumed.Show(source);
+                    resumed.NavigateStep(1);
+                    resumed.NavigateStep(1);
+                    if (TutorialProgress.Load().Pending)
+                        throw new Exception("Completed tour must clear resume state");
+                }
+                new TutorialProgress().Save();
+            }
             var tourBubble = TutorialOverlay.PlaceBubble(new Size(760, 570), new Rectangle(10, 10, 500, 80), new Size(400, 260));
             if (!new Rectangle(0, 0, 760, 570).Contains(tourBubble) || tourBubble.IntersectsWith(new Rectangle(10, 10, 500, 80)))
                 throw new Exception("Tutorial bubble must fit and avoid target when space is available");

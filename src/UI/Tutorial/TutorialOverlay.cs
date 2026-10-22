@@ -11,8 +11,15 @@ namespace AniimoAffinities
     internal sealed class TutorialOverlay : Form
     {
         private readonly MainForm source;
+        private readonly bool persist;
+        private readonly TutorialProgress progress;
+        internal static readonly string[] Sections = { "Types & affinities", "Effectiveness matrix", "Affinity radar & views", "Pin & locked overlay", "Keyboard shortcuts", "Display & appearance" };
+        internal static int SectionForStep(int step)
+        {
+            return step < 5 ? 0 : step < 7 ? 1 : step < 10 ? 2 : step < 12 ? 3 : step < 14 ? 4 : 5;
+        }
         private readonly TourStep[] steps ={
-            new TourStep("main","all","Welcome to Aniimo Affinities","Explore how types interact, compare matchups and keep useful information over your game. This guided preview leaves your selections and settings untouched."),
+            new TourStep("main","all","Welcome to Affinisaur","Explore how types interact, compare matchups and keep useful information over your game. This guided preview leaves your selections and settings untouched."),
             new TourStep("main","types","Choose Main and Sub","Click a type to make it Main, then another to add Sub. A third type replaces Sub. Click a selected type to remove it; the cross at the end clears both."),
             new TourStep("main","types","Preview and keyboard shortcuts","Hover a type for a temporary preview. Click to keep it. Small keyboard badges show your configured shortcuts. Main / Sub labels always identify the committed selection."),
             new TourStep("main","content","Read attack and defense","Amber shows your best available attack. Blue shows damage received by the combined types. ×1 is neutral; above ×1 means more damage, below ×1 means less."),
@@ -24,11 +31,11 @@ namespace AniimoAffinities
             new TourStep("main","radar","Click or hold","A short click swaps the view into the main window. Hold click or Space for 0.9 seconds to open it in a separate window. The button takes the previous view's icon. The small turquoise mark identifies a hold action; its contour fills while holding."),
             new TourStep("main","pin","Pin, then lock","Click Pin to stay on top with a transparent background. Hold it to lock a click-through overlay. The compact lock button unlocks it, and the drag handle moves it. Pin and Lock are never restored at startup."),
             new TourStep("main","pin","Resize the locked overlay","The locked overlay has two size targets. Hold a size for 0.9 seconds to apply it; a short click does nothing. Releasing early or leaving the button cancels. Move and Unlock remain available beside them."),
-            new TourStep("window","content","Rebind window actions","Pin, Lock / unlock, Settings, Minimize, Matrix and Radar all have configurable shortcuts. Select a field, then activate it to capture a key. Delete clears it, Esc cancels capture, and duplicate bindings are rejected."),
+            new TourStep("window","content","Rebind window actions","Pin, Lock / unlock, Settings, Minimize, Matrix and Radar all have configurable shortcuts. Select a field, then activate it to capture a key. Delete clears it, Esc cancels capture, and conflicts offer Swap, Unbind the other action or Cancel."),
             new TourStep("types","content","Rebind type shortcuts","Each type and Clear selection has its own shortcut. Tab navigates and Space activates a focused field. The keyboard hints appear during keyboard navigation. Save commits changes; Cancel discards them."),
             new TourStep("display","content","Choose how the app looks","Click a preview to change text size, window scale or keyboard badges. Main / Sub labels remain visible. Apply temporarily reveals the original view; keep the changes within 15 seconds or the previous settings return."),
             new TourStep("display","appearance","Theme and window controls","The appearance button cycles Dark, System and Light. Esc closes custom windows, Alt+F4 closes the active window, and the minus button minimizes. Your selected types, view layout and display preferences are remembered."),
-            new TourStep("main","all","You're ready","You can restart this tour from the help icon in Settings. Check the option below to stop showing it at startup; the same option remains available in Settings.")
+            new TourStep("main","all","You're ready","Selected sections complete. In Settings > Help & Tutorial, choose which sections to replay. If you leave a tour early, it resumes at your last step. The option below controls startup only.")
         };
         private sealed class Frame : IDisposable
         {
@@ -62,9 +69,13 @@ namespace AniimoAffinities
                 return index;
             }
         }
-        internal TutorialOverlay(MainForm source)
+        internal TutorialOverlay(MainForm source, bool persist = false)
         {
             this.source = source;
+            this.persist = persist;
+            progress = persist ? TutorialProgress.Load() : new TutorialProgress();
+            steps = steps.Where((step, i) => i == 16 || (progress.Sections & (1 << SectionForStep(i))) != 0).ToArray();
+            index = progress.Pending ? Math.Min(progress.Step, steps.Length - 1) : 0;
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
             StartPosition = FormStartPosition.Manual;
@@ -97,7 +108,7 @@ namespace AniimoAffinities
             previous.Text = "Previous";
             previous.TabIndex = 1;
             previous.Click += (s, e) => NavigateStep(-1);
-            skip.Text = "Skip · Esc";
+            skip.Text = "Pause · Esc";
             skip.TabIndex = 2;
             skip.Click += (s, e) => Close();
             next.Text = "Next";
@@ -123,6 +134,10 @@ namespace AniimoAffinities
                 try
                 {
                     TutorialPreferences.Save(dontShow.Checked);
+                    progress.Pending = false;
+                    progress.Step = 0;
+                    if (persist)
+                        progress.Save();
                     DialogResult = DialogResult.OK;
                     Close();
                 }
@@ -150,10 +165,21 @@ namespace AniimoAffinities
                 var step = steps[index];
                 if (!frames.ContainsKey(step.View))
                     frames.Add(step.View, CapturePreview(step.View));
-                counter.Text = "GUIDED TOUR  ·  " + (index + 1) + " / " + steps.Length;
+                counter.Text = "SELECTED TOUR  ·  " + (index + 1) + " / " + steps.Length;
                 heading.Text = step.Title;
                 body.Text = step.Body;
                 error.Text = "";
+                if (persist)
+                {
+                    progress.Step = index;
+                    progress.Pending = true;
+                    try
+                    {
+                        progress.Save();
+                    }
+                    catch (IOException) { error.Text = "Progress could not be saved. Try Next again."; }
+                    catch (UnauthorizedAccessException) { error.Text = "Progress could not be saved: access denied."; }
+                }
                 previous.Enabled = index > 0;
                 previous.Visible = index > 0;
                 next.Text = index == steps.Length - 1 ? "Finish" : "Next";

@@ -10,6 +10,7 @@ namespace AniimoAffinities
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Theme.LoadAppearance();
+            Application.AddMessageFilter(new WindowZoomWheel());
         }
     }
 }

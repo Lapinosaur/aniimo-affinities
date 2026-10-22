@@ -30,15 +30,22 @@ namespace AniimoAffinities
             var result = new GraphicsPath[Model.Names.Length][];
             for (int i = 0; i < result.Length; i++)
             {
-                var xml = new XmlDocument();
+                XmlDocument xml;
                 using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(Model.Names[i].ToLowerInvariant() + ".svg"))
-                    xml.Load(stream);
+                    xml = ReadDocument(stream);
                 var nodes = xml.GetElementsByTagName("path");
                 result[i] = new GraphicsPath[nodes.Count];
                 for (int j = 0; j < nodes.Count; j++)
                     result[i][j] = Parse(nodes[j].Attributes["d"].Value);
             }
             return result;
+        }
+        internal static XmlDocument ReadDocument(Stream stream)
+        {
+            var xml = new XmlDocument { XmlResolver = null };
+            using (var reader = XmlReader.Create(stream, new XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null, MaxCharactersInDocument = 1024 * 1024 }))
+                xml.Load(reader);
+            return xml;
         }
         // Inputs: SVG M/L/H/V/C/Z path. Output: even-odd geometry. Fallback: none. Raises: unsupported commands. Effects: none.
         private static GraphicsPath Parse(string data)

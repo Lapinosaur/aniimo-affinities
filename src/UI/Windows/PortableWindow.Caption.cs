@@ -7,10 +7,22 @@ namespace AniimoAffinities
 {
     internal partial class PortableWindow
     {
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativeWindowPosition
+        {
+            internal IntPtr Handle, InsertAfter;
+            internal int X, Y, Width, Height;
+            internal uint Flags;
+        }
         private Button CaptionButton(string text, string label, bool danger = false, bool pin = false)
         {
             var button = new Button { Text = "", AccessibleName = label, Dock = DockStyle.Right, Width = 42, FlatStyle = FlatStyle.Flat, ForeColor = Theme.Muted, BackColor = Theme.Background, TabStop = true };
             button.Cursor = Cursors.Hand;
+            captionTips.SetAnchorBounds(button, () =>
+            {
+                int size = (int)Math.Round(28 * AppliedWindowScale);
+                return new Rectangle((button.Width - size) / 2, (button.Height - size) / 2, size, size);
+            });
             button.FlatAppearance.BorderSize = 0;
             button.FlatAppearance.MouseOverBackColor = Theme.Background;
             button.FlatAppearance.MouseDownBackColor = Theme.Background;
@@ -127,7 +139,20 @@ namespace AniimoAffinities
                 SetOverlayLocked(false);
                 return;
             }
+            if (customCaption && message.Msg == 0x0046 && message.LParam != IntPtr.Zero && VisualUpdateDepth > 0)
+            {
+                var proposedPosition = (NativeWindowPosition)Marshal.PtrToStructure(message.LParam, typeof(NativeWindowPosition));
+                proposedPosition.Flags |= 0x0100; // SWP_NOCOPYBITS: do not reuse the old client surface.
+                Marshal.StructureToPtr(proposedPosition, message.LParam, false);
+            }
             base.WndProc(ref message);
+            if (customCaption && message.Msg == 0x0083 && message.WParam != IntPtr.Zero)
+            {
+                // No retained client pixels during resize: their old positions are invalid
+                // when right-docked caption controls and the team panel change together.
+                message.Result = new IntPtr(0x0300); // WVR_REDRAW
+                return;
+            }
             if (customCaption && message.Msg == 0x216 && WindowState == FormWindowState.Normal)
             {
                 var proposed = (WindowRect)Marshal.PtrToStructure(message.LParam, typeof(WindowRect));

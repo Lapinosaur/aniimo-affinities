@@ -1,55 +1,76 @@
 using System;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.IO;
+using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Text;
 
 namespace AniimoAffinities
 {
     internal static class RegressionTests
     {
-        internal static void Run()
+        private sealed class Suite
         {
-            Console.WriteLine("Updates");
-            UpdateTests.Run();
-            Console.WriteLine("Resources");
-            ResourceTests.Run();
-            Console.WriteLine("Packaging");
-            PackagingTests.Run();
-            Console.WriteLine("PreferenceFiles");
-            PreferenceFilesTests.Run();
-            Console.WriteLine("Tutorial");
-            TutorialTests.Run();
-            Console.WriteLine("Startup");
-            StartupTests.Run();
-            Console.WriteLine("Session");
-            SessionTests.Run();
-            Console.WriteLine("Settings");
-            SettingsTests.Run();
-            Console.WriteLine("HoldControls");
-            HoldControlsTests.Run();
-            Console.WriteLine("Zoom");
-            ZoomTests.Run();
-            Console.WriteLine("ViewSwitching");
-            ViewSwitchingTests.Run();
-            Console.WriteLine("DisplayRollback");
-            DisplayRollbackTests.Run();
-            Console.WriteLine("WindowAttention");
-            WindowAttentionTests.Run();
-            Console.WriteLine("Radar");
-            RadarTests.Run();
-            Console.WriteLine("Matrix");
-            MatrixTests.Run();
-            Console.WriteLine("Theme");
-            ThemeTests.Run();
-            Console.WriteLine("WindowBounds");
-            WindowBoundsTests.Run();
-            Console.WriteLine("Keyboard");
-            KeyboardTests.Run();
-            Console.WriteLine("Matchups");
-            MatchupsTests.Run();
+            internal readonly string Name, Group;
+            internal readonly Action Execute;
+            internal Suite(string name, string group, Action execute)
+            {
+                Name = name;
+                Group = group;
+                Execute = execute;
+            }
+        }
+        // Only groups without visible windows may overlap the single UI worker.
+        private static readonly Suite[] Suites = {
+            new Suite("Updates", "storage", UpdateTests.Run),
+            new Suite("Resources", "ui", ResourceTests.Run),
+            new Suite("Packaging", "storage", PackagingTests.Run),
+            new Suite("PreferenceFiles", "storage", PreferenceFilesTests.Run),
+            new Suite("Tutorial", "ui", TutorialTests.Run),
+            new Suite("Startup", "ui", StartupTests.Run),
+            new Suite("Session", "storage", SessionTests.Run),
+            new Suite("Settings", "ui", SettingsTests.Run),
+            new Suite("HoldControls", "ui", HoldControlsTests.Run),
+            new Suite("Zoom", "ui", ZoomTests.Run),
+            new Suite("ViewSwitching", "ui", ViewSwitchingTests.Run),
+            new Suite("Teams", "ui", TeamTests.Run),
+            new Suite("DisplayRollback", "ui", DisplayRollbackTests.Run),
+            new Suite("WindowAttention", "ui", WindowAttentionTests.Run),
+            new Suite("Radar", "ui", RadarTests.Run),
+            new Suite("Matrix", "ui", MatrixTests.Run),
+            new Suite("Theme", "ui", ThemeTests.Run),
+            new Suite("WindowBounds", "ui", WindowBoundsTests.Run),
+            new Suite("Keyboard", "ui", KeyboardTests.Run),
+            new Suite("Matchups", "model", MatchupsTests.Run),
+            new Suite("MainRender", "ui", MatchupsTests.RenderMain),
+        };
+        internal static string[] Groups()
+        {
+            return Suites.Select(suite => suite.Group).Distinct().ToArray();
+        }
+        internal static string Run(string group = "all")
+        {
+            if (Theme.Appearance != 1)
+                throw new Exception("A fresh profile must default to the System theme");
+            var selected = Suites.Where(suite => group == "all" || suite.Group == group).ToArray();
+            if (selected.Length == 0)
+                throw new ArgumentException("Unknown test group: " + group);
+            var report = new StringBuilder();
+            foreach (var suite in selected)
+            {
+                Console.WriteLine("START " + suite.Name);
+                var clock = Stopwatch.StartNew();
+                try
+                {
+                    suite.Execute();
+                }
+                catch (Exception error)
+                {
+                    throw new Exception("FAIL " + suite.Name + " (" + clock.ElapsedMilliseconds + " ms)\n" + report, error);
+                }
+                string result = "PASS " + suite.Name + " (" + clock.ElapsedMilliseconds + " ms)";
+                Console.WriteLine(result);
+                report.AppendLine(result);
+            }
+            return report.ToString();
         }
     }
 }

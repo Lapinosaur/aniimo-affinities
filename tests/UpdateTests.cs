@@ -9,7 +9,9 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
-            if (ReleaseUpdates.IsNewer("v0.1.0") || ReleaseUpdates.IsNewer("v0.4.0") || ReleaseUpdates.IsNewer("v1.0.0-beta") || !ReleaseUpdates.IsNewer("v0.5.0"))
+            var current = new Version(ReleaseUpdates.CurrentVersion);
+            string future = "v" + new Version(current.Major + 1, 0, 0);
+            if (ReleaseUpdates.IsNewer("v0.0.0") || ReleaseUpdates.IsNewer("v" + ReleaseUpdates.CurrentVersion) || ReleaseUpdates.IsNewer(future + "-beta") || !ReleaseUpdates.IsNewer(future))
                 throw new Exception("Release version comparison failed.");
             byte[] payload = Encoding.UTF8.GetBytes("update fixture");
             string hash;
@@ -30,12 +32,12 @@ namespace AniimoAffinities
                 bool rejected = false;
                 try
                 {
-                    ReleaseUpdates.Stage(payload, new string('0', 64), "v0.5.0", target);
+                    ReleaseUpdates.Stage(payload, new string('0', 64), future, target);
                 }
                 catch (InvalidDataException) { rejected = true; }
                 if (!rejected || File.Exists(Path.Combine(folder, "updates", "pending.txt")))
                     throw new Exception("Unverified update was staged.");
-                ReleaseUpdates.Stage(payload, hash, "v0.5.0", target);
+                ReleaseUpdates.Stage(payload, hash, future, target);
                 try
                 {
                     ReleaseUpdates.Install(int.MaxValue, path => { throw new IOException("Simulated launch failure"); });
@@ -43,7 +45,7 @@ namespace AniimoAffinities
                 catch (IOException) { }
                 if (File.ReadAllText(target) != "original fixture")
                     throw new Exception("Failed installation must restore the original.");
-                ReleaseUpdates.Stage(payload, hash, "v0.5.0", target);
+                ReleaseUpdates.Stage(payload, hash, future, target);
                 ReleaseUpdates.ClearCache(); // A pending payload must survive cleanup.
                 string launched = null;
                 ReleaseUpdates.Install(int.MaxValue, path => launched = path);
@@ -59,7 +61,7 @@ namespace AniimoAffinities
                     bool locked = false;
                     try
                     {
-                        ReleaseUpdates.Stage(payload, hash, "v0.5.0", target);
+                        ReleaseUpdates.Stage(payload, hash, future, target);
                     }
                     catch (IOException) { locked = true; }
                     if (!locked)

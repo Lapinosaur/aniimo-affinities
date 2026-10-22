@@ -16,6 +16,7 @@ This project is one Windows Forms application, compiled into one portable execut
 | `src/UI/Controls`, `Input`, `Tooltips` | Shared interactive controls, bindings and tooltip lifecycle |
 | `src/UI/Windows` | Caption, pin/lock, scaling, dragging and modal attention |
 | `src/UI/Main`, `Matrix`, `Radar`, `Settings`, `Tutorial` | Feature views and their local layout/state |
+| `src/UI/Team` | Team editor, known-opponent matchup grid and compact member cards |
 | `data` | Versioned matchup projections embedded at build time |
 | `assets` | Type vectors and branding resources |
 | `tests` | Named behavior regression suites; never shipped in the runtime |
@@ -41,3 +42,5 @@ The native app still targets the .NET Framework 4.x APIs and C# 5 compiler avail
 ## Data ownership
 
 The text projections were exported from the internal Aniimo model. This standalone repository does not contain that private parent application. Preserve the type order and resource filenames when updating data: the native model uses the order for all 81 selections. Tests verify single/dual-type factor parity and matrix consistency. See `data/README.md` for the formats.
+
+Team planning uses `TeamPlan` for two sets of six named slots and elemental comparisons. `TeamPreferences` stores a versioned `teams.txt` separately from session and tutorial preferences. Unknown slots are excluded; one known element is evaluated only as provided, without inferring a missing second element. Attack uses the best available attacking element against the target's combined known defenses. The reverse calculation gives damage received. No stats, moves, species data or synergy model are included. The editor debounces automatic saves and flushes pending edits on close. `MainForm.Team` owns dock placement and loading a member into the existing selection.

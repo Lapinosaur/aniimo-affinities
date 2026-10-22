@@ -18,3 +18,23 @@ csharp_preserve_single_line_blocks = false
 csharp_preserve_single_line_statements = false
 csharp_space_after_keywords_in_control_flow_statements = true
 csharp_space_around_binary_operators = before_and_after
+
+# Focused correctness/security rules; no blanket suppression of analyzer findings.
+# The portable compiler remains C# 5; Roslyn analyzers run through npm run lint.
+dotnet_diagnostic.CA2200.severity = warning
+dotnet_diagnostic.CA2012.severity = warning
+dotnet_diagnostic.CA2100.severity = warning
+dotnet_diagnostic.CA3075.severity = warning
+dotnet_diagnostic.CA5350.severity = warning
+dotnet_diagnostic.CA5351.severity = warning
+dotnet_diagnostic.CA5359.severity = warning
+dotnet_diagnostic.CA5364.severity = warning
+dotnet_diagnostic.CA5368.severity = warning
+dotnet_diagnostic.CA5394.severity = warning
+dotnet_diagnostic.CA5397.severity = warning
+dotnet_diagnostic.CA5398.severity = warning
+dotnet_diagnostic.CA5400.severity = warning
+
+dotnet_diagnostic.CA1806.severity = warning
+dotnet_diagnostic.CA2208.severity = warning
+dotnet_diagnostic.CA1821.severity = warning

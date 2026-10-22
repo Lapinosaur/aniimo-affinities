@@ -41,7 +41,23 @@ namespace AniimoAffinities
             Controls.Add(new Label { Text = "Remove temporary update files and the last error report.\nYour settings, shortcuts and tutorial preference are kept.\nA prepared update and the previous EXE backup are kept.", Location = new Point(24, 94), Size = new Size(392, 66), ForeColor = Theme.Muted });
             var status = new Label { Location = new Point(24, 164), Size = new Size(392, 34) };
             Controls.Add(status);
-            var clear = new SettingsButton { Text = "Clear cache", Primary = true, Location = new Point(256, 210), Size = new Size(160, 34) };
+            var open = new SettingsButton { Text = "Open folder", Glyph = "folder", GlyphWithText = true, Location = new Point(24, 210), Size = new Size(160, 34) };
+            open.Click += (s, e) =>
+            {
+                try
+                {
+                    Directory.CreateDirectory(PreferenceFiles.Root);
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(PreferenceFiles.Root) { UseShellExecute = true });
+                }
+                catch (Exception error)
+                {
+                    if (!(error is IOException || error is UnauthorizedAccessException || error is System.ComponentModel.Win32Exception))
+                        throw;
+                    status.Text = "Unable to open the data folder.";
+                }
+            };
+            Controls.Add(open);
+            var clear = new SettingsButton { Text = "Clear cache", Glyph = "trash", GlyphWithText = true, Primary = true, Location = new Point(256, 210), Size = new Size(160, 34) };
             clear.Click += (s, e) =>
             {
                 try

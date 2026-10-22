@@ -9,8 +9,15 @@ namespace AniimoAffinities
     internal sealed class ApplicationTips : IDisposable
     {
         private readonly Dictionary<Control, string> labels = new Dictionary<Control, string>();
+        private readonly Dictionary<Control, Func<Rectangle>> anchors = new Dictionary<Control, Func<Rectangle>>();
+        internal void SetAnchorBounds(Control control, Func<Rectangle> bounds)
+        {
+            anchors[control] = bounds;
+        }
         private readonly Timer timer = new Timer();
         private readonly TipBubble bubble = new TipBubble();
+        internal event Action<Rectangle> SupportBoundsChanged;
+        internal Func<Rectangle, Rectangle> SupportPlacement;
         private Control anchor; private Form owner; private bool displayed; private bool disposed;
         internal static ApplicationTips Create()
         {
@@ -23,6 +30,8 @@ namespace AniimoAffinities
         }
         internal void SetToolTip(Control control, string text)
         {
+            string previous;
+            bool refresh = ReferenceEquals(anchor, control) && labels.TryGetValue(control, out previous) && previous != text;
             if (!labels.ContainsKey(control))
             {
                 control.MouseEnter += Enter;
@@ -31,6 +40,8 @@ namespace AniimoAffinities
                 control.Disposed += RemoveControl;
             }
             labels[control] = text;
+            if (refresh)
+                Enter(control, EventArgs.Empty);
         }
         private void RemoveControl(object sender, EventArgs e)
         {
@@ -40,6 +51,7 @@ namespace AniimoAffinities
             control.MouseDown -= Down;
             control.Disposed -= RemoveControl;
             labels.Remove(control);
+            anchors.Remove(control);
             if (ReferenceEquals(anchor, control))
                 Hide();
         }
@@ -47,7 +59,7 @@ namespace AniimoAffinities
         {
             Hide();
             anchor = (Control)sender;
-            timer.Interval = 450;
+            timer.Interval = anchor is SupportButton ? 900 : 450;
             timer.Start();
         }
         private void Leave(object sender, EventArgs e)
@@ -76,13 +88,24 @@ namespace AniimoAffinities
                 return;
             owner.Deactivate += Leave;
             owner.LocationChanged += Leave;
-            bubble.Present(anchor, text);
+            Func<Rectangle> bounds;
+            var support = anchor as SupportButton;
+            bubble.Present(anchor, text, anchors.TryGetValue(anchor, out bounds) ? bounds() : anchor.ClientRectangle, support == null ? null : support.QrCode);
             displayed = true;
-            timer.Interval = 8000;
-            timer.Start();
+            if (support != null && SupportPlacement != null)
+                bubble.Relocate(SupportPlacement(bubble.Bounds));
+            if (support != null && SupportBoundsChanged != null)
+                SupportBoundsChanged(bubble.Bounds);
+            if (support == null)
+            {
+                timer.Interval = 8000;
+                timer.Start();
+            }
         }
         private void Hide()
         {
+            if (displayed && anchor is SupportButton && SupportBoundsChanged != null)
+                SupportBoundsChanged(Rectangle.Empty);
             timer.Stop();
             bubble.Hide();
             displayed = false;
@@ -110,6 +133,7 @@ namespace AniimoAffinities
                 item.Key.Disposed -= RemoveControl;
             }
             labels.Clear();
+            anchors.Clear();
         }
     }
 }

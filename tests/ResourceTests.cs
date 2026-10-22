@@ -10,6 +10,20 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            foreach (string unsafeXml in new[] { "<!DOCTYPE svg [<!ENTITY test 'expanded'>]><svg>&test;</svg>", "<svg>" + new string('x', 1024 * 1024) + "</svg>" })
+            {
+                bool rejected = false;
+                using (var stream = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(unsafeXml)))
+                    try
+                    {
+                        VectorIcon.ReadDocument(stream);
+                    }
+                    catch (System.Xml.XmlException) { rejected = true; }
+                if (!rejected)
+                    throw new Exception("SVG XML must reject DTDs and oversized documents.");
+            }
+            if (NativeMethods.TrySetWindowStyle(IntPtr.Zero, 0))
+                throw new Exception("Invalid window handles must report style update failure.");
             using (var tips = ApplicationTips.Create())
             {
                 var button = new Button();

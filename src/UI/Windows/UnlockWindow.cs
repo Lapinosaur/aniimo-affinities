@@ -34,7 +34,8 @@ namespace AniimoAffinities
             }
         }
         private readonly ApplicationTips tips = ApplicationTips.Create();
-        internal UnlockWindow(Action unlock, Action close, bool hotkeyAvailable, Func<Point> getLocation, Action<Point> move)
+        private HoldSizeButton panelToggle;
+        internal UnlockWindow(Action unlock, Action close, bool hotkeyAvailable, Func<Point> getLocation, Action<Point> move, Action togglePanel = null, Func<string> panelGlyph = null)
         {
             closeApplication = close;
             FormBorderStyle = FormBorderStyle.None;
@@ -101,9 +102,28 @@ namespace AniimoAffinities
             grip.MouseCaptureChanged += (s, e) => { if (!grip.Capture) dragging = false; };
             Controls.Add(grip);
             tips.SetToolTip(grip, "Hold and drag to move overlay");
+            if (togglePanel != null)
+            {
+                foreach (Control control in Controls)
+                    control.Left += 36;
+                ClientSize = new Size(208, 32);
+                var expandedRegion = Region.Clone();
+                expandedRegion.Translate(36, 0);
+                using (var outline = Drawing.Round(new RectangleF(0, 0, 32, 32), 8))
+                    expandedRegion.Union(outline);
+                var oldRegion = Region;
+                Region = expandedRegion;
+                oldRegion.Dispose();
+                panelToggle = new HoldSizeButton { Location = Point.Empty, Size = new Size(32, 32), Glyph = panelGlyph(), AccessibleName = "Hold to show or hide team panel" };
+                panelToggle.Commit += value => { togglePanel(); panelToggle.Glyph = panelGlyph(); panelToggle.Invalidate(); };
+                Controls.Add(panelToggle);
+                tips.SetToolTip(panelToggle, "Hold click or Space for 0.9 s to show or hide the team panel. Release early to cancel.");
+            }
         }
         protected override void OnDeactivate(EventArgs e)
         {
+            if (panelToggle != null)
+                panelToggle.CancelHold();
             foreach (var button in sizeButtons)
                 button.CancelHold();
             base.OnDeactivate(e);

@@ -23,6 +23,7 @@ namespace AniimoAffinities
         internal string Glyph = "";
         internal bool GlyphWithText;
         internal Color Brand = Color.Empty;
+        internal Color Surround = Color.Empty;
         private bool hover, pressed;
         internal SettingsButton()
         {
@@ -76,9 +77,9 @@ namespace AniimoAffinities
             int Width = (int)Math.Round(base.Width / zoom), Height = (int)Math.Round(base.Height / zoom);
             var g = e.Graphics;
             g.ScaleTransform(zoom, zoom);
-            g.Clear(Theme.Background);
+            g.Clear(Surround.IsEmpty ? Theme.Background : Surround);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = Primary ? (pressed ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? Theme.Background : Theme.Surface;
+            Color fill = Primary ? (pressed ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? (Surround.IsEmpty ? Theme.Background : Surround) : Theme.Surface;
             if (!Brand.IsEmpty)
                 fill = Theme.BrandSurface(Brand, hover || pressed);
             Color border = Focused && ShowFocusCues ? Theme.Accent : Primary ? fill : Quiet ? fill : Theme.Border;

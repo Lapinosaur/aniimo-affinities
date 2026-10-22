@@ -1,8 +1,12 @@
-# Aniimo Affinities
+# Affinisaur
+
+Unofficial Aniimo companion by Lapinosaur. Formerly Aniimo Affinities.
+
+The repository URL, executable asset name `AniimoAffinities.exe` and local preference folder keep their existing names for update and settings compatibility.
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
 
-![Aniimo Affinities](docs/images/preview.png)
+![Affinisaur](docs/images/preview.png)
 
 ## Features
 
@@ -11,7 +15,9 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 - Pin the app or hold to lock a minimal overlay, with dedicated move and resize controls.
 - Customize keyboard shortcuts, appearance, text size, window scale and keyboard badges.
 - Use Ctrl + Up / Ctrl + Down to resize from 50% to 150% in 25% steps.
-- Follow the guided tutorial; replay it or disable startup guidance in Settings.
+- Plan two teams of six, preview a member on hover and click to keep the selection.
+- Place the team panel beside, above or below the main view.
+- Replay selected tutorial sections or resume an unfinished tour from Settings.
 - Settings and committed selections are remembered locally.
 
 ## Run
@@ -19,7 +25,11 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 Windows x64 with .NET Framework 4.x (included in current Windows 10/11).
 Download `AniimoAffinities.exe` from the repository release and run it. No installer, server or WebView is required. The executable is not code-signed.
 
-The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits also offers a manual update check, a privacy-conscious diagnostic report and local cache cleanup. The tutorial opt-out is stored outside the executable and survives updates. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
+The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits offers a manual update check; Tutorial & Help groups Discord support, diagnostics and local storage. The tutorial opt-out is stored outside the executable and survives updates. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
+
+## Community
+
+[Join the Lapinosaur Discord community](https://discord.gg/qdsWumFaZz) for updates, feedback and support. This invitation never expires, has no usage limit and assigns the **Member** and **GitHub** roles when you join.
 
 ## Build and develop
 
@@ -55,10 +65,12 @@ Unofficial fan tool, not affiliated with or endorsed by Aniimo or its rights hol
 
 ## License
 
+The in-app **Legal & Privacy** page renders the bundled [legal document](docs/legal.md) offline, with headings, paragraphs, links and vertical scrolling. Edit that Markdown file to maintain its content. It includes terms of use, privacy information, publisher contact and third-party rights, with outstanding legal details explicitly identified.
+
 Original code, scripts and documentation are licensed under [MIT](LICENSE), copyright 2026 Lapinosaur. Third-party assets and game content are not relicensed: see [resource rights and notices](THIRD_PARTY_NOTICES.md). The bundled artwork review remains unresolved.
 
 ## Code signing policy
 
-Releases are currently unsigned. See the [code signing policy and preparation](docs/code-signing.md) and [privacy and removal information](docs/privacy.md). A [SignPath application draft](docs/signpath-application.md) is prepared, but has not been submitted or accepted.
+Releases are currently unsigned. See the [code signing policy and preparation](docs/code-signing.md) and [privacy and removal information](docs/privacy.md). The [SignPath application](docs/signpath-application.md) was submitted on 22 October 2026 and is awaiting review. No certificate or sponsorship has been granted.
 
 See [1.0 readiness](docs/1.0-readiness.md) for remaining manual acceptance checks and the CI publication procedure.

@@ -83,6 +83,9 @@ namespace AniimoAffinities
                     }
             if (typeof(Program).Assembly.GetType("AniimoAffinities.CaptureSelection") != null || typeof(Program).Assembly.GetType("AniimoAffinities.Recognition") != null)
                 throw new Exception("Capture must not ship");
+        }
+        internal static void RenderMain()
+        {
             using (var form = new MainForm())
             {
                 form.Show();

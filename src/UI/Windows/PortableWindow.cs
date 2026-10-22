@@ -75,6 +75,28 @@ namespace AniimoAffinities
         protected virtual void OnOverlayLockChanged()
         {
         }
+        internal int VisualUpdateDepth;
+        protected virtual bool ContentOnly
+        {
+            get
+            {
+                return false;
+            }
+        }
+        protected virtual Action LockedPanelToggle
+        {
+            get
+            {
+                return null;
+            }
+        }
+        protected virtual string LockedPanelGlyph
+        {
+            get
+            {
+                return "separate";
+            }
+        }
         private float holdProgress;
         private void CancelHold()
         {
@@ -96,12 +118,23 @@ namespace AniimoAffinities
                 unlockRegistered = shortcut != Keys.None && NativeMethods.RegisterHotKey(Handle, 0x414E, mods, (uint)(shortcut & Keys.KeyCode));
                 SetPinned(true);
                 unlockedStyle = NativeMethods.GetWindowLong(Handle, -20);
+                if (!NativeMethods.TrySetWindowStyle(Handle, unlockedStyle | 0x20 | 0x08000000))
+                {
+                    if (unlockRegistered)
+                        NativeMethods.UnregisterHotKey(Handle, 0x414E);
+                    unlockRegistered = false;
+                    MessageBox.Show(this, "Windows could not lock the overlay. Please try again.", "Overlay");
+                    return;
+                }
                 OverlayLocked = true;
-                NativeMethods.SetWindowLong(Handle, -20, unlockedStyle | 0x20 | 0x08000000);
             }
             else
             {
-                NativeMethods.SetWindowLong(Handle, -20, unlockedStyle);
+                if (!NativeMethods.TrySetWindowStyle(Handle, unlockedStyle))
+                {
+                    MessageBox.Show(this, "Windows could not unlock the overlay. Please try again.", "Overlay");
+                    return;
+                }
                 OverlayLocked = false;
                 if (unlockRegistered)
                     NativeMethods.UnregisterHotKey(Handle, 0x414E);
@@ -120,7 +153,7 @@ namespace AniimoAffinities
                 unlockWindow = new UnlockWindow(() => SetOverlayLocked(false), () => Close(), unlockRegistered, () => Location, point =>
                 {
                     Location = KeepCaptionVisible(new Rectangle(point, Size), Screen.FromPoint(Cursor.Position).WorkingArea, 54).Location;
-                });
+                }, LockedPanelToggle, () => LockedPanelGlyph);
                 PositionUnlockWindow();
                 unlockWindow.Show(this);
             }
@@ -137,7 +170,7 @@ namespace AniimoAffinities
         private void PositionUnlockWindow()
         {
             if (unlockWindow != null && pinControl != null)
-                unlockWindow.Bounds = new Rectangle(pinControl.PointToScreen(new Point((pinControl.Width - 32) / 2 - 140, Math.Max(0, (pinControl.Height - 32) / 2))), new Size(172, 32));
+                unlockWindow.Bounds = new Rectangle(pinControl.PointToScreen(new Point((pinControl.Width - 32) / 2 - (unlockWindow.Width - 32), Math.Max(0, (pinControl.Height - 32) / 2))), new Size(unlockWindow.Width, 32));
         }
         [StructLayout(LayoutKind.Sequential)]
         private struct WindowRect
@@ -153,6 +186,24 @@ namespace AniimoAffinities
             return new Rectangle(left, top, bounds.Width, bounds.Height);
         }
         private readonly ApplicationTips captionTips = ApplicationTips.Create();
+        internal event Action<Rectangle> SupportBoundsChanged
+        {
+            add
+            {
+                captionTips.SupportBoundsChanged += value;
+            }
+            remove
+            {
+                captionTips.SupportBoundsChanged -= value;
+            }
+        }
+        internal Func<Rectangle, Rectangle> SupportPlacement
+        {
+            set
+            {
+                captionTips.SupportPlacement = value;
+            }
+        }
         protected Control CaptionContent
         {
             get; set;
@@ -304,7 +355,6 @@ namespace AniimoAffinities
             Invalidate(true);
         }
         private readonly Icon applicationIcon;
-        private readonly Image coffeeArtwork;
         internal PortableWindow()
         {
             radarHoldTimer.Tick += (s, e) =>
@@ -373,9 +423,6 @@ namespace AniimoAffinities
                 applicationIcon = (Icon)embedded.Clone();
             Icon = applicationIcon;
             ShowIcon = true;
-            using (var stream = typeof(PortableWindow).Assembly.GetManifestResourceStream("buy-me-a-coffee.png"))
-            using (var image = Image.FromStream(stream))
-                coffeeArtwork = new Bitmap(image);
         }
         protected override void Dispose(bool disposing)
         {
@@ -388,7 +435,6 @@ namespace AniimoAffinities
                     unlockWindow.Dispose();
                 holdTimer.Dispose();
                 applicationIcon.Dispose();
-                coffeeArtwork.Dispose();
                 captionTips.Dispose();
             }
         }
@@ -401,15 +447,17 @@ namespace AniimoAffinities
             }
             base.OnHandleDestroyed(e);
         }
-        protected override void OnShown(EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
-            base.OnShown(e);
-            BeginInvoke(new Action(() =>
+            base.OnLoad(e);
+            using (new VisualUpdate(this))
             {
-                if (IsDisposed || Disposing || !Visible)
+                if (IsDisposed || Disposing)
                     return;
                 var caption = new Panel { Dock = DockStyle.Top, Height = CompactCaption ? 36 : 54, BackColor = Theme.Background };
-                captionPanel = caption;
+                var commands = new Panel { Width = !CompactCaption && !ContentOnly ? 406 : 42, Height = caption.Height, Dock = DockStyle.Right, BackColor = Theme.Background };
+                captionPanel = commands;
+                caption.Controls.Add(commands);
                 var title = new Label { Text = CaptionContent == null ? Text : "", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(40, 0, 0, 0), ForeColor = Theme.Muted };
                 if (CompactCaption)
                     title.Paint += (s, a) =>
@@ -448,17 +496,15 @@ namespace AniimoAffinities
                 settings.Click += (s, a) => OpenSettings();
                 EnableWindowDrag(title);
                 EnableWindowDrag(caption);
-                var coffee = CaptionButton("", "Buy Me a Coffee - Lapinosaur");
-                coffee.Width = 144;
-                coffee.Paint += (s, a) =>
-                {
-                    a.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                    a.Graphics.ScaleTransform(AppliedWindowScale, AppliedWindowScale);
-                    float width = 134, height = width * coffeeArtwork.Height / coffeeArtwork.Width;
-                    a.Graphics.DrawImage(coffeeArtwork, 5, (coffee.Height / AppliedWindowScale - height) / 2, width, height);
-                };
+                var coffee = new SupportButton { Dock = DockStyle.Right, Width = 154 };
+                UiFonts.Assign(coffee, UiFonts.Create("Segoe UI", 9));
                 coffee.Cursor = Cursors.Hand;
-                captionTips.SetToolTip(coffee, "Buy Me a Coffee · Lapinosaur");
+                captionTips.SetToolTip(coffee, "Support Lapinosaur\nScan with your phone");
+                captionTips.SetAnchorBounds(coffee, () =>
+                {
+                    int height = (int)Math.Round(32 * AppliedWindowScale);
+                    return new Rectangle(0, (coffee.Height - height) / 2, coffee.Width, height);
+                });
                 coffee.Click += (s, a) =>
                 {
                     try
@@ -488,14 +534,14 @@ namespace AniimoAffinities
                     CaptionContent.Dock = DockStyle.Left;
                     caption.Controls.Add(CaptionContent);
                 }
-                if (!CompactCaption)
+                if (!CompactCaption && !ContentOnly)
                 {
-                    caption.Controls.Add(matrix);
-                    caption.Controls.Add(radar);
-                    caption.Controls.Add(pin);
-                    caption.Controls.Add(coffee);
-                    caption.Controls.Add(settings);
-                    caption.Controls.Add(minimize);
+                    commands.Controls.Add(matrix);
+                    commands.Controls.Add(radar);
+                    commands.Controls.Add(pin);
+                    commands.Controls.Add(coffee);
+                    commands.Controls.Add(settings);
+                    commands.Controls.Add(minimize);
                 }
                 else
                 {
@@ -506,7 +552,8 @@ namespace AniimoAffinities
                     pin.Dispose();
                     minimize.Dispose();
                 }
-                caption.Controls.Add(close);
+                commands.Controls.Add(close);
+                commands.SendToBack();
                 Controls.Add(caption);
                 caption.BringToFront();
                 // Docking order: title above the existing selector, with the canvas filling the rest.
@@ -523,7 +570,7 @@ namespace AniimoAffinities
                 Controls.Add(windowFrame);
                 RefreshWindowFrame();
                 ApplyWindowScale();
-            }));
+            }
         }
         // Inputs: caption action. Output: consistent rounded surface, hover and keyboard focus.
         // Artwork-only actions keep their supplied branding. Raises: none.

@@ -23,7 +23,7 @@ namespace AniimoAffinities
             }
             catch (IOException) { }
             catch (UnauthorizedAccessException) { }
-            return "Aniimo Affinities " + ReleaseUpdates.CurrentVersion + "\r\nWindows: " + Environment.OSVersion.VersionString + "\r\n64-bit OS: " + Environment.Is64BitOperatingSystem + "\r\n.NET: " + Environment.Version + "\r\nWindow scale: " + DisplaySettings.WindowScale + "\r\nText scale: " + DisplaySettings.FontScale + "\r\nAppearance (0 dark / 1 system / 2 light): " + Theme.Appearance + "\r\nLast error: " + last;
+            return "Affinisaur " + ReleaseUpdates.CurrentVersion + "\r\nWindows: " + Environment.OSVersion.VersionString + "\r\n64-bit OS: " + Environment.Is64BitOperatingSystem + "\r\n.NET: " + Environment.Version + "\r\nWindow scale: " + DisplaySettings.WindowScale + "\r\nText scale: " + DisplaySettings.FontScale + "\r\nAppearance (0 dark / 1 system / 2 light): " + Theme.Appearance + "\r\nLast error: " + last;
         }
     }
 }

@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { runTests } from './test-runner.mjs';
 import { spawnSync } from 'node:child_process';
 import { root, output, filesUnder, resources } from './project.mjs';
 
@@ -19,7 +20,7 @@ export async function build(diagnostics = false) {
   const executable = path.join(folder, diagnostics ? 'AniimoAffinities.Diagnostics.exe' : 'AniimoAffinities.exe');
   const metadata = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
   const versionSource = path.join(folder, 'Version.g.cs');
-  await fs.writeFile(versionSource, `[assembly: System.Reflection.AssemblyVersion("${metadata.version}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("${metadata.version}.0")]\n`);
+  await fs.writeFile(versionSource, `[assembly: System.Reflection.AssemblyTitle("Affinisaur")]\n[assembly: System.Reflection.AssemblyProduct("Affinisaur")]\n[assembly: System.Reflection.AssemblyCompany("Lapinosaur")]\n[assembly: System.Reflection.AssemblyDescription("Unofficial Aniimo companion by Lapinosaur.")]\n[assembly: System.Reflection.AssemblyVersion("${metadata.version}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("${metadata.version}.0")]\n`);
   const sources = [...await filesUnder(path.join(root, 'src')), versionSource];
   if (diagnostics) sources.push(...await filesUnder(path.join(root, 'tests')), ...await filesUnder(path.join(root, 'tools/Diagnostics')));
   run(compiler, [
@@ -32,11 +33,9 @@ export async function build(diagnostics = false) {
   console.log(`Built ${path.relative(root, executable)}`);
   return executable;
 }
-export async function test() {
+export async function test(serial = false) {
   await build();
   const executable = await build(true);
-  const report = path.join(output, 'tests.txt');
-  await fs.rm(report, { force: true });
-  run(executable, ['--self-test', report]);
-  console.log(await fs.readFile(report, 'utf8'));
+  run(process.execPath, ['--test', 'scripts/test-runner.test.mjs']);
+  await runTests(executable, root, output, serial);
 }

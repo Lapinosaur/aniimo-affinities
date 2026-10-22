@@ -53,13 +53,13 @@ namespace AniimoAffinities
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 if (!displaySection)
                 {
-                    for (int row = 0; row < (windowSection ? KeyBindings.Actions.Length - 10 : 10); row++)
-                        Drawing.Box(e.Graphics, new RectangleF(24, 186 + row * 38, 412, 36), row % 2 == 0 ? Theme.Surface : Theme.Background, Theme.Background, 7);
+                    foreach (var field in fields.Where(f => f != null && f.Visible && f.TestHeld))
+                        Drawing.Box(e.Graphics, new RectangleF(24, field.Top - 2, 412, field.Height + 4), Theme.AccentSurface, Theme.Accent, 7);
                     using (var line = new Pen(Theme.Border))
                         e.Graphics.DrawLine(line, 24, 616 - (windowSection ? (20 - KeyBindings.Actions.Length) * 38 : 28), 436, 616 - (windowSection ? (20 - KeyBindings.Actions.Length) * 38 : 28));
                 }
             };
-            var status = new Label { Location = new Point(24, 510), Size = new Size(412, 32), ForeColor = Theme.Error };
+            var status = new Label { Location = new Point(24, 510), Size = new Size(412, 32), ForeColor = Theme.Muted };
             Controls.Add(status);
             for (int i = 0; i < fields.Length; i++)
             {
@@ -70,7 +70,7 @@ namespace AniimoAffinities
                 var icon = new DrawingPanel { Location = new Point(32, 115 + rowIndex * 38), Size = new Size(30, 30), AccessibleName = KeyBindings.Actions[i], AccessibleRole = AccessibleRole.Graphic, TabStop = false };
                 icon.Paint += (s, e) =>
                 {
-                    e.Graphics.Clear(Theme.Background);
+                    e.Graphics.Clear(icon.BackColor);
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                     if (type >= 0)
                         VectorIcon.Draw(e.Graphics, type, new RectangleF(3, 3, 24, 24));
@@ -83,9 +83,10 @@ namespace AniimoAffinities
                 };
                 tips.SetToolTip(icon, KeyBindings.Actions[i]);
                 Controls.Add(icon);
-                Controls.Add(new Label { Text = i == 0 ? "Clear selection" : KeyBindings.Actions[i], Location = new Point(72, 115 + rowIndex * 38), Size = new Size(146, 30), TextAlign = ContentAlignment.MiddleLeft });
+                var actionLabel = new Label { Text = i == 0 ? "Clear selection" : KeyBindings.Actions[i], Location = new Point(72, 115 + rowIndex * 38), Size = new Size(146, 30), TextAlign = ContentAlignment.MiddleLeft };
+                Controls.Add(actionLabel);
                 var field = new KeyCapture { Location = new Point(222, 116 + rowIndex * 38), Width = 174, AccessibleName = KeyBindings.Actions[i], TabIndex = i * 2, AllowModifiers = i >= 10, Binding = current[i] };
-                field.Feedback = message => status.Text = message;
+                field.Feedback = message => { status.ForeColor = field.Invalid ? Theme.Error : Theme.Muted; status.Text = message; };
                 fields[i] = field;
                 Controls.Add(field);
                 tips.SetToolTip(field, "Rebind");
@@ -97,8 +98,30 @@ namespace AniimoAffinities
                     if (duplicate == null)
                         return true;
                     duplicate.ShowValidation(true, false);
+                    status.Text = KeyBindings.Label(key) + " is used by " + duplicate.AccessibleName + ". Clear it there or try another key.";
+                    status.ForeColor = Theme.Error;
                     tips.SetToolTip(field, "Already assigned to " + duplicate.AccessibleName);
                     tips.SetToolTip(duplicate, "Conflicts with " + field.AccessibleName);
+                    Keys old = field.Binding;
+                    using (var conflict = new ShortcutConflictWindow(KeyBindings.Label(key), field.AccessibleName, duplicate.AccessibleName, old == Keys.None ? "Unassigned" : KeyBindings.Label(old), duplicate.AllowModifiers || (old & Keys.Modifiers) == Keys.None))
+                    {
+                        conflict.ShowDialog(this);
+                        field.Binding = old;
+                        if (conflict.Choice > 0)
+                        {
+                            duplicate.Binding = conflict.Choice == 1 ? old : Keys.None;
+                            field.Binding = key;
+                            field.ShowValidation(false, true);
+                            duplicate.ShowValidation(false, true);
+                            status.ForeColor = Theme.Muted;
+                            status.Text = "Shortcuts updated. Click Save to keep your changes.";
+                        }
+                        else
+                        {
+                            status.ForeColor = Theme.Muted;
+                            status.Text = "Cancelled. Both shortcuts are unchanged.";
+                        }
+                    }
                     return false;
                 };
                 var clear = new SettingsButton { Quiet = true, Text = "×", AccessibleName = "Clear shortcut : " + KeyBindings.Actions[i], Location = new Point(404, 117 + rowIndex * 38), Size = new Size(26, 26), TabIndex = i * 2 + 1 };
@@ -107,6 +130,14 @@ namespace AniimoAffinities
                 tips.SetToolTip(clear, "Clear shortcut · Del");
                 clear.Click += (s, e) => { field.Focus(); field.Binding = Keys.None; status.Text = ""; };
                 Controls.Add(clear);
+                testRowFeedback[i] = held =>
+                {
+                    icon.BackColor = actionLabel.BackColor = held ? Theme.AccentSurface : Theme.Background;
+                    actionLabel.ForeColor = held ? Theme.AccentForeground : Theme.TextColor;
+                    clear.Surround = held ? Theme.AccentSurface : Color.Empty;
+                    icon.Invalidate();
+                    clear.Invalidate();
+                };
                 for (int c = startCount; c < Controls.Count; c++)
                     Controls[c].Tag = i >= 10 ? "window" : "types";
             }
@@ -155,27 +186,9 @@ namespace AniimoAffinities
             var about = new SettingsButton { Glyph = "info", AccessibleName = "About & Credits", Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
             tips.SetToolTip(about, "About & Credits � Creator, links and acknowledgements");
             var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
-            var guideText = new Label { Text = "Discover the controls, views and overlay in a guided tour.", Location = new Point(0, 8), Size = new Size(412, 38), ForeColor = Theme.Muted };
-            var hideTour = new RoundCheckBox { Text = "Don't show this tutorial again", Checked = TutorialPreferences.Hidden, Location = new Point(0, 52), Size = new Size(412, 28), ForeColor = Theme.TextColor, TabIndex = 0 };
-            var guideStatus = new Label { Location = new Point(0, 82), Size = new Size(412, 24), ForeColor = Theme.Error };
-            hideTour.CheckedChanged += (s, e) =>
-            {
-                try
-                {
-                    TutorialPreferences.Save(hideTour.Checked);
-                    guideStatus.Text = "";
-                }
-                catch (System.IO.IOException) { guideStatus.Text = "Unable to save this preference."; }
-                catch (UnauthorizedAccessException) { guideStatus.Text = "Unable to save this preference."; }
-            };
-            var launchTour = new SettingsButton { Text = "Start tutorial", Primary = true, Location = new Point(260, 112), Size = new Size(152, 34), TabIndex = 1 };
-            launchTour.Click += (s, e) => { if (startTutorial != null) { startTutorial(); hideTour.Checked = TutorialPreferences.Hidden; } else guideStatus.Text = "Open the tutorial from the main window's Settings."; };
-            guidePanel.Controls.Add(guideText);
-            guidePanel.Controls.Add(hideTour);
-            guidePanel.Controls.Add(guideStatus);
-            guidePanel.Controls.Add(launchTour);
+            AddTutorialChoices(guidePanel, startTutorial);
             var guide = new SettingsButton { Glyph = "help", AccessibleName = "Tutorial", Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
-            tips.SetToolTip(guide, "Tutorial · Replay and startup preference");
+            tips.SetToolTip(guide, "Help & Tutorial · Discord, diagnostics and guided tour");
             var heading = Controls.OfType<Label>().First(label => label.Text == "Keyboard shortcuts");
             heading.UseMnemonic = false;
             var description = Controls.OfType<Label>().First(label => label.Text == "Click a shortcut and press a key to change it.");
@@ -194,7 +207,7 @@ namespace AniimoAffinities
                         item.Key.Top = item.Value - (window ? reduction : item.Key is Button ? 28 : 0);
                     if (!window)
                         status.Top = shortcutHint.Top;
-                    status.Height = window ? 32 : 24;
+                    status.Height = 32;
                     TransitionHeight(fullHeight - reduction);
                 }
                 aboutPanel.Hide();
@@ -262,7 +275,7 @@ namespace AniimoAffinities
                 aboutPanel.Hide();
                 about.Primary = false;
                 about.Invalidate();
-                TransitionHeight(330);
+                TransitionHeight(720);
                 displaySection = true;
                 editor.Hide();
                 foreach (var control in shortcutControls)
@@ -270,13 +283,13 @@ namespace AniimoAffinities
                 foreach (var hint in navigationHints)
                     if (hint != null)
                         hint.Visible = false;
-                heading.Text = "Tutorial";
-                description.Text = "Learn the app at your own pace.";
+                heading.Text = "Help & Tutorial";
+                description.Text = "Learn the app, or get a hand from the community.";
                 typesTab.Primary = false;
                 windowTab.Primary = false;
                 display.Primary = false;
                 guide.Primary = true;
-                hideTour.Checked = TutorialPreferences.Hidden;
+
                 guidePanel.Show();
                 typesTab.Invalidate();
                 windowTab.Invalidate();
@@ -286,7 +299,7 @@ namespace AniimoAffinities
             };
             about.Click += (s, e) =>
             {
-                TransitionHeight(690);
+                TransitionHeight(730);
                 displaySection = true;
                 editor.Hide();
                 guidePanel.Hide();

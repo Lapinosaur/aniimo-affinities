@@ -44,6 +44,7 @@ namespace AniimoAffinities
             }
             return base.ProcessCmdKey(ref message, input);
         }
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Security", "CA5394", Justification = "Random selects a cosmetic preview icon only; it does not generate secrets, identifiers or security decisions.")]
         internal DisplayDialog(Form host = null, Func<int> mainType = null, Func<Keys[]> previewBindings = null)
         {
             settingsHost = host;

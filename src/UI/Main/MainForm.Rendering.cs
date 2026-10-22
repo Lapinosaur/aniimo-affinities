@@ -16,7 +16,7 @@ namespace AniimoAffinities
             g.SmoothingMode = SmoothingMode.AntiAlias;
             if (preview.Main < 0 && currentView == "matrix")
             {
-                DrawInlineMatrix(g, 8);
+                DrawInlineMatrix(g, 12);
                 return;
             }
             if (preview.Main < 0)
@@ -26,18 +26,9 @@ namespace AniimoAffinities
             }
             int a = preview.Main, b = preview.Sub;
             string name = Model.Names[a] + (b >= 0 ? " + " + Model.Names[b] : "");
-            if (!TopMost)
-            {
-                VectorIcon.Draw(g, a, new RectangleF(18, 12, 36, 36));
-                if (b >= 0)
-                    VectorIcon.Draw(g, b, new RectangleF(64, 12, 36, 36));
-                using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
-                    Drawing.Text(g, name, title, Theme.TextColor, new RectangleF(b >= 0 ? 116 : 70, 5, 500, 35), false);
-                Drawing.Text(g, hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? "Temporary preview" : "Type affinities", Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
-            }
             float width = (canvas.Width - 36) / 2f;
             var factors = Model.Factors(a, b);
-            float cardTop = TopMost ? 8 : 78;
+            float cardTop = 12;
             if (currentView == "matrix")
             {
                 DrawInlineMatrix(g, cardTop);
@@ -45,6 +36,24 @@ namespace AniimoAffinities
             }
             for (int column = 0; column < 2; column++)
                 DrawCard(g, new RectangleF(12 + column * (width + 12), cardTop, width, canvas.Height - cardTop - 12), column, factors, name);
+        }
+        private void PaintAffinityHeader(object sender, PaintEventArgs e)
+        {
+            if (preview.Main < 0)
+                return;
+            var g = e.Graphics;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            int a = preview.Main, b = preview.Sub;
+            string name = Model.Names[a] + (b >= 0 ? " + " + Model.Names[b] : "");
+            if (!TopMost)
+            {
+                VectorIcon.Draw(g, a, new RectangleF(18, 12, 36, 36));
+                if (b >= 0)
+                    VectorIcon.Draw(g, b, new RectangleF(64, 12, 36, 36));
+                using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
+                    Drawing.Text(g, name, title, Theme.TextColor, new RectangleF(b >= 0 ? 116 : 70, 5, 500, 35), false);
+                Drawing.Text(g, teamPreview >= 0 || hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? "Temporary preview" : "Type affinities", Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
+            }
         }
         private void DrawInlineMatrix(Graphics g, float cardTop)
         {
@@ -56,7 +65,9 @@ namespace AniimoAffinities
                     var state = g.Save();
                     g.TranslateTransform(left + c * 68 * scale, cardTop + r * 44 * scale);
                     g.ScaleTransform(scale, scale);
-                    MatrixRenderer.DrawCell(g, r, c, new Rectangle(0, 0, 64, 40), preview.Sub >= 0 ? preview.Main : -1);
+                    int hoverRow = teamCounter == 1 && r > 0 && (teamOpponentMask & (1 << MatrixRenderer.Order[r - 1])) != 0 ? r : teamHovered < 0 ? -1 : Array.IndexOf(MatrixRenderer.Order, teamHovered) + 1;
+                    int hoverColumn = teamCounter == 0 && c > 0 && (teamOpponentMask & (1 << MatrixRenderer.Order[c - 1])) != 0 ? c : teamHovered < 0 ? -1 : Array.IndexOf(MatrixRenderer.Order, teamHovered) + 1;
+                    MatrixRenderer.DrawCell(g, r, c, new Rectangle(0, 0, 64, 40), preview.Sub >= 0 ? preview.Main : -1, hoverRow, hoverColumn);
                     g.Restore(state);
                 }
         }
@@ -76,7 +87,7 @@ namespace AniimoAffinities
             if (inlineRadar)
             {
                 float radius = Math.Max(30, Math.Min(box.Width / 2 - 80, (box.Height - 68) / 2 - 65));
-                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview);
+                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview, teamCounter == column ? teamOpponentMask : 0);
                 return;
             }
             float centerHeight = preview.Sub >= 0 ? 112 : 64;
@@ -183,6 +194,8 @@ namespace AniimoAffinities
                 for (int i = 0; i < entries.Length; i++)
                 {
                     affinityHits.Add(Tuple.Create(new RectangleF(x, y + i * cell, 54, cell), ordered[i].Mask, column));
+                    if (teamCounter == column && (teamOpponentMask & (1 << ordered[i].Type)) != 0)
+                        Drawing.Box(g, new RectangleF(x + 1, y + i * cell + 1, 52, cell - 2), Theme.AccentSurface, Theme.Accent, 8);
                     float icon = Math.Min(30, cell - 21);
                     VectorIcon.Draw(g, ordered[i].Type, new RectangleF(x + 4 + (54 - icon) / 2, y + i * cell + 5, icon, icon));
                     Drawing.Text(g, Model.Factor(values[column * 9 + ordered[i].Type]), small, Theme.TextColor, new RectangleF(x + 9, y + (i + 1) * cell - 18, 43, 16), true);

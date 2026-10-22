@@ -7,6 +7,7 @@ namespace AniimoAffinities
     internal sealed class HoldSizeButton : Button
     {
         internal float Target;
+        internal string Glyph = "";
         internal event Action<float> Commit;
         private readonly Timer timer = new Timer { Interval = 16 };
         private readonly System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
@@ -72,8 +73,11 @@ namespace AniimoAffinities
             g.Clear(Theme.Surface);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Drawing.Box(g, new RectangleF(1, 1, Width - 3, Height - 3), Theme.Surface, Theme.Border, 7);
-            using (var font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold))
-                Drawing.Text(g, Text, font, Theme.TextColor, new RectangleF(0, 0, Width, Height), true);
+            if (Glyph.Length > 0)
+                Glyphs.Draw(g, Glyph, new RectangleF((Width - 18) / 2f, (Height - 18) / 2f, 18, 18), Theme.TextColor);
+            else
+                using (var font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold))
+                    Drawing.Text(g, Text, font, Theme.TextColor, new RectangleF(0, 0, Width, Height), true);
             Drawing.HoldHint(g, new RectangleF(1, 1, Width - 3, Height - 3));
             if (progress <= 0)
                 return;

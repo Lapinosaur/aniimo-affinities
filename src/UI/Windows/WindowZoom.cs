@@ -46,34 +46,45 @@ namespace AniimoAffinities
         }
         internal static void Apply(PortableWindow window, float scale)
         {
+            var main = window as MainForm;
+            if (main != null)
+                main.FinishTeamTransition();
             var area = Screen.FromControl(window).WorkingArea;
+            int anchoredRight = window.Right, anchoredTop = window.Top;
             scale = FitScale(scale, new SizeF(window.Width / window.AppliedWindowScale, window.Height / window.AppliedWindowScale), area.Size);
             float ratio = scale / window.AppliedWindowScale;
             if (Math.Abs(ratio - 1) < .001)
                 return;
-            var bounds = new Dictionary<Control, Rectangle>();
-            Collect(window, bounds);
-            Size size = window.ClientSize, min = window.MinimumSize;
-            window.SuspendLayout();
-            window.MinimumSize = Size.Empty;
-            window.AppliedWindowScale = scale;
-            foreach (var item in bounds)
+            using (new VisualUpdate(window))
             {
-                item.Key.Bounds = Scale(item.Value, ratio);
-                if (item.Key is Label)
+                var bounds = new Dictionary<Control, Rectangle>();
+                Collect(window, bounds);
+                Size size = window.ClientSize, min = window.MinimumSize;
+                window.SuspendLayout();
+                window.MinimumSize = Size.Empty;
+                window.AppliedWindowScale = scale;
+                foreach (var item in bounds)
                 {
-                    UiFonts.Assign(item.Key, new Font(item.Key.Font.FontFamily, item.Key.Font.Size * ratio, item.Key.Font.Style));
-                    var padding = item.Key.Padding;
-                    item.Key.Padding = new Padding((int)Math.Round(padding.Left * ratio), (int)Math.Round(padding.Top * ratio), (int)Math.Round(padding.Right * ratio), (int)Math.Round(padding.Bottom * ratio));
+                    item.Key.Bounds = Scale(item.Value, ratio);
+                    if (item.Key is Label)
+                    {
+                        UiFonts.Assign(item.Key, new Font(item.Key.Font.FontFamily, item.Key.Font.Size * ratio, item.Key.Font.Style));
+                        var padding = item.Key.Padding;
+                        item.Key.Padding = new Padding((int)Math.Round(padding.Left * ratio), (int)Math.Round(padding.Top * ratio), (int)Math.Round(padding.Right * ratio), (int)Math.Round(padding.Bottom * ratio));
+                    }
                 }
+                window.ClientSize = new Size((int)Math.Round(size.Width * ratio), (int)Math.Round(size.Height * ratio));
+                window.MinimumSize = new Size((int)Math.Round(min.Width * ratio), (int)Math.Round(min.Height * ratio));
+                window.ResumeLayout(true);
+                Arrange(window);
+                window.Invalidate(true);
+                var desired = window is MainForm ? new Point(anchoredRight - window.Width, anchoredTop) : window.Location;
+                window.Location = FitLocation(desired, window.Size, area);
             }
-            window.ClientSize = new Size((int)Math.Round(size.Width * ratio), (int)Math.Round(size.Height * ratio));
-            window.MinimumSize = new Size((int)Math.Round(min.Width * ratio), (int)Math.Round(min.Height * ratio));
-            window.ResumeLayout(true);
-            Arrange(window);
-            window.Invalidate(true);
-            var work = Screen.FromControl(window).WorkingArea;
-            window.Location = new Point(Math.Max(work.Left, Math.Min(window.Left, work.Right - window.Width)), Math.Max(work.Top, Math.Min(window.Top, work.Bottom - 40)));
+        }
+        internal static Point FitLocation(Point desired, Size size, Rectangle work)
+        {
+            return new Point(Math.Max(work.Left, Math.Min(desired.X, work.Right - size.Width)), Math.Max(work.Top, Math.Min(desired.Y, work.Bottom - size.Height)));
         }
         internal static float FitScale(float requested, SizeF logicalSize, Size screen)
         {

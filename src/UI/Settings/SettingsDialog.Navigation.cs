@@ -46,6 +46,41 @@ namespace AniimoAffinities
         }
         private bool inputFilterRegistered;
         private Point lastPointerPosition;
+        private readonly System.Collections.Generic.HashSet<Keys> testedKeys = new System.Collections.Generic.HashSet<Keys>();
+        internal void TestShortcut(Keys key, bool down)
+        {
+            if (down)
+                testedKeys.Add(key);
+            else
+                testedKeys.Remove(key);
+            Keys modifiers = Keys.None;
+            if (testedKeys.Contains(Keys.ControlKey))
+                modifiers |= Keys.Control;
+            if (testedKeys.Contains(Keys.ShiftKey))
+                modifiers |= Keys.Shift;
+            if (testedKeys.Contains(Keys.Menu))
+                modifiers |= Keys.Alt;
+            for (int i = 0; i < fields.Length; i++)
+            {
+                var field = fields[i];
+                bool held = field.Visible && field.Binding != Keys.None && testedKeys.Any(k =>
+                {
+                    Keys normalized = k >= Keys.NumPad0 && k <= Keys.NumPad9 ? (Keys)((int)Keys.D0 + (int)k - (int)Keys.NumPad0) : k;
+                    return normalized == (field.Binding & Keys.KeyCode) && modifiers == (field.Binding & Keys.Modifiers);
+                });
+                field.TestHeld = held;
+                field.Invalidate();
+                if (testRowFeedback[i] != null)
+                    testRowFeedback[i](held);
+            }
+            Invalidate();
+        }
+        private readonly Action<bool>[] testRowFeedback = new Action<bool>[KeyBindings.Actions.Length];
+        private void ClearShortcutTest()
+        {
+            testedKeys.Clear();
+            TestShortcut(Keys.None, false);
+        }
         // Observe this dialog's input without consuming it, including keys handled by capture fields.
         public bool PreFilterMessage(ref Message message)
         {
@@ -53,6 +88,16 @@ namespace AniimoAffinities
             if (target == null || target.FindForm() != this)
                 return false;
             bool keyboard = message.Msg == 0x100 || message.Msg == 0x104;
+            bool keyUp = message.Msg == 0x101 || message.Msg == 0x105;
+            if ((keyboard || keyUp) && !fields.Any(f => f.Listening))
+            {
+                bool wasHeld = fields.Any(f => f.TestHeld);
+                TestShortcut((Keys)message.WParam.ToInt32(), keyboard);
+                if (fields.Any(f => f.TestHeld) || keyUp && wasHeld)
+                    return true;
+            }
+            else if (fields.Any(f => f.Listening))
+                ClearShortcutTest();
             bool mouseButton = message.Msg == 0x201 || message.Msg == 0x204 || message.Msg == 0x207 || message.Msg == 0x20B || message.Msg == 0x20A || message.Msg == 0x20E;
             bool mouseMove = message.Msg == 0x200 && Cursor.Position != lastPointerPosition;
             if (keyboard)
@@ -99,7 +144,7 @@ namespace AniimoAffinities
                 foreach (var field in fields)
                     field.GotFocus += (s, a) => RefreshNavigationHints();
                 Activated += (s, a) => RefreshNavigationHints();
-                Deactivate += (s, a) => { foreach (var badge in navigationHints) badge.Visible = false; };
+                Deactivate += (s, a) => { ClearShortcutTest(); foreach (var badge in navigationHints) badge.Visible = false; };
                 RefreshNavigationHints();
             }));
         }

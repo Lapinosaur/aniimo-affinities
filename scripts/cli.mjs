@@ -7,8 +7,15 @@ const [command = 'check', ...args] = process.argv.slice(2);
 try {
   switch (command) {
     case 'build': await build(); break;
-    case 'test': await test(); break;
+    case 'test':
+      if (args.some(arg => arg !== '--serial')) throw new Error('Usage: test [--serial]');
+      await test(args.includes('--serial'));
+      break;
+    case 'lint':
+      await import('./lint.mjs');
+      break;
     case 'check':
+      await import('./lint.mjs');
       await import('./check-architecture.mjs');
       await test();
       break;

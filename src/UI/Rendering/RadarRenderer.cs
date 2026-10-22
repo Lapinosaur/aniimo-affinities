@@ -19,7 +19,7 @@ namespace AniimoAffinities
             double angle = -Math.PI / 2 + index * Math.PI * 2 / 9;
             return new PointF(center.X + (float)Math.Cos(angle) * radius, center.Y + (float)Math.Sin(angle) * radius);
         }
-        internal static void DrawRadar(Graphics g, PointF center, float radius, bool attack, bool defense, Selection selection)
+        internal static void DrawRadar(Graphics g, PointF center, float radius, bool attack, bool defense, Selection selection, int highlightedTypes = 0)
         {
             var levels = new[] { 0.625, 1, 1.6, 2.56 };
             // Paint outside in so each interval gets a theme-aware alternating background.
@@ -51,6 +51,8 @@ namespace AniimoAffinities
             for (int i = 0; i < 9; i++)
             {
                 var point = Vertex(center, radius + 42, i);
+                if ((highlightedTypes & (1 << order[i])) != 0)
+                    Drawing.Box(g, new RectangleF(point.X - 15, point.Y - 23, 30, 30), Theme.AccentSurface, Theme.Accent, 8);
                 VectorIcon.Draw(g, order[i], new RectangleF(point.X - 11, point.Y - 19, 22, 22));
                 using (var font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold))
                 {

@@ -92,11 +92,11 @@ namespace AniimoAffinities
                         progress.Invalidate();
                         ready = true;
                         skip.Visible = false;
-                        download.Text = "Restart now";
+                        download.Text = "Restart app";
                         download.Enabled = true;
-                        status.Text = "Verified and ready. Restart now to install and reopen the app.";
+                        status.Text = "Update ready. Restart Affinisaur to apply it. Your PC stays on.";
                     }
-                    later.Text = ready ? "Restart later" : "Close";
+                    later.Text = ready ? "Later" : "Close";
                 };
                 worker.RunWorkerAsync();
             };

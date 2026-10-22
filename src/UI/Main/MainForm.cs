@@ -9,6 +9,14 @@ namespace AniimoAffinities
     internal sealed partial class MainForm : PortableWindow
     {
         private readonly Selection selection = new Selection();
+        private readonly bool childView;
+        protected override bool ContentOnly
+        {
+            get
+            {
+                return childView;
+            }
+        }
         private Keys[] bindings = KeyBindings.Load(KeyBindings.FilePath);
         private int hovered = -1;
         private readonly System.Collections.Generic.List<Tuple<RectangleF, int, int>> affinityHits = new System.Collections.Generic.List<Tuple<RectangleF, int, int>>();
@@ -19,6 +27,8 @@ namespace AniimoAffinities
         {
             get
             {
+                if (teamPreview >= 0 && teamPlan != null)
+                    return new Selection { Main = teamPlan.Allies[teamPreview].Main, Sub = teamPlan.Allies[teamPreview].Sub };
                 return selection.Preview(hovered);
             }
         }
@@ -32,9 +42,10 @@ namespace AniimoAffinities
             if (rememberSession)
                 new SessionState { Main = selection.Main, Sub = selection.Sub, Current = currentView, Radar = radarView, Matrix = matrixView }.Save(SessionState.FilePath);
         }
-        internal MainForm(bool remember = false)
+        internal MainForm(bool remember = false, bool child = false)
         {
-            Text = "Aniimo Affinities";
+            childView = child;
+            Text = "Affinisaur";
             ClientSize = new Size(902, 500);
             MinimumSize = new Size(878, 500);
             StartPosition = FormStartPosition.CenterScreen;
@@ -106,6 +117,16 @@ namespace AniimoAffinities
             RefreshSelection();
             rememberSession = remember;
             RefreshShortcuts();
+            InitializeTeam(remember);
+            if (childView)
+            {
+                teamPlan.Visible = false;
+                ApplyTeamLayout();
+                teamToolbar.Visible = false;
+                Text = "Affinity diagrams";
+                ShowInTaskbar = false;
+                StartPosition = FormStartPosition.CenterParent;
+            }
         }
         internal Selection TutorialSelection
         {
@@ -139,8 +160,29 @@ namespace AniimoAffinities
         }
         private void StartTutorial()
         {
-            using (var tour = new TutorialOverlay(this))
+            using (var tour = new TutorialOverlay(this, true))
                 tour.ShowDialog(Form.ActiveForm ?? this);
+        }
+        // Compose child HWNDs together: buffering only the form does not buffer caption buttons.
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                var parameters = base.CreateParams;
+                parameters.ExStyle |= 0x02000000; // WS_EX_COMPOSITED
+                return parameters;
+            }
+        }
+        protected override void SetBoundsCore(int x, int y, int width, int height, BoundsSpecified specified)
+        {
+            // State changes resize around the top-right corner; explicit moves stay untouched.
+            if (Visible && WindowState == FormWindowState.Normal && (specified & BoundsSpecified.Width) != 0 && (specified & BoundsSpecified.X) == 0)
+            {
+                width = Math.Max(width, MinimumSize.Width);
+                x = Right - width;
+                specified |= BoundsSpecified.X;
+            }
+            base.SetBoundsCore(x, y, width, height, specified);
         }
         protected override void OnShown(EventArgs e)
         {
@@ -211,23 +253,28 @@ namespace AniimoAffinities
         }
         private void SwapView(ref string slot)
         {
-            string previous = currentView;
-            currentView = slot;
-            slot = previous;
-            inlineRadar = currentView == "radar";
-            if (currentView == "matrix")
+            using (new VisualUpdate(this))
             {
-                diagramSize = new Size((int)(Width / AppliedWindowScale), (int)(Height / AppliedWindowScale));
-                Height = Math.Max(Height, (int)(680 * AppliedWindowScale));
+                teamTransition.Finish();
+                string previous = currentView;
+                currentView = slot;
+                slot = previous;
+                inlineRadar = currentView == "radar";
+                if (currentView == "matrix")
+                {
+                    diagramSize = new Size((int)(Width / AppliedWindowScale), (int)(Height / AppliedWindowScale));
+                    Height = Math.Max(Height, (int)(680 * AppliedWindowScale));
+                }
+                else if (previous == "matrix" && diagramSize.Width > 0)
+                    Size = new Size((int)(diagramSize.Width * AppliedWindowScale), (int)(diagramSize.Height * AppliedWindowScale));
+                hovered = -1;
+                affinityMask = 0;
+                RefreshRadarShortcut();
+                RefreshMatrixShortcut();
+                canvas.Invalidate();
+                SaveSession();
+                ApplyWindowScale();
             }
-            else if (previous == "matrix" && diagramSize.Width > 0)
-                Size = new Size((int)(diagramSize.Width * AppliedWindowScale), (int)(diagramSize.Height * AppliedWindowScale));
-            hovered = -1;
-            affinityMask = 0;
-            RefreshRadarShortcut();
-            RefreshMatrixShortcut();
-            canvas.Invalidate();
-            SaveSession();
         }
         protected override void OpenRadar()
         {
@@ -244,7 +291,7 @@ namespace AniimoAffinities
                 using (var dialog = new MatrixDialog(selection.Sub >= 0 ? selection.Main : -1, bindings, selection.Main, selection.Sub))
                     dialog.ShowDialog(this);
             else
-                using (var dialog = new MainForm())
+                using (var dialog = new MainForm(false, true))
                 {
                     dialog.selection.Main = selection.Main;
                     dialog.selection.Sub = selection.Sub;
@@ -257,6 +304,12 @@ namespace AniimoAffinities
         protected override void OnOverlayLockChanged()
         {
             hovered = -1;
+            teamPreview = -1;
+            teamHovered = -1;
+            teamCounter = -1;
+            teamOpponentMask = 0;
+            if (teamToolbar != null)
+                teamToolbar.Visible = !OverlayLocked;
             canvas.Invalidate();
         }
         private void RefreshShortcuts()
@@ -274,9 +327,16 @@ namespace AniimoAffinities
         // Inputs: window-local key. Output: advertised digit or focused-row navigation. Fallback: native Tab/Space/Alt+F4. Raises: none.
         protected override bool ProcessCmdKey(ref Message message, Keys keyData)
         {
+            if (childView && keyData == Keys.Escape)
+            {
+                Close();
+                return true;
+            }
             int action = Array.IndexOf(bindings, keyData);
             if (action >= 10)
             {
+                if (childView)
+                    return true;
                 if ((message.LParam.ToInt64() & (1L << 30)) == 0)
                 {
                     if (action == 10)
@@ -329,6 +389,8 @@ namespace AniimoAffinities
         // Inputs: current selection. Output: Main/Sub badges and accessible state. Fallback: empty prompt. Raises: none.
         private void RefreshSelection()
         {
+            if (teamBoard != null)
+                teamBoard.SyncSelection(selection.Main, selection.Sub);
             hoveringOrigin = false;
             affinityMask = 0;
             affinityColumn = -1;

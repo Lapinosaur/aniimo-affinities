@@ -10,14 +10,21 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AssemblyTitle>Affinisaur</AssemblyTitle>
+    <Product>Affinisaur</Product>
+    <Company>Lapinosaur</Company>
+    <Description>Unofficial Aniimo companion by Lapinosaur.</Description>
     <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/package.json')), '&quot;version&quot;:\s*&quot;([^&quot;]+)&quot;').Groups[1].Value)</Version>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>10.0</AnalysisLevel>
+    <AnalysisMode>None</AnalysisMode>
     <ApplicationIcon>assets/branding/app.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Reference Include="System.Web.Extensions" />
-    <EmbeddedResource Include="data/*.txt;assets/types/*.svg;assets/branding/app.ico;assets/branding/buy-me-a-coffee.png">
+    <EmbeddedResource Include="data/*.txt;assets/types/*.svg;assets/branding/app.ico;assets/branding/buy-me-a-coffee.png;assets/branding/support-qr.png;docs/legal.md">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>

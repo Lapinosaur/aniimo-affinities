@@ -25,11 +25,51 @@ namespace AniimoAffinities
                     g.DrawLine(pen, 12, 11, 12, 17);
                     g.DrawLine(pen, 12, 7, 12, 7.2f);
                 }
+                else if (name == "copy")
+                {
+                    g.DrawRectangle(pen, 8, 7, 12, 14);
+                    g.DrawLines(pen, new[] { new PointF(15, 3), new PointF(4, 3), new PointF(4, 17) });
+                }
+                else if (name == "check")
+                    g.DrawLines(pen, new[] { new PointF(4, 12), new PointF(9, 17), new PointF(20, 6) });
+                else if (name == "folder")
+                    g.DrawPolygon(pen, new[] { new PointF(2, 5), new PointF(9, 5), new PointF(12, 8), new PointF(22, 8), new PointF(20, 20), new PointF(2, 20) });
+                else if (name == "trash")
+                {
+                    g.DrawLine(pen, 3, 6, 21, 6);
+                    g.DrawRectangle(pen, 9, 3, 6, 3);
+                    g.DrawLines(pen, new[] { new PointF(5, 9), new PointF(6, 21), new PointF(18, 21), new PointF(19, 9) });
+                    g.DrawLine(pen, 10, 10, 10, 17);
+                    g.DrawLine(pen, 14, 10, 14, 17);
+                }
+                else if (name == "discord")
+                {
+                    using (var shape = new GraphicsPath())
+                    {
+                        shape.AddBezier(5, 5, 8, 3, 16, 3, 19, 5);
+                        shape.AddBezier(19, 5, 21, 9, 23, 15, 21, 18);
+                        shape.AddLines(new[] { new PointF(21, 18), new PointF(16, 20), new PointF(15, 17) });
+                        shape.AddBezier(15, 17, 13, 18, 11, 18, 9, 17);
+                        shape.AddLines(new[] { new PointF(9, 17), new PointF(8, 20), new PointF(3, 18) });
+                        shape.AddBezier(3, 18, 1, 15, 3, 9, 5, 5);
+                        g.DrawPath(pen, shape);
+                    }
+                    g.DrawEllipse(pen, 7, 10, 2, 3);
+                    g.DrawEllipse(pen, 15, 10, 2, 3);
+                }
                 else if (name == "youtube")
                 {
                     using (var frame = Drawing.Round(new RectangleF(2, 5, 20, 14), 4))
                         g.DrawPath(pen, frame);
                     g.DrawPolygon(pen, new[] { new PointF(10, 9), new PointF(16, 12), new PointF(10, 15) });
+                }
+                else if (name == "community")
+                {
+                    using (var outline = Drawing.Round(new RectangleF(2, 3, 20, 15), 5))
+                        g.DrawPath(pen, outline);
+                    g.DrawLines(pen, new[] { new PointF(7, 18), new PointF(7, 22), new PointF(12, 18) });
+                    g.DrawEllipse(pen, 7, 9, 2, 2);
+                    g.DrawEllipse(pen, 15, 9, 2, 2);
                 }
                 else if (name == "twitch")
                 {
@@ -79,6 +119,31 @@ namespace AniimoAffinities
                 {
                     g.DrawRectangle(pen, 3, 3, 12, 12);
                     g.DrawRectangle(pen, 9, 9, 12, 12);
+                }
+                else if (name == "team")
+                {
+                    g.DrawEllipse(pen, 9, 3, 6, 6);
+                    g.DrawEllipse(pen, 2, 6, 4, 4);
+                    g.DrawEllipse(pen, 18, 6, 4, 4);
+                    g.DrawArc(pen, 7, 12, 10, 12, 180, 180);
+                    g.DrawLine(pen, 7, 18, 17, 18);
+                    g.DrawArc(pen, 1, 13, 6, 8, 180, 150);
+                    g.DrawArc(pen, 17, 13, 6, 8, 210, 150);
+                }
+                else if (name.StartsWith("team-"))
+                {
+                    bool vertical = name == "team-Left" || name == "team-Right";
+                    bool first = name == "team-Left" || name == "team-Top";
+                    RectangleF small = vertical ? new RectangleF(first ? 2 : 17, 3, 5, 18) : new RectangleF(3, first ? 2 : 17, 18, 5);
+                    RectangleF main = vertical ? new RectangleF(first ? 10 : 2, 3, 12, 18) : new RectangleF(3, first ? 10 : 2, 18, 12);
+                    using (var outline = Drawing.Round(main, 2))
+                        g.DrawPath(pen, outline);
+                    using (var outline = Drawing.Round(small, 1.5f))
+                    {
+                        using (var fill = new SolidBrush(Color.FromArgb(45, color)))
+                            g.FillPath(fill, outline);
+                        g.DrawPath(pen, outline);
+                    }
                 }
                 else if (name == "separate")
                 {

@@ -69,10 +69,6 @@ namespace AniimoAffinities
             highlight.MouseLeave += (s, e) => { bestPreview = false; RefreshGrid(); };
             Controls.Add(highlight);
             tips.SetToolTip(highlight, "Highlight strongest attacking rows and resisting columns" + (bindings.Contains(Keys.H) ? "" : " · H"));
-            var radar = new SettingsButton { Glyph = "radar", Location = new Point(510, 80), Size = new Size(34, 30), TabIndex = 11, AccessibleName = "Affinity radar" };
-            radar.Click += (s, e) => { bool original = fixedType == initialBase && radarMain >= 0; using (var dialog = new RadarDialog(original ? radarMain : fixedType, original ? radarSub : -1, bindings)) dialog.ShowDialog(this); };
-            Controls.Add(radar);
-            tips.SetToolTip(radar, "Affinity radar · Compare attack and defense");
             Activated += (s, e) => selector.Invalidate(true);
             Deactivate += (s, e) => selector.Invalidate(true);
             for (int row = 0; row < 10; row++)

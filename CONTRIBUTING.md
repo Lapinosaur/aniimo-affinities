@@ -2,7 +2,7 @@
 
 ## Quick start (Windows x64)
 
-Install Node.js 22 or later. No npm packages are needed. The canonical build uses the .NET Framework C# compiler included with Windows.
+Install Node.js 22 or later and .NET SDK 10 for linting and formatting. No npm packages are needed. The canonical build uses the .NET Framework C# compiler included with Windows.
 
 ```powershell
 npm run check
@@ -10,7 +10,7 @@ npm run build
 npm run preview -- radar-separate
 ```
 
-`npm run check` checks architecture, builds both executables and runs all regression suites. Warnings fail the build. Test output is saved to `dist/tests.txt`; each suite is named in the terminal. A failing test returns a nonzero exit code and a stack trace.
+`npm run check` runs Roslyn correctness/security analyzers (warnings are errors), JavaScript syntax checks, checks architecture, builds both executables and runs all regression suites. Warnings fail the build. Test output is saved to `dist/tests.txt`; each suite is named in the terminal. A failing test returns a nonzero exit code and a stack trace.
 
 ## Commands
 
@@ -18,6 +18,7 @@ npm run preview -- radar-separate
 | --- | --- |
 | `npm run build` | Runtime executable in `dist/AniimoAffinities.exe` |
 | `npm test` | Build runtime and diagnostics, then run behavior tests |
+| `npm run lint` | C# Roslyn correctness/security rules and JavaScript syntax; no runtime dependency added |
 | `npm run check:architecture` | Folder boundaries, no shipped tooling, size limits, resources and shared preference writes |
 | `npm run check` | Architecture + build + tests |
 | `npm run preview -- main` | Main view screenshot in `dist/previews/main.png` |
@@ -44,3 +45,21 @@ Open `AniimoAffinities.csproj` in Visual Studio or a C# IDE. The SDK project is 
 - Keep unrelated changes out of a refactor. New dependencies or asset licenses require explicit review.
 
 GitHub Actions runs formatting, architecture, compilation and tests on Windows, then uploads the tested executable and report. It does not publish a release automatically.
+
+## Static analysis
+
+The SDK project enables the explicit CA rules in `.editorconfig`; compiler warnings also fail the build. `AnalysisMode=None` avoids implicitly changing the rule set; each listed rule is enabled explicitly. Add rules gradually rather than suppressing all warnings. Use a narrowly scoped, justified suppression only for a proven non-security use (the random display preview is cosmetic). The canonical distributable is still built with the Framework compiler; the SDK output in `bin/` is only for development checks. First lint may restore .NET Framework reference assemblies.
+
+The SVG loader prohibits DTDs and external resolution and caps XML size. Current SVGs are embedded assets, not remote inputs. Updates still trust the GitHub release and its SHA256 manifest; the client does not independently enforce an Authenticode publisher. These checks are defense in depth, not a claim of complete security coverage.
+
+## Parallel regression groups
+
+After building both executables, `npm test` / `npm run check` run up to three isolated diagnostic processes concurrently. The C# suite registry owns group membership:
+
+- `storage`: updates, packaging, atomic preference writes and session persistence; no visible windows.
+- `model`: matchup calculations and offscreen SVG rendering; no visible windows.
+- `ui`: all window, focus, keyboard, timer and interactive rendering suites, strictly sequential on one STA thread.
+
+Each process has its own temporary preference directory and static state. Do not move a suite that opens a window into a background group, even if it passes alone. New suites must be registered in `RegressionTests`; the runner discovers groups from the executable. Builds finish before tests start, so packaging always reads the completed runtime executable.
+
+Use `npm run test:serial` for comparison or debugging; it uses the same groups and process isolation, one at a time. Reports include timings per suite and group in `dist/tests.txt`, structured results in `dist/tests.json`, and separate reports/logs in `dist/test-results/`. All groups are awaited even when one fails. A group timeout (120 seconds) or nonzero exit fails the run; failures are never silently retried. CI uploads these reports even on failure. Parallelism does not imply UI tests can share a desktop safely; larger UI shards would need separate Windows runners.
