@@ -21,6 +21,10 @@ Download `AniimoAffinities.exe` from the repository release and run it. No insta
 
 The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits also offers a manual update check, a privacy-conscious diagnostic report and local cache cleanup. The tutorial opt-out is stored outside the executable and survives updates. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
 
+## Community
+
+[Join the Lapinosaur Discord community](https://discord.gg/gPSAhnUbvP) for updates, feedback and support. This invitation never expires, has no usage limit and assigns the **Member** role when you join.
+
 ## Build and develop
 
 Install Node.js 22 or later on Windows, then run:
