@@ -1,0 +1,9 @@
+Dark|#9355d0
+Lightning|#e0c21a
+Fire|#e46161
+Grass|#51b17a
+Light|#f6a93c
+Ice|#45c1d6
+Earth|#bea77b
+Water|#2e90f0
+Wind|#58c7b1
