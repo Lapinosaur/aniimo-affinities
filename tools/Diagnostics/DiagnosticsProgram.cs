@@ -17,6 +17,11 @@ namespace AniimoAffinities
                 try
                 {
                     ApplicationBootstrap.Initialize();
+                    if (args.Length == 2 && args[0] == "--profile-resources")
+                    {
+                        ResourceProbe.Run(args[1]);
+                        return 0;
+                    }
                     if (args.Length == 2 && args[0].StartsWith("--preview-half-"))
                     {
                         DisplaySettings.WindowScale = .5f;

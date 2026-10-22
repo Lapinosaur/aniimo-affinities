@@ -40,7 +40,7 @@ namespace AniimoAffinities
             StartPosition = FormStartPosition.CenterScreen;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             AutoScaleMode = AutoScaleMode.Dpi;
             row.Dock = DockStyle.Top;
             row.Height = 62;

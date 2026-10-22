@@ -21,24 +21,35 @@ namespace AniimoAffinities
         }
         internal static void ApplyDisplay(float scale, bool badges, float windowScale = 1)
         {
-            WindowScale = Math.Max(.5f, Math.Min(1.5f, windowScale));
-            foreach (Form form in Application.OpenForms)
-            {
-                var window = form as PortableWindow;
-                if (window != null)
-                    window.ApplyWindowScale();
-            }
+            float nextZoom = Math.Max(.5f, Math.Min(1.5f, windowScale));
+            bool zoomChanged = Math.Abs(nextZoom - WindowScale) > .0001f;
+            bool fontChanged = Math.Abs(scale - FontScale) > .0001f;
+            bool badgesChanged = badges != ShowBadges;
+            if (!zoomChanged && !fontChanged && !badgesChanged)
+                return;
+            WindowScale = nextZoom;
+            if (zoomChanged)
+                foreach (Form form in Application.OpenForms)
+                {
+                    var window = form as PortableWindow;
+                    if (window != null)
+                        window.ApplyWindowScale();
+                }
             float ratio = scale / FontScale;
             FontScale = scale;
             ShowBadges = badges;
-            var fonts = new System.Collections.Generic.List<Tuple<Control, Font>>();
-            foreach (Form form in Application.OpenForms)
-                CollectFonts(form, ratio, fonts);
-            foreach (var pair in fonts)
+            if (fontChanged)
             {
-                pair.Item1.Font = pair.Item2;
-                pair.Item1.Invalidate();
+                // Snapshot before changing a parent, so inherited fonts are scaled only once.
+                var fonts = new System.Collections.Generic.List<Tuple<Control, Font>>();
+                foreach (Form form in Application.OpenForms)
+                    CollectFonts(form, ratio, fonts);
+                foreach (var pair in fonts)
+                    UiFonts.Assign(pair.Item1, pair.Item2);
             }
+            if (fontChanged || badgesChanged)
+                foreach (Form form in Application.OpenForms)
+                    form.Invalidate(true);
             if (DisplayChanged != null)
                 DisplayChanged();
         }

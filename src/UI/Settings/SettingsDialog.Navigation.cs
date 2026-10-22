@@ -90,7 +90,7 @@ namespace AniimoAffinities
                 }
                 for (int i = 0; i < navigationHints.Length; i++)
                 {
-                    var badge = new Label { AutoSize = false, Height = 14, TabStop = false, BackColor = Theme.Border, ForeColor = Theme.TextColor, Font = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold), TextAlign = ContentAlignment.MiddleCenter, Visible = false };
+                    var badge = UiFonts.Own(new Label { AutoSize = false, Height = 14, TabStop = false, BackColor = Theme.Border, ForeColor = Theme.TextColor, Font = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold), TextAlign = ContentAlignment.MiddleCenter, Visible = false });
                     navigationHints[i] = badge;
                     Controls.Add(badge);
                 }

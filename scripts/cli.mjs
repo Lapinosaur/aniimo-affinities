@@ -12,6 +12,13 @@ try {
       await import('./check-architecture.mjs');
       await test();
       break;
+    case 'profile:resources': {
+      const executable = await build(true);
+      const destination = path.join(output, 'resources.txt');
+      run(executable, ['--profile-resources', destination]);
+      console.log(await fs.readFile(destination, 'utf8'));
+      break;
+    }
     case 'preview': {
       const variant = args[0] || 'main';
       if (!/^[a-z-]+$/.test(variant)) throw new Error('Preview variant must use lowercase letters and hyphens.');

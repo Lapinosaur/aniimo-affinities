@@ -438,7 +438,7 @@ namespace AniimoAffinities
                 radar.MouseUp += (s, a) => CancelRadarHold();
                 radar.MouseLeave += (s, a) => CancelRadarHold();
                 radar.MouseCaptureChanged += (s, a) => { if (!radar.Capture) CancelRadarHold(); };
-                settings.Font = UiFonts.Create("Segoe UI Symbol", 13);
+                UiFonts.Assign(settings, UiFonts.Create("Segoe UI Symbol", 13));
                 captionTips.SetToolTip(settings, "Settings · Keyboard shortcuts");
                 settings.Click += (s, a) => OpenSettings();
                 EnableWindowDrag(title);

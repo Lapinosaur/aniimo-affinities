@@ -1,6 +1,6 @@
 {
   "name": "aniimo-affinities",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Portable Windows type matchup companion",
   "type": "module",
@@ -12,6 +12,7 @@
     "test": "node scripts/cli.mjs test",
     "check": "node scripts/cli.mjs check",
     "check:architecture": "node scripts/check-architecture.mjs",
+    "profile:resources": "node scripts/cli.mjs profile:resources",
     "preview": "node scripts/cli.mjs preview",
     "format": "node scripts/cli.mjs format",
     "format:check": "node scripts/cli.mjs format:check"

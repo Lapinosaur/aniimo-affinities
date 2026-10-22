@@ -60,7 +60,7 @@ namespace AniimoAffinities
                 item.Key.Bounds = Scale(item.Value, ratio);
                 if (item.Key is Label)
                 {
-                    item.Key.Font = new Font(item.Key.Font.FontFamily, item.Key.Font.Size * ratio, item.Key.Font.Style);
+                    UiFonts.Assign(item.Key, new Font(item.Key.Font.FontFamily, item.Key.Font.Size * ratio, item.Key.Font.Style));
                     var padding = item.Key.Padding;
                     item.Key.Padding = new Padding((int)Math.Round(padding.Left * ratio), (int)Math.Round(padding.Top * ratio), (int)Math.Round(padding.Right * ratio), (int)Math.Round(padding.Bottom * ratio));
                 }

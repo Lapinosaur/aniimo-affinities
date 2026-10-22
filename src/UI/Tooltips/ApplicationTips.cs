@@ -11,7 +11,7 @@ namespace AniimoAffinities
         private readonly Dictionary<Control, string> labels = new Dictionary<Control, string>();
         private readonly Timer timer = new Timer();
         private readonly TipBubble bubble = new TipBubble();
-        private Control anchor; private Form owner; private bool displayed;
+        private Control anchor; private Form owner; private bool displayed; private bool disposed;
         internal static ApplicationTips Create()
         {
             return new ApplicationTips();
@@ -28,9 +28,20 @@ namespace AniimoAffinities
                 control.MouseEnter += Enter;
                 control.MouseLeave += Leave;
                 control.MouseDown += Down;
-                control.Disposed += Leave;
+                control.Disposed += RemoveControl;
             }
             labels[control] = text;
+        }
+        private void RemoveControl(object sender, EventArgs e)
+        {
+            var control = (Control)sender;
+            control.MouseEnter -= Enter;
+            control.MouseLeave -= Leave;
+            control.MouseDown -= Down;
+            control.Disposed -= RemoveControl;
+            labels.Remove(control);
+            if (ReferenceEquals(anchor, control))
+                Hide();
         }
         private void Enter(object sender, EventArgs e)
         {
@@ -85,6 +96,9 @@ namespace AniimoAffinities
         }
         public void Dispose()
         {
+            if (disposed)
+                return;
+            disposed = true;
             Hide();
             timer.Dispose();
             bubble.Dispose();
@@ -93,7 +107,7 @@ namespace AniimoAffinities
                 item.Key.MouseEnter -= Enter;
                 item.Key.MouseLeave -= Leave;
                 item.Key.MouseDown -= Down;
-                item.Key.Disposed -= Leave;
+                item.Key.Disposed -= RemoveControl;
             }
             labels.Clear();
         }

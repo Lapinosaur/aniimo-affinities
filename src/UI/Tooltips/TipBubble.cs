@@ -17,7 +17,7 @@ namespace AniimoAffinities
             StartPosition = FormStartPosition.Manual;
             BackColor = Theme.Surface;
             DoubleBuffered = true;
-            Font = UiFonts.Create("Segoe UI", 8.25f, FontStyle.Bold);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 8.25f, FontStyle.Bold));
         }
         protected override bool ShowWithoutActivation
         {

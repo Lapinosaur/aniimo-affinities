@@ -44,7 +44,7 @@ namespace AniimoAffinities
             ShowInTaskbar = false;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             selector.Location = new Point(8, 38);
             selector.Height = 54;
             Controls.Add(selector);
@@ -70,7 +70,7 @@ namespace AniimoAffinities
             tips.SetToolTip(separateButton, "Show attack and defense side by side");
             selectionTitle.Location = new Point(462, 48);
             selectionTitle.Size = new Size(312, 38);
-            selectionTitle.Font = UiFonts.Create("Segoe UI", 11, FontStyle.Bold);
+            UiFonts.Assign(selectionTitle, UiFonts.Create("Segoe UI", 11, FontStyle.Bold));
             selectionTitle.TextAlign = ContentAlignment.MiddleCenter;
             selectionTitle.AutoEllipsis = true;
             Controls.Add(selectionTitle);

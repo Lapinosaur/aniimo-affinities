@@ -70,7 +70,7 @@ namespace AniimoAffinities
             KeyPreview = true;
             Text = "Guided tour";
             BackColor = Theme.Background;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             ForeColor = Theme.TextColor;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             var work = Screen.FromControl(source).WorkingArea;
@@ -80,7 +80,7 @@ namespace AniimoAffinities
             bubble.Padding = new Padding(16);
             Controls.Add(bubble);
             counter.ForeColor = Theme.AccentForeground;
-            heading.Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold);
+            UiFonts.Assign(heading, UiFonts.Create("Segoe UI", 13, FontStyle.Bold));
             foreach (var label in new[] { counter, heading, body, error })
             {
                 label.BackColor = Theme.Surface;

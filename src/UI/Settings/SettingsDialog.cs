@@ -30,9 +30,9 @@ namespace AniimoAffinities
             StartPosition = FormStartPosition.CenterParent;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             AutoScaleMode = AutoScaleMode.Dpi;
-            Controls.Add(new Label { Text = "Keyboard shortcuts", Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(350, 32), Location = new Point(24, 14) });
+            Controls.Add(UiFonts.Own(new Label { Text = "Keyboard shortcuts", Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(350, 32), Location = new Point(24, 14) }));
             var appearance = new SettingsButton { Quiet = true, Location = new Point(396, 14), Size = new Size(36, 32), TabIndex = 0 };
             Action updateAppearance = () =>
             {
@@ -46,8 +46,8 @@ namespace AniimoAffinities
             Controls.Add(appearance);
             updateAppearance();
             Controls.Add(new Label { Text = "Click a shortcut and press a key to change it.", ForeColor = Theme.Muted, Size = new Size(412, 22), Location = new Point(24, 52) });
-            Controls.Add(new Label { Text = "ACTION", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(180, 20), Location = new Point(28, 88) });
-            Controls.Add(new Label { Text = "SHORTCUT", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(160, 20), Location = new Point(224, 88) });
+            Controls.Add(UiFonts.Own(new Label { Text = "ACTION", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(180, 20), Location = new Point(28, 88) }));
+            Controls.Add(UiFonts.Own(new Label { Text = "SHORTCUT", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(160, 20), Location = new Point(224, 88) }));
             Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -110,7 +110,7 @@ namespace AniimoAffinities
                 for (int c = startCount; c < Controls.Count; c++)
                     Controls[c].Tag = i >= 10 ? "window" : "types";
             }
-            Controls.Add(new Label { Text = "Delete clears the focused shortcut. Esc cancels.", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), Location = new Point(28, 492), Size = new Size(404, 18) });
+            Controls.Add(UiFonts.Own(new Label { Text = "Delete clears the focused shortcut. Esc cancels.", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), Location = new Point(28, 492), Size = new Size(404, 18) }));
             var reset = ActionButton("Defaults", 24);
             var cancel = ActionButton("Cancel", 216);
             var save = ActionButton("Save", 330);

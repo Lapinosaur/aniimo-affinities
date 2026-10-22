@@ -42,7 +42,7 @@ namespace AniimoAffinities
             ShowInTaskbar = false;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             AddAxisLegend(20, "rows", "atk", "Rows: attacker");
             AddAxisLegend(96, "columns", "def", "Columns: defender");
             Controls.Add(new Label { Text = "× Damage multiplier", ForeColor = Theme.Muted, Location = new Point(176, 46), Size = new Size(180, 20) });

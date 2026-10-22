@@ -62,7 +62,7 @@ namespace AniimoAffinities
             ShowInTaskbar = false;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             Controls.Add(new Label { Text = "Text size", Location = new Point(24, 52), Size = new Size(380, 24) });
             for (int i = 0; i < 3; i++)
             {

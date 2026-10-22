@@ -25,8 +25,8 @@ namespace AniimoAffinities
             MinimizeBox = false;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
-            Font = UiFonts.Create("Segoe UI", 9);
-            Controls.Add(new Label { Text = "Is everything readable?", Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold), Location = new Point(24, 54), Size = new Size(392, 32) });
+            UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
+            Controls.Add(UiFonts.Own(new Label { Text = "Is everything readable?", Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold), Location = new Point(24, 54), Size = new Size(392, 32) }));
             var remaining = new Label { Location = new Point(24, 94), Size = new Size(392, 44), ForeColor = Theme.Muted };
             Controls.Add(remaining);
             var progress = new DrawingPanel { Location = new Point(24, 140), Size = new Size(392, 8), TabStop = false, AccessibleRole = AccessibleRole.ProgressBar, AccessibleName = "Time remaining before restoring previous settings" };
