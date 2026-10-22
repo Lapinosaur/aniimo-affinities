@@ -11,10 +11,12 @@ namespace AniimoAffinities
         private readonly Timer timer = new Timer { Interval = 16 };
         private readonly System.Diagnostics.Stopwatch watch = new System.Diagnostics.Stopwatch();
         private float progress;
+        private readonly KeyboardHold keyboard;
         internal HoldSizeButton()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
+            keyboard = new KeyboardHold(this, () => { watch.Restart(); timer.Start(); }, CancelHold);
             timer.Tick += (s, e) =>
             {
                 progress = Math.Min(1, (float)watch.Elapsed.TotalMilliseconds / 900);
@@ -51,12 +53,13 @@ namespace AniimoAffinities
         }
         protected override void OnMouseLeave(EventArgs e)
         {
-            CancelHold();
+            if (!keyboard.Active)
+                CancelHold();
             base.OnMouseLeave(e);
         }
         protected override void OnMouseCaptureChanged(EventArgs e)
         {
-            if (!Capture)
+            if (!Capture && !keyboard.Active)
                 CancelHold();
             base.OnMouseCaptureChanged(e);
         }

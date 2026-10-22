@@ -23,7 +23,7 @@ export async function build(diagnostics = false) {
     '/nologo', diagnostics ? '/target:exe' : '/target:winexe', '/platform:x64', '/optimize+', '/codepage:65001',
     '/warn:4', '/warnaserror+', `/main:AniimoAffinities.${diagnostics ? 'DiagnosticsProgram' : 'Program'}`,
     `/win32icon:${path.join(root, 'assets/branding/app.ico')}`, `/out:${executable}`,
-    ...['System.Windows.Forms', 'System.Drawing', 'System.Core', 'System.Xml'].map(name => `/reference:${name}.dll`),
+    ...['System.Windows.Forms', 'System.Drawing', 'System.Core', 'System.Xml', 'System.Web.Extensions'].map(name => `/reference:${name}.dll`),
     ...await resources(), ...sources,
   ]);
   console.log(`Built ${path.relative(root, executable)}`);

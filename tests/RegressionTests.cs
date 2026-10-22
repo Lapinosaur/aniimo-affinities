@@ -12,6 +12,8 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            Console.WriteLine("Updates");
+            UpdateTests.Run();
             Console.WriteLine("Resources");
             ResourceTests.Run();
             Console.WriteLine("Packaging");

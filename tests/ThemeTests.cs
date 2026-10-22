@@ -23,9 +23,9 @@ namespace AniimoAffinities
                 foreach (var role in new[] { Theme.Attack, Theme.Defense })
                     if (Contrast(role, Theme.Surface) < 4.5 || Contrast(role, Theme.Background) < 4.5)
                         throw new Exception("Attack/defense contrast below 4.5:1");
-                foreach (var pair in new[] { new[] { Theme.TextColor, Theme.Surface }, new[] { Theme.TextColor, Theme.Border }, new[] { Theme.Muted, Theme.Background }, new[] { Theme.AccentForeground, Theme.AccentSurface }, new[] { Theme.AccentInk, Theme.Accent }, new[] { Theme.AccentInk, Theme.AccentPressed } })
+                foreach (var pair in new[] { new[] { Theme.TextColor, Theme.HoverSurface }, new[] { Theme.AccentForeground, Theme.AccentHover }, new[] { Theme.TextColor, Theme.Surface }, new[] { Theme.TextColor, Theme.Border }, new[] { Theme.Muted, Theme.Background }, new[] { Theme.AccentForeground, Theme.AccentSurface }, new[] { Theme.AccentInk, Theme.Accent }, new[] { Theme.AccentInk, Theme.AccentPressed } })
                     if (Contrast(pair[0], pair[1]) < 4.5)
-                        throw new Exception("Theme text contrast below 4.5:1");
+                        throw new Exception("Theme text contrast below 4.5:1: mode=" + mode + " ink=" + pair[0] + " fill=" + pair[1]);
             }
             Theme.Appearance = originalAppearance;
             Theme.ApplyAppearance();

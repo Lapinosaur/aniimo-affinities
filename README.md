@@ -19,7 +19,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 Windows x64 with .NET Framework 4.x (included in current Windows 10/11).
 Download `AniimoAffinities.exe` from the repository release and run it. No installer, server or WebView is required. The executable is not code-signed.
 
-The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. The support button opens a browser only when clicked.
+The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits also offers a manual update check. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
 
 ## Build and develop
 

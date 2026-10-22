@@ -32,7 +32,7 @@ namespace AniimoAffinities
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             AutoScaleMode = AutoScaleMode.Dpi;
-            Controls.Add(UiFonts.Own(new Label { Text = "Keyboard shortcuts", Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(350, 32), Location = new Point(24, 14) }));
+            Controls.Add(UiFonts.Own(new Label { Text = "Keyboard shortcuts", Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(282, 32), Location = new Point(24, 14) }));
             var appearance = new SettingsButton { Quiet = true, Location = new Point(396, 14), Size = new Size(36, 32), TabIndex = 0 };
             Action updateAppearance = () =>
             {
@@ -151,6 +151,9 @@ namespace AniimoAffinities
             var shortcutControls = Controls.Cast<Control>().Where(control => control.Top >= 126).ToArray();
             var editor = new DisplayDialog(this, mainType, () => fields.Select(field => field.Binding).ToArray()) { Location = new Point(0, 124), Visible = false, Size = new Size(440, 422) };
             var display = new SettingsButton { Text = "Display", Location = new Point(346, 82), Size = new Size(90, 30), TabIndex = 2 };
+            var aboutPanel = new AboutPanel { Location = new Point(24, 124), Visible = false };
+            var about = new SettingsButton { Glyph = "info", AccessibleName = "About & Credits", Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
+            tips.SetToolTip(about, "About & Credits � Creator, links and acknowledgements");
             var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
             var guideText = new Label { Text = "Discover the controls, views and overlay in a guided tour.", Location = new Point(0, 8), Size = new Size(412, 38), ForeColor = Theme.Muted };
             var hideTour = new CheckBox { Text = "Don't show this tutorial again", Checked = TutorialPreferences.Hidden, Location = new Point(0, 52), Size = new Size(412, 28), ForeColor = Theme.TextColor, TabIndex = 0 };
@@ -174,6 +177,7 @@ namespace AniimoAffinities
             var guide = new SettingsButton { Glyph = "help", AccessibleName = "Tutorial", Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
             tips.SetToolTip(guide, "Tutorial · Replay and startup preference");
             var heading = Controls.OfType<Label>().First(label => label.Text == "Keyboard shortcuts");
+            heading.UseMnemonic = false;
             var description = Controls.OfType<Label>().First(label => label.Text == "Click a shortcut and press a key to change it.");
             var shortcutHint = Controls.OfType<Label>().Single(label => label.Text == "Delete clears the focused shortcut. Esc cancels.");
             status.TextChanged += (s, e) => { status.Visible = !displaySection && status.Text.Length > 0; shortcutHint.Visible = !displaySection && status.Text.Length == 0; };
@@ -193,6 +197,9 @@ namespace AniimoAffinities
                     status.Height = window ? 32 : 24;
                     TransitionHeight(fullHeight - reduction);
                 }
+                aboutPanel.Hide();
+                about.Primary = false;
+                about.Invalidate();
                 guidePanel.Hide();
                 guide.Primary = false;
                 guide.Invalidate();
@@ -224,6 +231,9 @@ namespace AniimoAffinities
             selectSection(false);
             display.Click += (s, e) =>
             {
+                aboutPanel.Hide();
+                about.Primary = false;
+                about.Invalidate();
                 guidePanel.Hide();
                 guide.Primary = false;
                 guide.Invalidate();
@@ -249,6 +259,9 @@ namespace AniimoAffinities
             Controls.Add(editor);
             guide.Click += (s, e) =>
             {
+                aboutPanel.Hide();
+                about.Primary = false;
+                about.Invalidate();
                 TransitionHeight(330);
                 displaySection = true;
                 editor.Hide();
@@ -271,6 +284,31 @@ namespace AniimoAffinities
                 guide.Invalidate();
                 Invalidate();
             };
+            about.Click += (s, e) =>
+            {
+                TransitionHeight(668);
+                displaySection = true;
+                editor.Hide();
+                guidePanel.Hide();
+                foreach (var control in shortcutControls)
+                    control.Visible = false;
+                foreach (var hint in navigationHints)
+                    if (hint != null)
+                        hint.Visible = false;
+                heading.Text = "About & Credits";
+                description.Text = "Made by Lapinosaur. Built for the community.";
+                foreach (var button in new[] { typesTab, windowTab, display, guide })
+                {
+                    button.Primary = false;
+                    button.Invalidate();
+                }
+                about.Primary = true;
+                about.Invalidate();
+                aboutPanel.Show();
+                Invalidate();
+            };
+            Controls.Add(aboutPanel);
+            Controls.Add(about);
             Controls.Add(guidePanel);
             Controls.Add(guide);
             // Reserve the shared compact caption without overlapping the shortcut fields.

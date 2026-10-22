@@ -15,7 +15,7 @@ namespace AniimoAffinities
         internal static Color TextColor = Ivory;
         internal static Color Attack, Defense, AttackSurface, DefenseSurface, ReducedDamage, IncreasedDamage;
         internal static Color AccentForeground = Accent, HoverSurface = Anthracite, StrongBorder = Anthracite, Error = Color.FromArgb(245, 105, 115), TooltipShadow = Anthracite;
-        internal static int Appearance;
+        internal static int Appearance = 1;
         private static readonly string AppearancePath = PreferenceFiles.FilePath("appearance.txt");
         internal static void LoadAppearance()
         {
@@ -72,7 +72,7 @@ namespace AniimoAffinities
             Border = Blend(Background, TextColor, 0.22f);
             Muted = Blend(Background, TextColor, light ? 0.72f : 0.68f);
             AccentSurface = Blend(Surface, Accent, light ? 0.14f : 0.18f);
-            AccentHover = Blend(Surface, Accent, light ? 0.26f : 0.32f);
+            AccentHover = Blend(Surface, Accent, light ? 0.26f : 0.18f);
             AccentPressed = Blend(Accent, Anthracite, 0.16f);
             AccentLight = Blend(Accent, Ivory, 0.22f);
             AccentInk = Anthracite;

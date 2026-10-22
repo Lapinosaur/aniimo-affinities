@@ -37,7 +37,7 @@ namespace AniimoAffinities
                 if (hover)
                     fill = danger ? Color.FromArgb(225, 65, 75) : active ? Theme.AccentHover : Theme.HoverSurface;
                 if (pressed)
-                    fill = ControlPaint.Dark(fill);
+                    fill = danger ? Color.FromArgb(185, 45, 55) : active ? Theme.AccentHover : Theme.HoverSurface;
                 bool hasHold = pin || text == "matrix" || text == "radar";
                 Drawing.Box(g, bounds, fill, active ? Theme.Accent : hasHold ? Theme.Border : fill, Theme.ControlRadius);
                 if (hasHold)
@@ -49,7 +49,7 @@ namespace AniimoAffinities
                     using (var pen = new Pen(Theme.AccentForeground))
                         g.DrawPath(pen, outline);
                 }
-                Color ink = danger && (TopMost || hover) ? Color.White : active ? Theme.AccentForeground : Theme.TextColor;
+                Color ink = danger && (TopMost || hover || pressed) ? Color.White : active ? Theme.AccentForeground : Theme.TextColor;
                 if (pin && OverlayLocked)
                     Glyphs.Draw(g, "lock", new RectangleF((bw - 16) / 2f, (bh - 16) / 2f, 16, 16), ink);
                 else if (pin)
@@ -60,7 +60,7 @@ namespace AniimoAffinities
                     Glyphs.Draw(g, text == "⚙" ? "settings" : "minimize", new RectangleF((bw - 16) / 2f, (bh - 16) / 2f, 16, 16), ink);
                 else
                     Drawing.Text(g, text, button.Font, ink, new RectangleF(0, 0, bw, bh), true);
-                Keys shortcut = danger ? Keys.Escape : text == "matrix" ? MatrixShortcut : text == "radar" ? RadarShortcut : Keys.None;
+                Keys shortcut = danger && CompactCaption ? Keys.Escape : text == "matrix" ? MatrixShortcut : text == "radar" ? RadarShortcut : Keys.None;
                 if (DisplaySettings.ShowBadges && shortcut != Keys.None && Form.ActiveForm == this)
                 {
                     string key = shortcut == Keys.Escape ? "Esc" : KeyBindings.Label(shortcut);

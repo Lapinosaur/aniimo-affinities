@@ -19,7 +19,46 @@ namespace AniimoAffinities
             g.ScaleTransform(box.Width / 24, box.Height / 24);
             using (var pen = new Pen(color, 1.7f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
             {
-                if (name == "matrix")
+                if (name == "info")
+                {
+                    g.DrawEllipse(pen, 3, 3, 18, 18);
+                    g.DrawLine(pen, 12, 11, 12, 17);
+                    g.DrawLine(pen, 12, 7, 12, 7.2f);
+                }
+                else if (name == "youtube")
+                {
+                    using (var frame = Drawing.Round(new RectangleF(2, 5, 20, 14), 4))
+                        g.DrawPath(pen, frame);
+                    g.DrawPolygon(pen, new[] { new PointF(10, 9), new PointF(16, 12), new PointF(10, 15) });
+                }
+                else if (name == "twitch")
+                {
+                    g.DrawPolygon(pen, new[] { new PointF(3, 3), new PointF(21, 3), new PointF(21, 15), new PointF(16, 20), new PointF(11, 20), new PointF(7, 23), new PointF(7, 20), new PointF(3, 20) });
+                    g.DrawLine(pen, 10, 7, 10, 13);
+                    g.DrawLine(pen, 16, 7, 16, 13);
+                }
+                else if (name == "coffee")
+                {
+                    g.DrawLine(pen, 3, 21, 19, 21);
+                    g.DrawArc(pen, 16, 7, 7, 8, -90, 180);
+                    using (var cup = Drawing.Round(new RectangleF(4, 7, 13, 11), 3))
+                        g.DrawPath(pen, cup);
+                    g.DrawLine(pen, 8, 2, 8, 4);
+                    g.DrawLine(pen, 13, 2, 13, 4);
+                }
+                else if (name == "github")
+                {
+                    using (var cat = new GraphicsPath())
+                    {
+                        cat.AddLines(new[] { new PointF(5, 8), new PointF(5, 3), new PointF(10, 5), new PointF(14, 5), new PointF(19, 3), new PointF(19, 8) });
+                        cat.AddBezier(19, 8, 24, 16, 17, 19, 12, 19);
+                        cat.AddBezier(12, 19, 7, 19, 0, 16, 5, 8);
+                        g.DrawPath(pen, cat);
+                    }
+                    g.DrawLine(pen, 10, 19, 10, 23);
+                    g.DrawLine(pen, 14, 19, 14, 23);
+                }
+                else if (name == "matrix")
                 {
                     using (var frame = Drawing.Round(new RectangleF(3, 3, 18, 18), 2))
                         g.DrawPath(pen, frame);

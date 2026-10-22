@@ -15,6 +15,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
+    <Reference Include="System.Web.Extensions" />
     <EmbeddedResource Include="data/*.txt;assets/types/*.svg;assets/branding/app.ico;assets/branding/buy-me-a-coffee.png">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>

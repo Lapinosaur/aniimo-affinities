@@ -42,6 +42,23 @@ namespace AniimoAffinities
                 }
                 if (commits != 1)
                     throw new Exception("Completed hold must resize exactly once");
+                var keyDown = typeof(Control).GetMethod("OnKeyDown", flags);
+                var keyUp = typeof(Control).GetMethod("OnKeyUp", flags);
+                keyDown.Invoke(button, new object[] { new KeyEventArgs(Keys.Space) });
+                keyUp.Invoke(button, new object[] { new KeyEventArgs(Keys.Space) });
+                if (commits != 1)
+                    throw new Exception("Short Space press must not resize");
+                keyDown.Invoke(button, new object[] { new KeyEventArgs(Keys.Space) });
+                watch.Restart();
+                while (watch.ElapsedMilliseconds < 2100)
+                {
+                    keyDown.Invoke(button, new object[] { new KeyEventArgs(Keys.Space) });
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(5);
+                }
+                keyUp.Invoke(button, new object[] { new KeyEventArgs(Keys.Space) });
+                if (commits != 2)
+                    throw new Exception("Space auto-repeat must commit only once per press");
             }
 
         }

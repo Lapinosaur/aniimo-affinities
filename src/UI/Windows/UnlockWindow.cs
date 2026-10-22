@@ -29,7 +29,7 @@ namespace AniimoAffinities
                 button.Target = values[i];
                 button.Text = Math.Round(values[i] * 100) + "%";
                 button.AccessibleName = "Resize overlay to " + button.Text;
-                tips.SetToolTip(button, "Hold for 0.9 s to resize to " + button.Text + ". Release early to cancel.");
+                tips.SetToolTip(button, "Hold click or Space for 0.9 s to resize to " + button.Text + ". Release early to cancel.");
                 button.Invalidate();
             }
         }

@@ -151,7 +151,10 @@ namespace AniimoAffinities
                 dontShow.Visible = index == steps.Length - 1;
                 ArrangeStep();
                 Activate();
-                next.Focus();
+                if (dontShow.Visible)
+                    dontShow.Focus();
+                else
+                    next.Focus();
                 Invalidate();
             }
             finally { loading = false; }

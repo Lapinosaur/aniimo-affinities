@@ -148,15 +148,15 @@ namespace AniimoAffinities
                         }
                         return 0;
                     }
-                    if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-guide-settings"))
+                    if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings"))
                     {
                         using (var form = new SettingsDialog(KeyBindings.Defaults()))
                         {
                             form.Show();
                             Application.DoEvents();
-                            if (args[0] == "--preview-guide-settings")
+                            if (args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings")
                             {
-                                form.Controls.OfType<SettingsButton>().Single(button => button.AccessibleName == "Tutorial").PerformClick();
+                                form.Controls.OfType<SettingsButton>().Single(button => button.AccessibleName == (args[0] == "--preview-about-settings" ? "About & Credits" : "Tutorial")).PerformClick();
                                 var settle = System.Diagnostics.Stopwatch.StartNew();
                                 while (settle.ElapsedMilliseconds < 230)
                                 {

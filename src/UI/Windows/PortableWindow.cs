@@ -78,6 +78,7 @@ namespace AniimoAffinities
         private float holdProgress;
         private void CancelHold()
         {
+            suppressPinClick |= holdWatch.ElapsedMilliseconds >= 300;
             holdTimer.Stop();
             holdWatch.Reset();
             holdProgress = 0;
@@ -198,8 +199,9 @@ namespace AniimoAffinities
         }
         private static string ViewTip(string view, string key)
         {
-            return ViewName(view) + "\nClick: open in a separate window" + (key.Length > 0 ? " (" + key + ")" : "") + "\nHold for 0.9 s: swap this view with the main view. The button takes the previous view's icon.";
+            return ViewName(view) + "\nClick: open in a separate window" + (key.Length > 0 ? " (" + key + ")" : "") + "\nHold click or Space for 0.9 s: swap this view with the main view. The button takes the previous view's icon.";
         }
+        private KeyboardHold matrixKeyboard, radarKeyboard, pinKeyboard;
         private Button viewHoldTarget;
         private bool holdingMatrix;
         private readonly Timer radarHoldTimer = new Timer { Interval = 16 };
@@ -208,6 +210,7 @@ namespace AniimoAffinities
         private float radarHoldProgress;
         private void CancelRadarHold()
         {
+            suppressRadarClick |= radarHoldWatch.ElapsedMilliseconds >= 225;
             radarHoldTimer.Stop();
             radarHoldWatch.Reset();
             radarHoldProgress = 0;
@@ -270,7 +273,7 @@ namespace AniimoAffinities
         {
             if (!(this is DisplayConfirmationDialog) && WindowZoom.HandleShortcut(input, message.LParam))
                 return true;
-            if (input == Keys.Escape)
+            if (input == Keys.Escape && CompactCaption)
             {
                 Close();
                 return true;
@@ -306,7 +309,7 @@ namespace AniimoAffinities
         {
             radarHoldTimer.Tick += (s, e) =>
             {
-                if (viewHoldTarget == null || !viewHoldTarget.ClientRectangle.Contains(viewHoldTarget.PointToClient(Cursor.Position)) || (Control.MouseButtons & MouseButtons.Left) == 0)
+                if (viewHoldTarget == null || !((holdingMatrix ? matrixKeyboard : radarKeyboard) != null && (holdingMatrix ? matrixKeyboard : radarKeyboard).Active) && (!viewHoldTarget.ClientRectangle.Contains(viewHoldTarget.PointToClient(Cursor.Position)) || (Control.MouseButtons & MouseButtons.Left) == 0))
                 {
                     CancelRadarHold();
                     return;
@@ -350,7 +353,7 @@ namespace AniimoAffinities
             SizeChanged += (s, e) => PositionUnlockWindow();
             holdTimer.Tick += (s, e) =>
             {
-                if (pinControl == null || !pinControl.ClientRectangle.Contains(pinControl.PointToClient(Cursor.Position)) || (Control.MouseButtons & MouseButtons.Left) == 0)
+                if (pinControl == null || !(pinKeyboard != null && pinKeyboard.Active) && (!pinControl.ClientRectangle.Contains(pinControl.PointToClient(Cursor.Position)) || (Control.MouseButtons & MouseButtons.Left) == 0))
                 {
                     CancelHold();
                     return;
@@ -424,20 +427,22 @@ namespace AniimoAffinities
                 var settings = CaptionButton("⚙", "Settings");
                 var matrix = CaptionButton("matrix", "Effectiveness matrix");
                 matrixControl = matrix;
-                matrix.Click += (s, a) => { if (suppressRadarClick) { suppressRadarClick = false; return; } OpenMatrix(); };
+                matrix.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } OpenMatrix(); };
+                matrixKeyboard = new KeyboardHold(matrix, () => { viewHoldTarget = matrix; holdingMatrix = true; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); }, CancelRadarHold);
                 matrix.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { viewHoldTarget = matrix; holdingMatrix = true; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); } };
                 matrix.MouseUp += (s, a) => CancelRadarHold();
-                matrix.MouseLeave += (s, a) => CancelRadarHold();
-                matrix.MouseCaptureChanged += (s, a) => { if (!matrix.Capture) CancelRadarHold(); };
+                matrix.MouseLeave += (s, a) => { if (!matrixKeyboard.Active) CancelRadarHold(); };
+                matrix.MouseCaptureChanged += (s, a) => { if (!matrix.Capture && !matrixKeyboard.Active) CancelRadarHold(); };
                 RefreshMatrixShortcut();
                 var radar = CaptionButton("radar", "Affinity radar");
                 radarControl = radar;
-                radar.Click += (s, a) => { if (suppressRadarClick) { suppressRadarClick = false; return; } OpenRadar(); };
+                radar.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } OpenRadar(); };
                 RefreshRadarShortcut();
+                radarKeyboard = new KeyboardHold(radar, () => { viewHoldTarget = radar; holdingMatrix = false; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); }, CancelRadarHold);
                 radar.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { viewHoldTarget = radar; holdingMatrix = false; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); } };
                 radar.MouseUp += (s, a) => CancelRadarHold();
-                radar.MouseLeave += (s, a) => CancelRadarHold();
-                radar.MouseCaptureChanged += (s, a) => { if (!radar.Capture) CancelRadarHold(); };
+                radar.MouseLeave += (s, a) => { if (!radarKeyboard.Active) CancelRadarHold(); };
+                radar.MouseCaptureChanged += (s, a) => { if (!radar.Capture && !radarKeyboard.Active) CancelRadarHold(); };
                 UiFonts.Assign(settings, UiFonts.Create("Segoe UI Symbol", 13));
                 captionTips.SetToolTip(settings, "Settings · Keyboard shortcuts");
                 settings.Click += (s, a) => OpenSettings();
@@ -464,14 +469,15 @@ namespace AniimoAffinities
                 };
                 var pin = CaptionButton("", "Always on top", false, true);
                 pinControl = pin;
+                pinKeyboard = new KeyboardHold(pin, () => { suppressPinClick = false; holdWatch.Restart(); holdTimer.Start(); }, CancelHold);
                 pin.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { suppressPinClick = false; holdWatch.Restart(); holdTimer.Start(); } };
                 pin.MouseUp += (s, a) => CancelHold();
-                pin.MouseLeave += (s, a) => CancelHold();
-                pin.MouseCaptureChanged += (s, a) => { if (!pin.Capture) CancelHold(); };
-                pin.Click += (s, a) => { if (suppressPinClick || OverlayLocked) return; SetPinned(!TopMost); pin.AccessibleName = TopMost ? "Disable always on top" : "Always on top"; pin.Invalidate(); };
+                pin.MouseLeave += (s, a) => { if (!pinKeyboard.Active) CancelHold(); };
+                pin.MouseCaptureChanged += (s, a) => { if (!pin.Capture && !pinKeyboard.Active) CancelHold(); };
+                pin.Click += (s, a) => { if (suppressPinClick || holdWatch.ElapsedMilliseconds >= 300 || OverlayLocked) return; SetPinned(!TopMost); pin.AccessibleName = TopMost ? "Disable always on top" : "Always on top"; pin.Invalidate(); };
                 captionTips.SetToolTip(pin, "Click to pin · Hold to lock overlay");
                 var minimize = CaptionButton("−", "Minimize");
-                captionTips.SetToolTip(close, "Close · Esc / Alt+F4");
+                captionTips.SetToolTip(close, CompactCaption ? "Close · Esc / Alt+F4" : "Close · Alt+F4");
                 captionTips.SetToolTip(minimize, "Minimize");
                 close.Click += (s, a) => Close();
                 minimize.Click += (s, a) => WindowState = FormWindowState.Minimized;
