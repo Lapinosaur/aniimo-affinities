@@ -37,9 +37,14 @@ namespace AniimoAffinities
                 control.MouseEnter += Enter;
                 control.MouseLeave += Leave;
                 control.MouseDown += Down;
+                control.GotFocus += Enter;
+                control.LostFocus += Leave;
+                control.EnabledChanged += Leave;
                 control.Disposed += RemoveControl;
             }
             labels[control] = text;
+            if (string.IsNullOrEmpty(control.AccessibleDescription))
+                control.AccessibleDescription = System.Text.RegularExpressions.Regex.Replace(text ?? "", @"\[types:[^\]]*\]", "");
             if (refresh)
                 Enter(control, EventArgs.Empty);
         }
@@ -49,6 +54,9 @@ namespace AniimoAffinities
             control.MouseEnter -= Enter;
             control.MouseLeave -= Leave;
             control.MouseDown -= Down;
+            control.GotFocus -= Enter;
+            control.LostFocus -= Leave;
+            control.EnabledChanged -= Leave;
             control.Disposed -= RemoveControl;
             labels.Remove(control);
             anchors.Remove(control);
@@ -130,6 +138,9 @@ namespace AniimoAffinities
                 item.Key.MouseEnter -= Enter;
                 item.Key.MouseLeave -= Leave;
                 item.Key.MouseDown -= Down;
+                item.Key.GotFocus -= Enter;
+                item.Key.LostFocus -= Leave;
+                item.Key.EnabledChanged -= Leave;
                 item.Key.Disposed -= RemoveControl;
             }
             labels.Clear();

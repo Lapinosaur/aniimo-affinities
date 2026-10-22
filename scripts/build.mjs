@@ -17,7 +17,7 @@ export async function build(diagnostics = false) {
   await fs.access(compiler);
   const folder = diagnostics ? path.join(output, 'diagnostics') : output;
   await fs.mkdir(folder, { recursive: true });
-  const executable = path.join(folder, diagnostics ? 'AniimoAffinities.Diagnostics.exe' : 'AniimoAffinities.exe');
+  const executable = path.join(folder, diagnostics ? 'AniimoAffinities.Diagnostics.exe' : 'Affinisaur.exe');
   const metadata = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
   const versionSource = path.join(folder, 'Version.g.cs');
   await fs.writeFile(versionSource, `[assembly: System.Reflection.AssemblyTitle("Affinisaur")]\n[assembly: System.Reflection.AssemblyProduct("Affinisaur")]\n[assembly: System.Reflection.AssemblyCompany("Lapinosaur")]\n[assembly: System.Reflection.AssemblyDescription("Unofficial Aniimo companion by Lapinosaur.")]\n[assembly: System.Reflection.AssemblyVersion("${metadata.version}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("${metadata.version}.0")]\n`);

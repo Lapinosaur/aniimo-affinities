@@ -50,6 +50,16 @@ namespace AniimoAffinities
                     Theme.ApplyAppearance();
                     args[0] = "--preview-" + args[0].Substring("--preview-dark-".Length);
                 }
+                if (args.Length == 2 && args[0].StartsWith("--preview-busy-"))
+                {
+                    BusyPreview.Save(args[0].Substring("--preview-busy-".Length), args[1]);
+                    return 0;
+                }
+                if (args.Length == 2 && args[0] == "--preview-components")
+                {
+                    ComponentPreview.Save(args[1]);
+                    return 0;
+                }
                 if (args.Length == 2 && args[0].StartsWith("--preview-team"))
                 {
                     TeamPreview.Save(args[0].Substring("--preview-".Length), args[1]);
@@ -78,7 +88,15 @@ namespace AniimoAffinities
                 }
                 if (args.Length == 2 && (args[0] == "--preview-storage" || args[0] == "--preview-update"))
                 {
-                    using (PortableWindow form = args[0] == "--preview-storage" ? (PortableWindow)new StorageWindow() : new UpdateWindow(new ReleaseUpdate { Version = "v0.5.0" }))
+                    using (PortableWindow form = args[0] == "--preview-storage" ? (PortableWindow)new StorageWindow() : new UpdateWindow(new ReleaseUpdate
+                    {
+                        Version = "v0.7.0",
+                        HistoryComplete = true,
+                        Changes = new[] {
+                        new ReleaseChange { Version = "v0.7.0", Notes = "## Example release notes (preview fixture)\n- Individual tutorials and saved progress.\n- Shared keyboard focus and disabled states." },
+                        new ReleaseChange { Version = "v0.6.0", Notes = "## Example intermediate release\n- Improved panel transitions.\n- Clearer shortcut conflict feedback." }
+                    }
+                    }))
                     {
                         form.Show();
                         Application.DoEvents();

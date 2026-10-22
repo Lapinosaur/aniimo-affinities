@@ -100,8 +100,20 @@ namespace AniimoAffinities
             grip.MouseMove += (s, e) => { if (dragging) move(new Point(windowStart.X + Cursor.Position.X - pointerStart.X, windowStart.Y + Cursor.Position.Y - pointerStart.Y)); };
             grip.MouseUp += (s, e) => { if (e.Button == MouseButtons.Left) { dragging = false; grip.Capture = false; } };
             grip.MouseCaptureChanged += (s, e) => { if (!grip.Capture) dragging = false; };
+            grip.PreviewKeyDown += (s, e) => { if (e.KeyCode == Keys.Left || e.KeyCode == Keys.Right || e.KeyCode == Keys.Up || e.KeyCode == Keys.Down) e.IsInputKey = true; };
+            grip.KeyDown += (s, e) =>
+            {
+                int distance = e.Shift ? 10 : 1;
+                int x = e.KeyCode == Keys.Left ? -distance : e.KeyCode == Keys.Right ? distance : 0;
+                int y = e.KeyCode == Keys.Up ? -distance : e.KeyCode == Keys.Down ? distance : 0;
+                if (x == 0 && y == 0)
+                    return;
+                var location = getLocation();
+                move(new Point(location.X + x, location.Y + y));
+                e.Handled = e.SuppressKeyPress = true;
+            };
             Controls.Add(grip);
-            tips.SetToolTip(grip, "Hold and drag to move overlay");
+            tips.SetToolTip(grip, "Drag to move the overlay, or focus this button and use arrow keys. Shift moves 10 pixels.");
             if (togglePanel != null)
             {
                 foreach (Control control in Controls)

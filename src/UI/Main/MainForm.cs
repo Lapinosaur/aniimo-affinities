@@ -142,7 +142,7 @@ namespace AniimoAffinities
                 return (Keys[])bindings.Clone();
             }
         }
-        internal MainForm CreateTutorialPreview()
+        internal MainForm CreateTutorialPreview(bool showTeam = false)
         {
             var form = new MainForm();
             var selected = TutorialSelection;
@@ -151,11 +151,23 @@ namespace AniimoAffinities
             form.bindings = TutorialBindings;
             form.RefreshSelection();
             form.RefreshShortcuts();
+            if (showTeam)
+            {
+                form.teamPlan.Allies[0].Main = selected.Main;
+                form.teamPlan.Allies[0].Sub = selected.Sub;
+                form.teamPlan.Opponents[0].Main = 0;
+                form.teamPlan.Opponents[1].Main = 1;
+                form.teamPlan.Visible = true;
+                form.teamPlan.Position = "Left";
+                form.teamBoard.RefreshCards();
+                form.ApplyTeamLayout();
+                form.FinishTeamTransition();
+            }
             return form;
         }
         internal Rectangle TutorialTarget(string name)
         {
-            Control target = name == "types" ? row : name == "content" ? canvas : TutorialCaptionTarget(name);
+            Control target = name == "team" ? teamBoard : name == "team-tools" ? teamToolbar : name == "types" ? row : name == "content" ? canvas : TutorialCaptionTarget(name);
             return target == null ? ClientRectangle : RectangleToClient(target.RectangleToScreen(target.ClientRectangle));
         }
         private void StartTutorial()
@@ -188,7 +200,26 @@ namespace AniimoAffinities
         {
             base.OnShown(e);
             if (rememberSession && !TutorialPreferences.Hidden)
-                BeginInvoke(new Action(() => { if (!IsDisposed && Visible) StartTutorial(); }));
+                BeginInvoke(new Action(() =>
+                {
+                    if (IsDisposed || !Visible)
+                        return;
+                    var progress = TutorialProgress.Load();
+                    if (!progress.Pending && progress.Completed == TutorialProgress.All)
+                        return;
+                    if (!progress.Pending)
+                    {
+                        progress.Sections = TutorialProgress.All & ~progress.Completed;
+                        progress.Step = 0;
+                        try
+                        {
+                            progress.Save();
+                        }
+                        catch (System.IO.IOException error) { DiagnosticReport.Record(error); return; }
+                        catch (UnauthorizedAccessException error) { DiagnosticReport.Record(error); return; }
+                    }
+                    StartTutorial();
+                }));
         }
         protected override void OpenSettings()
         {
@@ -402,6 +433,9 @@ namespace AniimoAffinities
                 button.Invalidate();
             }
             LayoutRow();
+            canvas.AccessibleName = "Type affinities";
+            canvas.AccessibleRole = AccessibleRole.Graphic;
+            canvas.AccessibleText = () => AccessibleMatchups.Describe(selection);
             canvas.Invalidate();
             SaveSession();
         }

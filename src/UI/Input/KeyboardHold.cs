@@ -19,7 +19,7 @@ namespace AniimoAffinities
                 if (e.KeyCode != Keys.Space)
                     return;
                 e.Handled = e.SuppressKeyPress = true;
-                if (Active || e.Modifiers != Keys.None)
+                if (!button.Enabled || !button.Visible || Active || e.Modifiers != Keys.None)
                     return;
                 Active = true;
                 owner = button.FindForm();

@@ -68,6 +68,12 @@ namespace AniimoAffinities
             if (FilterFocusChanged != null)
                 FilterFocusChanged(active);
         }
+        internal void FocusElements()
+        {
+            var first = selector.Controls.OfType<IconButton>().OrderBy(button => button.TabIndex).FirstOrDefault(button => button.Enabled && button.Visible);
+            if (Enabled && first != null)
+                first.Focus();
+        }
         internal void ShowShortcuts(bool active)
         {
             modifierHint.Visible = active && DisplaySettings.ShowBadges;
@@ -79,7 +85,7 @@ namespace AniimoAffinities
         }
         internal bool HandleShortcut(Keys keys, bool repeated, bool nameFocused = false)
         {
-            if ((!ContainsFocus && !nameFocused) || (keys & Keys.Modifiers) != Keys.Control)
+            if (!Enabled || (!ContainsFocus && !nameFocused) || (keys & Keys.Modifiers) != Keys.Control)
                 return false;
             int code = (int)(keys & Keys.KeyCode);
             int digit = code >= (int)Keys.D0 && code <= (int)Keys.D9 ? code - (int)Keys.D0 : code >= (int)Keys.NumPad0 && code <= (int)Keys.NumPad9 ? code - (int)Keys.NumPad0 : -1;
@@ -103,7 +109,9 @@ namespace AniimoAffinities
                 return true;
             if (ContainsFocus && (keys == Keys.Left || keys == Keys.Right))
             {
-                var buttons = selector.Controls.OfType<IconButton>().Where(b => b.Visible).OrderBy(b => b.TabIndex).ToArray();
+                var buttons = selector.Controls.OfType<IconButton>().Where(b => b.Visible && b.Enabled).OrderBy(b => b.TabIndex).ToArray();
+                if (buttons.Length == 0)
+                    return true;
                 int index = Array.FindIndex(buttons, b => b.Focused);
                 buttons[(index + (keys == Keys.Right ? 1 : buttons.Length - 1)) % buttons.Length].Focus();
                 return true;

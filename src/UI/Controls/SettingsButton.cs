@@ -5,9 +5,23 @@ using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
-    internal sealed class SettingsButton : Button
+    internal class SettingsButton : InteractiveButton
     {
         internal bool Primary, Quiet, Segment;
+        protected override bool IsBusy
+        {
+            get
+            {
+                return Busy;
+            }
+        }
+        protected override bool IsSelected
+        {
+            get
+            {
+                return Segment && Primary;
+            }
+        }
         internal RectangleF GroupShape;
         internal static void Group(params SettingsButton[] buttons)
         {
@@ -25,10 +39,67 @@ namespace AniimoAffinities
         internal Color Brand = Color.Empty;
         internal Color Surround = Color.Empty;
         private bool hover, pressed;
+        private readonly Timer busyTimer = new Timer { Interval = 40 };
+        private string idleText, idleDescription;
+        private bool idleEnabled;
+        private int busyAngle;
+        internal bool Busy
+        {
+            get; private set;
+        }
+        internal bool BeginBusy(string text)
+        {
+            if (Busy || IsDisposed || !Enabled)
+                return false;
+            idleText = Text;
+            idleDescription = AccessibleDescription;
+            idleEnabled = Enabled;
+            Busy = true;
+            Text = text;
+            AccessibleDescription = text;
+            Enabled = false;
+            pressed = hover = false;
+            if (Visible)
+                busyTimer.Start();
+            Invalidate();
+            Update();
+            return true;
+        }
+        internal void EndBusy()
+        {
+            if (!Busy || IsDisposed)
+                return;
+            busyTimer.Stop();
+            Busy = false;
+            Text = idleText;
+            AccessibleDescription = idleDescription;
+            Enabled = idleEnabled;
+            Invalidate();
+        }
         internal SettingsButton()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
+            busyTimer.Tick += (s, e) => { busyAngle = (busyAngle + 16) % 360; Invalidate(); };
+        }
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (Busy && Visible)
+                busyTimer.Start();
+            else
+                busyTimer.Stop();
+        }
+        protected override void OnClick(EventArgs e)
+        {
+            if (!Busy && Enabled)
+                base.OnClick(e);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+                busyTimer.Dispose();
+            base.Dispose(disposing);
         }
         protected override void OnMouseEnter(EventArgs e)
         {
@@ -68,7 +139,7 @@ namespace AniimoAffinities
         protected override void OnEnabledChanged(EventArgs e)
         {
             base.OnEnabledChanged(e);
-            Cursor = Enabled ? Cursors.Hand : Cursors.No;
+            Cursor = Busy ? Cursors.AppStarting : Enabled ? Cursors.Hand : Cursors.No;
             Invalidate();
         }
         protected override void OnPaint(PaintEventArgs e)
@@ -79,7 +150,7 @@ namespace AniimoAffinities
             g.ScaleTransform(zoom, zoom);
             g.Clear(Surround.IsEmpty ? Theme.Background : Surround);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = Primary ? (pressed ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? (Surround.IsEmpty ? Theme.Background : Surround) : Theme.Surface;
+            Color fill = Primary ? ((pressed || InteractionPressed) ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? (Surround.IsEmpty ? Theme.Background : Surround) : Theme.Surface;
             if (!Brand.IsEmpty)
                 fill = Theme.BrandSurface(Brand, hover || pressed);
             Color border = Focused && ShowFocusCues ? Theme.Accent : Primary ? fill : Quiet ? fill : Theme.Border;
@@ -97,9 +168,9 @@ namespace AniimoAffinities
                 inner.Inflate(-1, -1);
                 using (var clip = Drawing.Round(inner, Theme.ControlRadius - 1))
                     g.SetClip(clip);
-                using (var brush = new SolidBrush(Primary ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface))
+                using (var brush = new SolidBrush(!Enabled ? Theme.Surface : Primary ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface))
                     g.FillRectangle(brush, 0, 1, Width, Height - 2);
-                if (Primary)
+                if (Primary && Enabled)
                     using (var pen = new Pen(Theme.Accent, 2))
                         g.DrawLine(pen, 0, Height - 2, Width, Height - 2);
                 using (var pen = new Pen(Theme.Border))
@@ -107,11 +178,16 @@ namespace AniimoAffinities
             }
             else
                 Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), fill, border, 6);
-            if (Focused && ShowFocusCues)
-                using (var outline = Drawing.Round(new RectangleF(0, 0, Width - 1, Height - 1), 8))
-                using (var pen = new Pen(Theme.AccentForeground))
-                    g.DrawPath(pen, outline);
-            if (Glyph.Length > 0 && GlyphWithText)
+            if (Busy)
+            {
+                bool hasText = Text.Length > 0;
+                float x = hasText ? 12 : (Width - 16) / 2f;
+                using (var pen = new Pen(Theme.AccentForeground, 2) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                    g.DrawArc(pen, x, (Height - 16) / 2f, 16, 16, busyAngle, 265);
+                if (hasText)
+                    Drawing.Text(g, Text, Font, Theme.TextColor, new RectangleF(34, 0, Math.Max(1, Width - 40), Height), true);
+            }
+            else if (Glyph.Length > 0 && GlyphWithText)
             {
                 Color ink = !Enabled ? Theme.Muted : Primary ? Theme.AccentInk : Theme.TextColor;
                 Glyphs.Draw(g, Glyph, new RectangleF(14, (Height - 18) / 2f, 18, 18), Brand.IsEmpty || !Enabled ? ink : Theme.BrandInk(Brand, fill));
@@ -123,6 +199,7 @@ namespace AniimoAffinities
                 Glyphs.Draw(g, "reset", new RectangleF((Width - 16) / 2f, (Height - 16) / 2f, 16, 16), hover ? Theme.TextColor : Theme.Muted);
             else
                 Drawing.Text(g, Text, Font, !Enabled ? Theme.Muted : Primary ? (Segment ? Theme.AccentForeground : Theme.AccentInk) : Theme.TextColor, new RectangleF(4, 0, Width - 8, Height), true);
+            FinishPaint(g, Width, Height, false);
         }
     }
 }

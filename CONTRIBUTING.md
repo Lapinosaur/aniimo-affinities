@@ -16,7 +16,7 @@ npm run preview -- radar-separate
 
 | Command | Result |
 | --- | --- |
-| `npm run build` | Runtime executable in `dist/AniimoAffinities.exe` |
+| `npm run build` | Runtime executable in `dist/Affinisaur.exe` |
 | `npm test` | Build runtime and diagnostics, then run behavior tests |
 | `npm run lint` | C# Roslyn correctness/security rules and JavaScript syntax; no runtime dependency added |
 | `npm run check:architecture` | Folder boundaries, no shipped tooling, size limits, resources and shared preference writes |

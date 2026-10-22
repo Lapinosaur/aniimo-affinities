@@ -51,6 +51,8 @@ namespace AniimoAffinities
                 cards[i].Click += (s, e) => select(index);
                 cards[i].MouseEnter += (s, e) => { if (onCardHover != null) onCardHover(index); };
                 cards[i].MouseLeave += (s, e) => { if (onCardHover != null) onCardHover(-1); };
+                cards[i].GotFocus += (s, e) => { if (onCardHover != null) onCardHover(index); };
+                cards[i].LostFocus += (s, e) => { if (onCardHover != null) onCardHover(-1); };
                 cards[i].ElementHovered += type => { if (onHover != null) onHover(type); };
                 cards[i].CounterHovered += counter =>
                 {
@@ -85,6 +87,8 @@ namespace AniimoAffinities
                     detail += "\n\nClick to choose this ally's elements.";
                 cards[i].AccessibleName = member.Title(i);
                 cards[i].AccessibleDescription = member.Title(i) + ". " + plan.Summary(member);
+                if (member.Known)
+                    cards[i].AccessibleDescription += ". " + Model.Names[member.Main] + (member.Sub >= 0 ? " + " + Model.Names[member.Sub] : "") + ". Focus to preview; Enter or Space to select.";
                 cards[i].DefaultTooltip = detail;
                 tips.SetToolTip(cards[i], detail);
                 cards[i].Invalidate();
@@ -137,13 +141,20 @@ namespace AniimoAffinities
         }
     }
 
-    internal sealed class TeamCard : Button
+    internal sealed class TeamCard : InteractiveButton
     {
         private readonly TeamPlan plan;
         private readonly int index;
         private int hoveredElement = -1;
         private int hoveredCounter = -1;
         internal bool Selected;
+        protected override bool IsSelected
+        {
+            get
+            {
+                return Selected;
+            }
+        }
         private bool cardHovered;
         protected override void OnMouseEnter(EventArgs e)
         {
@@ -239,14 +250,12 @@ namespace AniimoAffinities
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             float w = Width / scale, h = Height / scale;
-            Drawing.Box(g, new RectangleF(1, 1, w - 3, h - 3), Selected ? Theme.AccentSurface : Theme.Surface, Selected || cardHovered ? Theme.Accent : Theme.Border, Theme.ControlRadius);
+            Drawing.Box(g, new RectangleF(1, 1, w - 3, h - 3), Selected || InteractionPressed ? Theme.AccentSurface : Theme.Surface, Selected || cardHovered ? Theme.Accent : Theme.Border, Theme.ControlRadius);
             if (Selected)
             {
                 Drawing.Box(g, new RectangleF(3, 10, 3, h - 20), Theme.Accent, Color.Transparent, 1);
                 Glyphs.Draw(g, "check", new RectangleF(w - 23, 9, 13, 13), Theme.AccentForeground);
             }
-            if (Focused)
-                ControlPaint.DrawFocusRectangle(g, Rectangle.Round(new RectangleF(7, 4, w - 14, h - 9)), Theme.Muted, Selected ? Theme.AccentSurface : Theme.Surface);
             var member = plan.Allies[index];
             bool compact = h < 80 && w >= 180;
             using (var font = UiFonts.Create("Segoe UI", 9, FontStyle.Bold))
@@ -270,6 +279,7 @@ namespace AniimoAffinities
             else
                 using (var font = UiFonts.Create("Segoe UI", 7))
                     Drawing.Text(g, member.Known ? "No opponents" : "Choose elements", font, Theme.Muted, new RectangleF(compact ? 80 : 10, compact ? 33 : h - 27, compact ? w - 90 : w - 20, 20), false);
+            FinishPaint(g, w, h);
         }
     }
 }

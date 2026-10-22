@@ -187,6 +187,9 @@ namespace AniimoAffinities
             tips.SetToolTip(about, "About & Credits � Creator, links and acknowledgements");
             var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
             AddTutorialChoices(guidePanel, startTutorial);
+            var backToSettings = new SettingsButton { Text = "Back to settings", Bounds = new Rectangle(24, 82, 412, 30), Visible = false, TabIndex = 0 };
+            Controls.Add(backToSettings);
+            Resize += (s, e) => { if (guidePanel.Visible) guidePanel.Height = Math.Max(120, ClientSize.Height - guidePanel.Top - 16); };
             var guide = new SettingsButton { Glyph = "help", AccessibleName = "Tutorial", Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
             tips.SetToolTip(guide, "Help & Tutorial · Discord, diagnostics and guided tour");
             var heading = Controls.OfType<Label>().First(label => label.Text == "Keyboard shortcuts");
@@ -214,6 +217,10 @@ namespace AniimoAffinities
                 about.Primary = false;
                 about.Invalidate();
                 guidePanel.Hide();
+                backToSettings.Hide();
+                typesTab.Show();
+                windowTab.Show();
+                display.Show();
                 guide.Primary = false;
                 guide.Invalidate();
                 displaySection = false;
@@ -237,6 +244,7 @@ namespace AniimoAffinities
                 Invalidate();
                 RefreshNavigationHints();
             };
+            backToSettings.Click += (s, e) => selectSection(false);
             typesTab.Click += (s, e) => selectSection(false);
             windowTab.Click += (s, e) => selectSection(true);
             Controls.Add(typesTab);
@@ -248,6 +256,10 @@ namespace AniimoAffinities
                 about.Primary = false;
                 about.Invalidate();
                 guidePanel.Hide();
+                backToSettings.Hide();
+                typesTab.Show();
+                windowTab.Show();
+                display.Show();
                 guide.Primary = false;
                 guide.Invalidate();
                 TransitionHeight(594);
@@ -290,7 +302,12 @@ namespace AniimoAffinities
                 display.Primary = false;
                 guide.Primary = true;
 
+                typesTab.Hide();
+                windowTab.Hide();
+                display.Hide();
+                backToSettings.Show();
                 guidePanel.Show();
+                guidePanel.Height = Math.Max(120, ClientSize.Height - guidePanel.Top - 16);
                 typesTab.Invalidate();
                 windowTab.Invalidate();
                 display.Invalidate();
@@ -303,6 +320,10 @@ namespace AniimoAffinities
                 displaySection = true;
                 editor.Hide();
                 guidePanel.Hide();
+                backToSettings.Hide();
+                typesTab.Show();
+                windowTab.Show();
+                display.Show();
                 foreach (var control in shortcutControls)
                     control.Visible = false;
                 foreach (var hint in navigationHints)

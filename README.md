@@ -2,7 +2,7 @@
 
 Unofficial Aniimo companion by Lapinosaur. Formerly Aniimo Affinities.
 
-The repository URL, executable asset name `AniimoAffinities.exe` and local preference folder keep their existing names for update and settings compatibility.
+The executable is named `Affinisaur.exe`. The repository URL and local preference folder keep their existing names. Releases from v0.6.0 also provide an identical `AniimoAffinities.exe` compatibility asset for older update clients; existing installations keep their chosen file path when updating.
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
 
@@ -17,15 +17,15 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 - Use Ctrl + Up / Ctrl + Down to resize from 50% to 150% in 25% steps.
 - Plan two teams of six, preview a member on hover and click to keep the selection.
 - Place the team panel beside, above or below the main view.
-- Replay selected tutorial sections or resume an unfinished tour from Settings.
+- Play, resume or replay individual tutorials, with completion tracking and a separate Support tab.
 - Settings and committed selections are remembered locally.
 
 ## Run
 
 Windows x64 with .NET Framework 4.x (included in current Windows 10/11).
-Download `AniimoAffinities.exe` from the repository release and run it. No installer, server or WebView is required. The executable is not code-signed.
+Download [Affinisaur.exe](https://github.com/Lapinosaur/aniimo-affinities/releases/latest/download/Affinisaur.exe) and run it. The `AniimoAffinities.exe` asset is an identical compatibility copy for older updaters. No installer, server or WebView is required. The executable is not code-signed.
 
-The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits offers a manual update check; Tutorial & Help groups Discord support, diagnostics and local storage. The tutorial opt-out is stored outside the executable and survives updates. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
+The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits offers a manual update check; Tutorial & Help groups Discord support, diagnostics and local storage. The tutorial opt-out is stored outside the executable and survives updates. New stable releases must include `Affinisaur.exe`, the identical compatibility asset `AniimoAffinities.exe`, and `SHA256SUMS.txt` covering both names.
 
 ## Community
 
@@ -41,7 +41,7 @@ npm run build
 npm run preview -- radar-separate
 ```
 
-No npm dependencies are required. The canonical build uses the Windows .NET Framework compiler. The runtime is written to `dist/AniimoAffinities.exe`; tests and preview tools are compiled separately and use isolated temporary preferences. `node build.mjs` remains a build-and-test shortcut.
+No npm dependencies are required. The canonical build uses the Windows .NET Framework compiler. The runtime is written to `dist/Affinisaur.exe`; tests and preview tools are compiled separately and use isolated temporary preferences. `node build.mjs` remains a build-and-test shortcut.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for commands and IDE setup, and [the architecture guide](docs/architecture.md) for ownership and dependency rules.
 

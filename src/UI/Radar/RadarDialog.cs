@@ -119,6 +119,8 @@ namespace AniimoAffinities
             combinedButton.Invalidate();
             separateButton.Invalidate();
             chart.Invalidate();
+            chart.AccessibleRole = AccessibleRole.Graphic;
+            chart.AccessibleText = () => AccessibleMatchups.Describe(selection);
             selectionTitle.Text = selection.Main < 0 ? "Select one or two types" : Model.Names[selection.Main] + (selection.Sub < 0 ? "" : " + " + Model.Names[selection.Sub]);
             chart.AccessibleName = selection.Main < 0 ? "Select one or two types" : Model.Names[selection.Main] + (selection.Sub < 0 ? "" : " + " + Model.Names[selection.Sub]) + " attack and defense radar";
         }

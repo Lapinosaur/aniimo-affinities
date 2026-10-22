@@ -7,7 +7,7 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
-            string executable = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "AniimoAffinities.exe"));
+            string executable = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "Affinisaur.exe"));
             var runtime = Assembly.LoadFile(executable);
             if (runtime.GetType("AniimoAffinities.RegressionTests") != null || runtime.GetType("AniimoAffinities.DiagnosticsProgram") != null)
                 throw new Exception("Developer tooling must not ship in the runtime executable.");

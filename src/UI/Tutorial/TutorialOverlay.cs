@@ -13,10 +13,11 @@ namespace AniimoAffinities
         private readonly MainForm source;
         private readonly bool persist;
         private readonly TutorialProgress progress;
-        internal static readonly string[] Sections = { "Types & affinities", "Effectiveness matrix", "Affinity radar & views", "Pin & locked overlay", "Keyboard shortcuts", "Display & appearance" };
+        internal static readonly string[] Sections = { "Types & affinities", "Effectiveness matrix", "Affinity radar & views", "Pin & locked overlay", "Keyboard shortcuts", "Display & appearance", "Team planning" };
+        private readonly int[] sectionIds;
         internal static int SectionForStep(int step)
         {
-            return step < 5 ? 0 : step < 7 ? 1 : step < 10 ? 2 : step < 12 ? 3 : step < 14 ? 4 : 5;
+            return step >= 17 ? 6 : step == 16 ? -1 : step < 5 ? 0 : step < 7 ? 1 : step < 10 ? 2 : step < 12 ? 3 : step < 14 ? 4 : 5;
         }
         private readonly TourStep[] steps ={
             new TourStep("main","all","Welcome to Affinisaur","Explore how types interact, compare matchups and keep useful information over your game. This guided preview leaves your selections and settings untouched."),
@@ -28,14 +29,17 @@ namespace AniimoAffinities
             new TourStep("matrix","content","Compare rows and columns","Rows attack; columns defend. Choose a type to compare dual-type defenders. Violet means reduced damage, gray neutral and turquoise increased damage; stronger shades mark extreme values. Best matchups highlights useful choices."),
             new TourStep("radar","all","Read the affinity radar","Each axis represents a type. Amber is attack: higher deals more damage. Blue is defense: lower takes less damage. Alternating bands help compare levels on the shared scale. Hover the two icons below for explanations."),
             new TourStep("radar","modes","Combine or separate","Use these two exclusive choices to overlay both curves or view one radar for attack and one for defense. The type filters use the same keyboard shortcuts as the main window."),
-            new TourStep("main","radar","Click or hold","A short click swaps the view into the main window. Hold click or Space for 0.9 seconds to open it in a separate window. The button takes the previous view's icon. The small turquoise mark identifies a hold action; its contour fills while holding."),
+            new TourStep("main","radar","Choose the useful view","Use the radar to spot broad strengths and weaknesses; use the matrix for exact multipliers against each defender. A short click changes the main view. Hold click or Space to keep a comparison in a separate window."),
             new TourStep("main","pin","Pin, then lock","Click Pin to stay on top with a transparent background. Hold it to lock a click-through overlay. The compact lock button unlocks it, and the drag handle moves it. Pin and Lock are never restored at startup."),
             new TourStep("main","pin","Resize the locked overlay","The locked overlay has two size targets. Hold a size for 0.9 seconds to apply it; a short click does nothing. Releasing early or leaving the button cancels. Move and Unlock remain available beside them."),
             new TourStep("window","content","Rebind window actions","Pin, Lock / unlock, Settings, Minimize, Matrix and Radar all have configurable shortcuts. Select a field, then activate it to capture a key. Delete clears it, Esc cancels capture, and conflicts offer Swap, Unbind the other action or Cancel."),
-            new TourStep("types","content","Rebind type shortcuts","Each type and Clear selection has its own shortcut. Tab navigates and Space activates a focused field. The keyboard hints appear during keyboard navigation. Save commits changes; Cancel discards them."),
+            new TourStep("types","content","Rebind type shortcuts","Each type and Clear selection has its own shortcut. Tab navigates and Space activates a focused field. Outside capture, hold a shortcut to illuminate its matching row and test it safely. Save commits changes; Cancel discards them."),
             new TourStep("display","content","Choose how the app looks","Click a preview to change text size, window scale or keyboard badges. Main / Sub labels remain visible. Apply temporarily reveals the original view; keep the changes within 15 seconds or the previous settings return."),
             new TourStep("display","appearance","Theme and window controls","The appearance button cycles Dark, System and Light. Esc closes custom windows, Alt+F4 closes the active window, and the minus button minimizes. Your selected types, view layout and display preferences are remembered."),
-            new TourStep("main","all","You're ready","Selected sections complete. In Settings > Help & Tutorial, choose which sections to replay. If you leave a tour early, it resumes at your last step. The option below controls startup only.")
+            new TourStep("main","all","You're ready","This tour is complete. Settings > Help & Tutorial records your completed tutorials. Play, resume or replay each tutorial individually. The option below controls startup only."),
+            new TourStep("team","team","Build a useful comparison","Open the team editor to enter allies and opponents. Names are optional. Enter only elements you know: empty opponents are excluded and missing second elements are never guessed."),
+            new TourStep("team","team","Preview, then select","Hover an ally to preview its affinities temporarily. Click to keep the selection. A selected card keeps its check mark and accent strip after the pointer leaves. Attack counts favorable opponents; defense counts threats."),
+            new TourStep("team","team-tools","Place your team panel","Use the arrows to place the panel beside, above or below the main view. The panel button shows or hides it. In locked overlay mode, hold its compact panel button to toggle it.")
         };
         private sealed class Frame : IDisposable
         {
@@ -74,7 +78,9 @@ namespace AniimoAffinities
             this.source = source;
             this.persist = persist;
             progress = persist ? TutorialProgress.Load() : new TutorialProgress();
-            steps = steps.Where((step, i) => i == 16 || (progress.Sections & (1 << SectionForStep(i))) != 0).ToArray();
+            var selectedSteps = Enumerable.Range(0, steps.Length).Where(i => i != 16 && (progress.Sections & (1 << SectionForStep(i))) != 0).Concat(new[] { 16 }).ToArray();
+            sectionIds = selectedSteps.Select(SectionForStep).ToArray();
+            steps = selectedSteps.Select(i => steps[i]).ToArray();
             index = progress.Pending ? Math.Min(progress.Step, steps.Length - 1) : 0;
             FormBorderStyle = FormBorderStyle.None;
             ShowInTaskbar = false;
@@ -145,6 +151,12 @@ namespace AniimoAffinities
                 catch (UnauthorizedAccessException) { error.Text = "Unable to save. Try again or use Skip."; }
                 return;
             }
+            int section = sectionIds[index];
+            if (direction > 0 && section >= 0 && (index + 1 == steps.Length || sectionIds[index + 1] != section))
+            {
+                progress.Completed |= 1 << section;
+                progress.SectionSteps[section] = 0;
+            }
             index = Math.Max(0, Math.Min(steps.Length - 1, index + direction));
             ShowStep();
         }
@@ -164,13 +176,26 @@ namespace AniimoAffinities
                 }
                 var step = steps[index];
                 if (!frames.ContainsKey(step.View))
-                    frames.Add(step.View, CapturePreview(step.View));
-                counter.Text = "SELECTED TOUR  ·  " + (index + 1) + " / " + steps.Length;
+                {
+                    next.BeginBusy("Loading…");
+                    try
+                    {
+                        frames.Add(step.View, CapturePreview(step.View));
+                    }
+                    finally { next.EndBusy(); }
+                }
+                counter.Text = "GUIDED TOUR  ·  " + (index + 1) + " / " + steps.Length;
                 heading.Text = step.Title;
                 body.Text = step.Body;
                 error.Text = "";
                 if (persist)
                 {
+                    int section = sectionIds[index];
+                    if (section >= 0)
+                    {
+                        progress.Started |= 1 << section;
+                        progress.SectionSteps[section] = sectionIds.Take(index).Count(value => value == section);
+                    }
                     progress.Step = index;
                     progress.Pending = true;
                     try
@@ -219,8 +244,8 @@ namespace AniimoAffinities
             Form host;
             var selected = source.TutorialSelection;
             var keys = source.TutorialBindings;
-            if (view == "main")
-                host = source.CreateTutorialPreview();
+            if (view == "main" || view == "team")
+                host = source.CreateTutorialPreview(view == "team");
             else if (view == "matrix")
                 host = new MatrixDialog(selected.Sub < 0 ? -1 : selected.Main, keys, selected.Main, selected.Sub);
             else if (view == "radar")
@@ -245,7 +270,7 @@ namespace AniimoAffinities
                 frame.Targets["content"] = new Rectangle(16, (int)(host.Height * .23), host.Width - 32, (int)(host.Height * .67));
                 var main = host as MainForm;
                 if (main != null)
-                    foreach (string target in new[] { "types", "content", "matrix", "radar", "pin" })
+                    foreach (string target in new[] { "types", "content", "matrix", "radar", "pin", "team", "team-tools" })
                         frame.Targets[target] = main.TutorialTarget(target);
                 if (view == "radar")
                     frame.Targets["modes"] = new Rectangle((int)(784 * ((PortableWindow)host).AppliedWindowScale), (int)(38 * ((PortableWindow)host).AppliedWindowScale), (int)(110 * ((PortableWindow)host).AppliedWindowScale), (int)(54 * ((PortableWindow)host).AppliedWindowScale));

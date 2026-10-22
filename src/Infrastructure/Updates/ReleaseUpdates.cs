@@ -12,7 +12,9 @@ namespace AniimoAffinities
 {
     internal sealed class ReleaseUpdate
     {
-        internal string Version, Download, Checksums;
+        internal string Version, Download, Checksums, AssetName;
+        internal ReleaseChange[] Changes = new ReleaseChange[0];
+        internal bool HistoryComplete;
     }
     internal static partial class ReleaseUpdates
     {
@@ -46,19 +48,31 @@ namespace AniimoAffinities
         internal static ReleaseUpdate Check()
         {
             string json = Encoding.UTF8.GetString(Fetch("https://api.github.com/repos/Lapinosaur/aniimo-affinities/releases/latest", 2 * 1024 * 1024));
+            var update = ParseRelease(json);
+            if (update != null)
+                LoadHistory(update);
+            return update;
+        }
+        internal static ReleaseUpdate ParseRelease(string json)
+        {
             var data = new JavaScriptSerializer().Deserialize<Dictionary<string, object>>(json);
             string tag = (string)data["tag_name"];
             if ((bool)data["draft"] || (bool)data["prerelease"] || !IsNewer(tag))
                 return null;
             var result = new ReleaseUpdate { Version = tag };
+            object notes;
+            result.Changes = new[] { new ReleaseChange { Version = tag, Notes = data.TryGetValue("body", out notes) ? notes as string : "" } };
             foreach (var item in (System.Collections.IEnumerable)data["assets"])
             {
                 var asset = (Dictionary<string, object>)item;
                 string name = (string)asset["name"], url = (string)asset["browser_download_url"];
                 if (!url.StartsWith(Repository + Uri.EscapeDataString(tag) + "/", StringComparison.Ordinal))
                     continue;
-                if (name == "AniimoAffinities.exe")
+                if (name == "Affinisaur.exe" || (name == "AniimoAffinities.exe" && result.Download == null))
+                {
                     result.Download = url;
+                    result.AssetName = name;
+                }
                 if (name == "SHA256SUMS.txt")
                     result.Checksums = url;
             }
@@ -92,12 +106,12 @@ namespace AniimoAffinities
                 return output.ToArray();
             }
         }
-        internal static string Checksum(string text)
+        internal static string Checksum(string text, string assetName = "AniimoAffinities.exe")
         {
             foreach (string line in text.Split('\n'))
             {
                 string[] parts = line.Trim().Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length == 2 && parts[1].TrimStart('*') == "AniimoAffinities.exe" && parts[0].Length == 64 && parts[0].All(Uri.IsHexDigit))
+                if (parts.Length == 2 && parts[1].TrimStart('*') == assetName && parts[0].Length == 64 && parts[0].All(Uri.IsHexDigit))
                     return parts[0];
             }
             throw new InvalidDataException("Release checksum is missing.");
@@ -109,7 +123,7 @@ namespace AniimoAffinities
         }
         internal static void Prepare(ReleaseUpdate update, string target, Action<int> progress = null, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken))
         {
-            string expected = Checksum(Encoding.UTF8.GetString(Fetch(update.Checksums, 65536, null, cancellation)));
+            string expected = Checksum(Encoding.UTF8.GetString(Fetch(update.Checksums, 65536, null, cancellation)), update.AssetName ?? "AniimoAffinities.exe");
             byte[] bytes = Fetch(update.Download, 64 * 1024 * 1024, progress, cancellation);
             cancellation.ThrowIfCancellationRequested();
             Stage(bytes, expected, update.Version, target);

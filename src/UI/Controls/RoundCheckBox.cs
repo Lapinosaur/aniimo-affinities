@@ -28,8 +28,20 @@ namespace AniimoAffinities
             base.OnLostFocus(e);
             Invalidate();
         }
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Cursor = Enabled ? Cursors.Hand : Cursors.Default;
+            Invalidate();
+        }
+        protected override void OnChangeUICues(UICuesEventArgs e)
+        {
+            base.OnChangeUICues(e);
+            Invalidate();
+        }
         protected override void OnPaint(PaintEventArgs e)
         {
+            Cursor = Enabled && AutoCheck ? Cursors.Hand : Cursors.Default;
             var g = e.Graphics;
             g.Clear(BackColor);
             g.SmoothingMode = SmoothingMode.AntiAlias;

@@ -1,5 +1,7 @@
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
@@ -9,6 +11,9 @@ namespace AniimoAffinities
         internal TeamMatchupPanel(TeamPlan value)
         {
             plan = value;
+            AccessibleName = "Team matchup comparison";
+            AccessibleRole = AccessibleRole.Table;
+            AccessibleText = () => string.Join("; ", plan.Allies.SelectMany((ally, i) => plan.Opponents.Select((opponent, j) => ally.Title(i) + " against " + opponent.Title(j, true) + ": " + (!ally.Known || !opponent.Known ? "not set" : "attack " + Model.Factor(TeamPlan.Damage(ally, opponent)) + ", damage received " + Model.Factor(TeamPlan.Damage(opponent, ally))))).ToArray());
         }
         internal void Configure()
         {

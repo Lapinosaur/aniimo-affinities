@@ -25,7 +25,7 @@ jobs:
         with:
           name: aniimo-affinities-windows
           path: |
-            dist/AniimoAffinities.exe
+            dist/Affinisaur.exe
             dist/tests.txt
             dist/tests.json
             dist/test-results/

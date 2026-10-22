@@ -1,5 +1,5 @@
 param(
-    [string]$Path = 'dist/AniimoAffinities.exe',
+    [string]$Path = 'dist/Affinisaur.exe',
     [switch]$RequireSigned
 )
 $ErrorActionPreference = 'Stop'

@@ -7,6 +7,8 @@ namespace AniimoAffinities
 {
     internal sealed class LegalWindow : PortableWindow
     {
+        private readonly SettingsButton linkStatus = new SettingsButton { Text = "", Visible = false, TabStop = false, Bounds = new Rectangle(22, 552, 616, 32), Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
+        private readonly Label linkFeedback = new Label { Bounds = new Rectangle(22, 552, 616, 32), Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, ForeColor = Theme.Muted };
         protected override bool CompactCaption
         {
             get
@@ -21,7 +23,7 @@ namespace AniimoAffinities
             MinimumSize = new Size(420, 320);
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
-            var document = new FlowLayoutPanel { Location = new Point(22, 52), Size = new Size(616, 524), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = "Conditions d'utilisation, confidentialité et licences" };
+            var document = new FlowLayoutPanel { Location = new Point(22, 52), Size = new Size(616, 488), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = "Conditions d'utilisation, confidentialité et licences" };
             using (var stream = typeof(LegalWindow).Assembly.GetManifestResourceStream("legal.md"))
             using (var reader = new StreamReader(stream))
             {
@@ -49,14 +51,23 @@ namespace AniimoAffinities
                     paragraph.MaximumSize = new Size(Math.Max(200, document.ClientSize.Width - 30), 0);
             };
             Controls.Add(document);
+            Controls.Add(linkStatus);
+            Controls.Add(linkFeedback);
         }
         private void OpenLink(string url)
         {
-            try
+            if (linkStatus.Busy)
+                return;
+            linkFeedback.Hide();
+            linkStatus.Visible = true;
+            BusyOperation.OpenLink(this, linkStatus, url, error =>
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-            }
-            catch (System.ComponentModel.Win32Exception) { MessageBox.Show(this, "Unable to open your browser."); }
+                linkStatus.Hide();
+                linkFeedback.Text = error == null ? "Opened in your browser" : "Unable to open your browser. Select the link to retry.";
+                linkFeedback.Show();
+                if (error != null)
+                    DiagnosticReport.Record(error);
+            });
         }
     }
 }

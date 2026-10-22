@@ -111,6 +111,7 @@ namespace AniimoAffinities
                 int slot = i;
                 elements.FilterFocusChanged += active => ShowRowShortcuts(slot, active, false);
                 name.Editor.GotFocus += (s, e) => ShowRowShortcuts(slot, true, true);
+                name.Editor.AccessibleDescription = "Optional name. Tab moves to the next name. F6 enters this row's elements; use arrows and Space there. Ctrl+1 through Ctrl+9 selects an element; Ctrl+0 clears.";
                 name.Editor.LostFocus += (s, e) => ShowRowShortcuts(slot, false, true);
                 name.Editor.TextChanged += (s, e) => { member.Name = name.Editor.Text; Save(); };
                 rows.Controls.Add(name);
@@ -135,6 +136,11 @@ namespace AniimoAffinities
             if (name != null)
             {
                 var filter = rows.Controls.OfType<TeamTypeSelector>().FirstOrDefault(n => n.TabIndex == name.TabIndex + 1);
+                if (filter != null && keys == Keys.F6)
+                {
+                    filter.FocusElements();
+                    return true;
+                }
                 if (filter != null && filter.HandleShortcut(keys, (message.LParam.ToInt64() & (1L << 30)) != 0, true))
                     return true;
             }

@@ -8,6 +8,23 @@ namespace AniimoAffinities
 {
     internal class DrawingPanel : Panel
     {
+        internal Func<string> AccessibleText;
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new PanelAccess(this);
+        }
+        private sealed class PanelAccess : ControlAccessibleObject
+        {
+            private readonly DrawingPanel panel;
+            internal PanelAccess(DrawingPanel panel) : base(panel) { this.panel = panel; }
+            public override string Description
+            {
+                get
+                {
+                    return panel.AccessibleText == null ? base.Description : panel.AccessibleText();
+                }
+            }
+        }
         internal bool PhysicalPainting;
         private bool painting;
         public new int Width
@@ -61,6 +78,7 @@ namespace AniimoAffinities
         }
         internal DrawingPanel()
         {
+            TabStop = false;
             DoubleBuffered = true;
             ResizeRedraw = true;
         }

@@ -17,11 +17,12 @@ namespace AniimoAffinities
             AddText("CREDITS", 250, 20, 8, true, Theme.Muted);
             AddText("Design & development: Lapinosaur\nMatchup data: Aniimo type affinities", 276, 44, 9, false, Theme.TextColor);
             var source = new SettingsButton { Text = "Type icons · ManuelGraf / AniimoWeaknessCalculator", Location = new Point(0, 324), Size = new Size(412, 32), AccessibleName = "Open type icon source on GitHub" };
-            source.Click += (s, e) => OpenLink("https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg");
+            source.Click += (s, e) => OpenLink(source, "https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg");
             Controls.Add(source);
             tips.SetToolTip(source, "Community traces of game artwork. Redistribution rights are not established; no third-party asset license is implied.");
             AddText("Unofficial fan tool. Not affiliated with or endorsed by\nAniimo or its rights holders.", 366, 44, 8, false, Theme.Muted);
             var updates = new SettingsButton { Text = "Check for updates", Location = new Point(212, 416), Size = new Size(200, 32) };
+            UpdatePrompt.Track(updates);
             updates.Click += (s, e) => UpdatePrompt.Check(FindForm(), true);
             Controls.Add(updates);
             Controls.Add(new Label { Text = "Version " + ReleaseUpdates.CurrentVersion, Location = new Point(0, 422), Size = new Size(200, 22), ForeColor = Theme.Muted });
@@ -39,7 +40,7 @@ namespace AniimoAffinities
                     control.Top += 42;
             Height += 42;
             var discord = new SettingsButton { Text = "Join the Discord community", Glyph = "community", GlyphWithText = true, Brand = Color.FromArgb(88, 101, 242), Location = new Point(0, 238), Size = new Size(412, 34), AccessibleName = "Join the Discord community" };
-            discord.Click += (s, e) => OpenLink("https://discord.gg/B6n83stRcf");
+            discord.Click += (s, e) => OpenLink(discord, "https://discord.gg/B6n83stRcf");
             tips.SetToolTip(discord, "News, feedback & support · Permanent invite with the Member role");
             Controls.Add(discord);
             Redesign(discord, source, updates, diagnostics, storage);
@@ -110,7 +111,7 @@ namespace AniimoAffinities
             CardText(support, "Made with care", 16, 13, 250, 25, 12, true);
             CardText(support, "By Lapinosaur, for the community.\nYour support helps me keep creating.", 16, 43, 260, 38, 8.5f, false);
             var carrot = new SupportButton { Location = new Point(13, 84), Size = new Size(166, 40), Surround = Theme.Surface };
-            carrot.Click += (s, e) => OpenLink("https://buymeacoffee.com/lapinosaur");
+            carrot.Click += (s, e) => OpenLink(carrot, "https://buymeacoffee.com/lapinosaur");
             support.Controls.Add(carrot);
             CardText(support, "Always optional. Thank you!", 17, 121, 260, 20, 8, false);
             var qr = new DrawingPanel { Location = new Point(284, 10), Size = new Size(111, 111), AccessibleName = "Scan to support Lapinosaur" };
@@ -124,7 +125,7 @@ namespace AniimoAffinities
                 string url = links[i];
                 var link = new SettingsButton { Text = names[i], Glyph = names[i].ToLowerInvariant(), GlyphWithText = true, Location = new Point(i * 140, 338), Size = new Size(132, 34) };
                 link.Brand = i == 1 ? Color.FromArgb(145, 70, 255) : i == 2 ? Color.FromArgb(255, 0, 51) : Color.FromArgb(110, 118, 129);
-                link.Click += (s, e) => OpenLink(url);
+                link.Click += (s, e) => OpenLink(link, url);
                 tips.SetToolTip(link, url);
                 Controls.Add(link);
             }
@@ -147,20 +148,20 @@ namespace AniimoAffinities
         private void AddLink(string name, string description, string url, int left, int top)
         {
             var button = new SettingsButton { Text = name, Brand = name == "Twitch" ? Color.FromArgb(145, 70, 255) : name == "YouTube" ? Color.FromArgb(255, 0, 51) : name == "Buy Me a Coffee" ? Color.FromArgb(255, 221, 0) : Color.FromArgb(110, 118, 129), GlyphWithText = true, Glyph = name == "Twitch" ? "twitch" : name == "GitHub" ? "github" : name == "YouTube" ? "youtube" : "coffee", Location = new Point(left, top), Size = new Size(200, 34), AccessibleName = name + " · " + description };
-            button.Click += (s, e) => OpenLink(url);
+            button.Click += (s, e) => OpenLink(button, url);
             tips.SetToolTip(button, "Open in your browser · " + url);
             Controls.Add(button);
             Controls.Add(UiFonts.Own(new Label { UseMnemonic = false, Text = description, Location = new Point(left, top + 38), Size = new Size(200, 22), ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), TextAlign = ContentAlignment.MiddleCenter }));
         }
-        private void OpenLink(string url)
+        private void OpenLink(SettingsButton button, string url)
         {
-            try
+            status.Text = "Opening your browser…";
+            BusyOperation.OpenLink(this, button, url, error =>
             {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
-                status.Text = "";
-            }
-            catch (System.ComponentModel.Win32Exception) { status.Text = "Unable to open your browser. Please try again."; }
-            catch (InvalidOperationException) { status.Text = "Unable to open your browser. Please try again."; }
+                status.Text = error == null ? "" : "Unable to open your browser. Please try again.";
+                if (error != null)
+                    DiagnosticReport.Record(error);
+            });
         }
         protected override void Dispose(bool disposing)
         {

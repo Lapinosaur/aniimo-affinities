@@ -34,7 +34,7 @@ namespace AniimoAffinities
             Editor.Text = value;
             Editor.AccessibleName = accessibleName;
             Editor.BackColor = Theme.Surface;
-            Editor.ForeColor = Theme.TextColor;
+            Editor.ForeColor = Enabled ? Theme.TextColor : Theme.Muted;
             ((HintTextBox)Editor).Hint = hint;
             Controls.Add(Editor);
             Editor.GotFocus += (s, e) => RefreshState();
@@ -69,9 +69,9 @@ namespace AniimoAffinities
             e.Graphics.Clear(Parent == null ? Theme.Background : Parent.BackColor);
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             Editor.BackColor = Theme.Surface;
-            Editor.ForeColor = Theme.TextColor;
+            Editor.ForeColor = Enabled ? Theme.TextColor : Theme.Muted;
             Drawing.Box(e.Graphics, new RectangleF(1, 1, Width - 3, Height - 3), Theme.Surface,
-                Editor.Focused ? Theme.Accent : hover ? Theme.StrongBorder : Theme.Border, Theme.ControlRadius);
+                Editor.Focused && Enabled ? Theme.Accent : hover && Enabled ? Theme.StrongBorder : Theme.Border, Theme.ControlRadius);
             if (DisplaySettings.ShowBadges && NavigationHint.Length > 0)
             {
                 float zoom = WindowZoom.Factor(this);

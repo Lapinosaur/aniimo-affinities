@@ -13,7 +13,7 @@ Proposed signing roles: Lapinosaur as author, reviewer and approver. MFA and man
 
 ## Integration boundary
 
-The stable release workflow builds and tests first, then verifies Authenticode, then computes SHA-256 and publishes. Insert the chosen provider's signing action immediately before verification. Sign the exact tested `dist/AniimoAffinities.exe` with SHA-256 and a trusted timestamp; never rebuild or modify it afterwards.
+The stable release workflow builds and tests first, then verifies Authenticode, then computes SHA-256 and publishes. Insert the chosen provider's signing action immediately before verification. Sign the exact tested `dist/Affinisaur.exe` with SHA-256 and a trusted timestamp; never rebuild or modify it afterwards.
 
 Once signing is configured, set repository variable `REQUIRE_CODE_SIGNATURE` to `true`. This makes missing, invalid or untimestamped signatures block publication. Until then unsigned releases remain explicitly supported. Never silently fall back to unsigned output after a signing failure.
 

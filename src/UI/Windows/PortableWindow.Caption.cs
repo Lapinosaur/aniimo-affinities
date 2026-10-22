@@ -16,7 +16,7 @@ namespace AniimoAffinities
         }
         private Button CaptionButton(string text, string label, bool danger = false, bool pin = false)
         {
-            var button = new Button { Text = "", AccessibleName = label, Dock = DockStyle.Right, Width = 42, FlatStyle = FlatStyle.Flat, ForeColor = Theme.Muted, BackColor = Theme.Background, TabStop = true };
+            var button = new InteractiveButton { Text = "", AccessibleName = label, Dock = DockStyle.Right, Width = 42, FlatStyle = FlatStyle.Flat, ForeColor = Theme.Muted, BackColor = Theme.Background, TabStop = true };
             button.Cursor = Cursors.Hand;
             captionTips.SetAnchorBounds(button, () =>
             {
@@ -30,6 +30,8 @@ namespace AniimoAffinities
             button.MouseEnter += (s, e) => { hover = true; button.Invalidate(); };
             button.MouseLeave += (s, e) => { hover = false; pressed = false; button.Invalidate(); };
             button.MouseDown += (s, e) => { pressed = e.Button == MouseButtons.Left; button.Invalidate(); };
+            button.KeyDown += (s, e) => { if (e.KeyCode == Keys.Space) { pressed = true; button.Invalidate(); } };
+            button.KeyUp += (s, e) => { pressed = false; button.Invalidate(); };
             button.MouseUp += (s, e) => { pressed = false; button.Invalidate(); };
             button.GotFocus += (s, e) => button.Invalidate();
             button.LostFocus += (s, e) => button.Invalidate();
@@ -54,13 +56,6 @@ namespace AniimoAffinities
                 Drawing.Box(g, bounds, fill, active ? Theme.Accent : hasHold ? Theme.Border : fill, Theme.ControlRadius);
                 if (hasHold)
                     Drawing.HoldHint(g, bounds);
-                if (button.Focused && ShowFocusCues)
-                {
-                    bounds.Inflate(2, 2);
-                    using (var outline = Drawing.Round(bounds, Theme.ControlRadius + 2))
-                    using (var pen = new Pen(Theme.AccentForeground))
-                        g.DrawPath(pen, outline);
-                }
                 Color ink = danger && (TopMost || hover || pressed) ? Color.White : active ? Theme.AccentForeground : Theme.TextColor;
                 if (pin && OverlayLocked)
                     Glyphs.Draw(g, "lock", new RectangleF((bw - 16) / 2f, (bh - 16) / 2f, 16, 16), ink);
@@ -111,6 +106,7 @@ namespace AniimoAffinities
                             }
                     }
                 }
+                button.FinishPaint(g, bw, bh);
             };
             return button;
         }

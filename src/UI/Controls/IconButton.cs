@@ -6,9 +6,16 @@ using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
-    internal sealed class IconButton : Button
+    internal sealed class IconButton : InteractiveButton
     {
         internal int Type = -1; internal string Badge = "", Glyph = ""; internal bool Active, Segment, SegmentStart, SegmentEnd; private bool hover;
+        protected override bool IsSelected
+        {
+            get
+            {
+                return Active;
+            }
+        }
         internal RectangleF GroupShape;
         internal string Shortcut = "";
         internal IconButton()
@@ -48,7 +55,7 @@ namespace AniimoAffinities
                     using (var clip = Drawing.Round(inner, Theme.SelectorRadius - 1))
                         g.SetClip(clip);
                 }
-                using (var fill = new SolidBrush(Active ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface))
+                using (var fill = new SolidBrush(Active ? Theme.AccentSurface : InteractionPressed ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface))
                     g.FillRectangle(fill, 0, 0, Width, Height);
                 if (!SegmentEnd)
                     using (var divider = new Pen(Theme.Surface))
@@ -56,13 +63,10 @@ namespace AniimoAffinities
                 if (Active)
                     using (var underline = new Pen(Theme.Accent, 2))
                         g.DrawLine(underline, 0, Height - 1, Width, Height - 1);
-                if (Focused && ShowFocusCues)
-                    using (var outline = Drawing.Round(new RectangleF(3, 3, Width - 7, Height - 7), 5))
-                    using (var focus = new Pen(Theme.AccentForeground, 1.5f))
-                        g.DrawPath(focus, outline);
+
             }
             else
-                Drawing.Box(g, new RectangleF(2, 3, Width - 5, Height - 7), Active ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface, Focused ? Theme.AccentForeground : Active ? Theme.Accent : Theme.Border, 8);
+                Drawing.Box(g, new RectangleF(2, 3, Width - 5, Height - 7), Active ? Theme.AccentSurface : InteractionPressed ? Theme.AccentSurface : hover ? Theme.HoverSurface : Theme.Surface, Active ? Theme.Accent : Theme.Border, 8);
             if (Type >= 0)
                 VectorIcon.Draw(g, Type, new RectangleF(11, (Height - 20) / 2f, 20, 20));
             else
@@ -82,6 +86,7 @@ namespace AniimoAffinities
                 using (var keyFont = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold))
                     Drawing.Text(g, Shortcut, keyFont, Theme.TextColor, new RectangleF(Width - badgeWidth - 2, 1, badgeWidth, 11), true);
             }
+            FinishPaint(g, Width, Height);
         }
     }
 }

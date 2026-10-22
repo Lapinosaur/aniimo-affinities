@@ -5,10 +5,9 @@ using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
-    internal sealed class SupportButton : Button
+    internal sealed class SupportButton : SettingsButton
     {
         private bool hover, pressed;
-        internal Color Surround = Color.Empty;
         internal readonly Image QrCode;
         internal SupportButton()
         {
@@ -61,6 +60,11 @@ namespace AniimoAffinities
         }
         protected override void OnPaint(PaintEventArgs e)
         {
+            if (Busy)
+            {
+                base.OnPaint(e);
+                return;
+            }
             var g = e.Graphics;
             float scale = WindowZoom.Factor(this), w = Width / scale, h = Height / scale;
             g.ScaleTransform(scale, scale);
@@ -74,7 +78,7 @@ namespace AniimoAffinities
                 start = Color.FromArgb(52, 109, 224);
                 end = Color.FromArgb(119, 76, 205);
             }
-            if (pressed)
+            if (pressed || InteractionPressed)
             {
                 start = Color.FromArgb(35, 65, 158);
                 end = Color.FromArgb(70, 50, 145);
@@ -83,10 +87,6 @@ namespace AniimoAffinities
             using (var path = Drawing.Round(bounds, 10))
             using (var fill = new LinearGradientBrush(bounds, start, end, 15))
                 g.FillPath(fill, path);
-            if (Focused && ShowFocusCues)
-                using (var path = Drawing.Round(new RectangleF(bounds.X - 1, bounds.Y - 1, bounds.Width + 2, bounds.Height + 2), 11))
-                using (var pen = new Pen(Theme.AccentForeground))
-                    g.DrawPath(pen, path);
             float x = bounds.X + 10, y = bounds.Y + 7;
             using (var carrot = new GraphicsPath())
             {
@@ -102,6 +102,7 @@ namespace AniimoAffinities
             }
             using (var font = UiFonts.Create("Segoe UI", 8.5f, FontStyle.Bold))
                 Drawing.Text(g, "Buy me a carrot", font, Color.White, new RectangleF(bounds.X + 31, bounds.Y, bounds.Width - 35, bounds.Height), true);
+            FinishPaint(g, w, h);
         }
     }
 }

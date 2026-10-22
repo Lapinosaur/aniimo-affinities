@@ -28,6 +28,8 @@ namespace AniimoAffinities
             new Suite("Startup", "ui", StartupTests.Run),
             new Suite("Session", "storage", SessionTests.Run),
             new Suite("Settings", "ui", SettingsTests.Run),
+            new Suite("BusyFeedback", "ui", BusyFeedbackTests.Run),
+            new Suite("Accessibility", "ui", AccessibilityTests.Run),
             new Suite("HoldControls", "ui", HoldControlsTests.Run),
             new Suite("Zoom", "ui", ZoomTests.Run),
             new Suite("ViewSwitching", "ui", ViewSwitchingTests.Run),

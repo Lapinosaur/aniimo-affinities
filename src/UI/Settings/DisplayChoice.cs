@@ -31,6 +31,17 @@ namespace AniimoAffinities
             base.OnLostFocus(e);
             Invalidate();
         }
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Cursor = Enabled ? Cursors.Hand : Cursors.Default;
+            Invalidate();
+        }
+        protected override void OnChangeUICues(UICuesEventArgs e)
+        {
+            base.OnChangeUICues(e);
+            Invalidate();
+        }
         protected override void OnPaint(PaintEventArgs e)
         {
             var g = e.Graphics;
@@ -62,6 +73,7 @@ namespace AniimoAffinities
                     using (var font = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold))
                         Drawing.Text(g, shortcut, font, Theme.TextColor, key, true);
                 }
+                PaintAvailability(g);
                 return;
             }
             if (WindowPreview)
@@ -88,6 +100,7 @@ namespace AniimoAffinities
                             Drawing.Text(g, hint, font, Theme.TextColor, badge, true);
                     }
                 }
+                PaintAvailability(g);
                 return;
             }
             using (var title = new Font("Segoe UI", 13 * PreviewScale, FontStyle.Bold))
@@ -96,6 +109,14 @@ namespace AniimoAffinities
                 Drawing.Text(g, "Damage dealt", body, Theme.TextColor, new RectangleF(12, 53, 104, 22), false);
             using (var number = new Font("Segoe UI", 8 * PreviewScale, FontStyle.Bold))
                 Drawing.Text(g, "×1.6  ·  ×0.625", number, Theme.Muted, new RectangleF(12, 75, 104, 20), false);
+            PaintAvailability(g);
+        }
+        private void PaintAvailability(Graphics graphics)
+        {
+            if (!Enabled)
+                using (var shade = new SolidBrush(Color.FromArgb(110, Theme.Surface)))
+                using (var outline = Drawing.Round(new RectangleF(2, 2, Width - 5, Height - 5), Theme.ControlRadius))
+                    graphics.FillPath(shade, outline);
         }
     }
 }

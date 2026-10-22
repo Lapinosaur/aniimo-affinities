@@ -10,44 +10,56 @@ namespace AniimoAffinities
     {
         private void AddTutorialChoices(Panel panel, Action startTutorial)
         {
-            panel.AutoScroll = true;
-            AddTechnicalHelp(panel);
-            foreach (Control control in panel.Controls)
-                control.Top += 170;
-            panel.Height = 560;
-            panel.Controls.Add(new Label { Text = "Choose the sections to replay. Paused tours resume where you left off.", ForeColor = Theme.Muted, Bounds = new Rectangle(0, 4, 392, 36) });
-            var progress = TutorialProgress.Load();
-            var choices = new CheckBox[TutorialOverlay.Sections.Length];
-            for (int i = 0; i < choices.Length; i++)
-            {
-                choices[i] = new RoundCheckBox { Text = TutorialOverlay.Sections[i], Checked = (progress.Sections & (1 << i)) != 0, ForeColor = Theme.TextColor, Bounds = new Rectangle(0, 44 + i * 28, 392, 26), TabIndex = i };
-                panel.Controls.Add(choices[i]);
-            }
-            var hide = new RoundCheckBox { Text = "Don't show at startup", Checked = TutorialPreferences.Hidden, ForeColor = Theme.TextColor, Bounds = new Rectangle(0, 220, 392, 26), TabIndex = 6 };
-            var status = new Label { ForeColor = Theme.Muted, Bounds = new Rectangle(0, 250, 392, 34) };
-            var resume = new SettingsButton { Text = "Resume", Bounds = new Rectangle(0, 292, 122, 34), TabIndex = 7 };
-            var replay = new SettingsButton { Text = "Replay selected", Primary = true, Bounds = new Rectangle(134, 292, 258, 34), TabIndex = 8 };
+            panel.Height = 548;
+            var tutorials = new SettingsButton { Text = "Tutorials", Primary = true, Bounds = new Rectangle(0, 0, 196, 34), TabIndex = 0 };
+            var support = new SettingsButton { Text = "Support", Bounds = new Rectangle(196, 0, 196, 34), TabIndex = 1 };
+            SettingsButton.Group(tutorials, support);
+            var list = new Panel { AutoScroll = true, Bounds = new Rectangle(0, 46, 412, 502), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, TabIndex = 2 };
+            var help = new Panel { Bounds = list.Bounds, Anchor = list.Anchor, Visible = false, AutoScroll = true, TabIndex = 3 };
+            AddTechnicalHelp(help);
+            help.Bounds = list.Bounds;
+            panel.Controls.AddRange(new Control[] { tutorials, support, list, help });
+            tutorials.Click += (s, e) => { tutorials.Primary = true; support.Primary = false; list.Show(); help.Hide(); tutorials.Invalidate(); support.Invalidate(); };
+            support.Click += (s, e) => { tutorials.Primary = false; support.Primary = true; list.Hide(); help.Show(); tutorials.Invalidate(); support.Invalidate(); };
+            var summary = new Label { ForeColor = Theme.TextColor, Bounds = new Rectangle(0, 0, 390, 24) };
+            var explanation = new Label { Text = "Checks mark completed tutorials. Each tour can be played independently.", ForeColor = Theme.Muted, Bounds = new Rectangle(0, 26, 390, 38) };
+            list.Controls.AddRange(new Control[] { summary, explanation });
+            var checks = new RoundCheckBox[7];
+            var actions = new SettingsButton[7];
+            var states = new Label[7];
+            string[] purposes = { "Select types and read damage multipliers.", "Compare attacking rows and defending columns.", "Compare strengths across types and views.", "Keep the app above a game and lock the overlay.", "Assign, test and resolve shortcut conflicts.", "Adjust theme, text and window size safely.", "Compare allies with known opponents." };
+            var status = new Label { ForeColor = Theme.Muted, Bounds = new Rectangle(0, 756, 390, 44) };
+            var resume = new SettingsButton { Text = "Resume paused tour", Bounds = new Rectangle(0, 68, 390, 34), TabIndex = 0 };
+            list.Controls.Add(resume);
             Action refresh = () =>
             {
-                progress = TutorialProgress.Load();
+                var progress = TutorialProgress.Load();
+                summary.Text = Enumerable.Range(0, 7).Count(i => (progress.Completed & (1 << i)) != 0) + " of 7 tutorials completed";
                 resume.Enabled = progress.Pending && startTutorial != null;
-                replay.Enabled = choices.Any(choice => choice.Checked) && startTutorial != null;
-                status.Text = progress.Pending ? "Paused at step " + (progress.Step + 1) + ". Resume keeps the previous section selection." : "Select one or more sections, then replay.";
-                hide.Checked = TutorialPreferences.Hidden;
+                resume.Text = progress.Pending ? "Resume paused tour" : "No paused tour";
+                for (int i = 0; i < 7; i++)
+                {
+                    if (checks[i] == null)
+                        continue;
+                    bool completed = (progress.Completed & (1 << i)) != 0;
+                    bool started = (progress.Started & (1 << i)) != 0;
+                    checks[i].Checked = completed;
+                    states[i].Text = completed ? "Completed" : started ? "In progress" : "Not started";
+                    actions[i].Text = completed ? "Replay" : started ? "Resume" : "Play";
+                    actions[i].AccessibleName = actions[i].Text + " " + TutorialOverlay.Sections[i];
+                }
             };
-            Action<bool> launch = restart =>
+            Action<int> launch = section =>
             {
                 try
                 {
-                    if (restart)
+                    if (section >= 0)
                     {
-                        int mask = 0;
-                        for (int i = 0; i < choices.Length; i++)
-                            if (choices[i].Checked)
-                                mask |= 1 << i;
-                        if (mask == 0)
-                            return;
-                        new TutorialProgress { Sections = mask }.Save();
+                        var progress = TutorialProgress.Load();
+                        progress.Sections = 1 << section;
+                        progress.Pending = (progress.Started & (1 << section)) != 0 && (progress.Completed & (1 << section)) == 0;
+                        progress.Step = progress.Pending ? progress.SectionSteps[section] : 0;
+                        progress.Save();
                     }
                     if (startTutorial != null)
                         startTutorial();
@@ -56,21 +68,38 @@ namespace AniimoAffinities
                 catch (IOException) { status.Text = "Unable to save tutorial progress. Please try again."; }
                 catch (UnauthorizedAccessException) { status.Text = "Unable to save tutorial progress: access denied."; }
             };
-            resume.Click += (s, e) => launch(false);
-            replay.Click += (s, e) => launch(true);
-            foreach (var choice in choices)
-                choice.CheckedChanged += (s, e) => { replay.Enabled = choices.Any(item => item.Checked) && startTutorial != null; };
-            hide.CheckedChanged += (s, e) =>
+            resume.Click += (s, e) => launch(-1);
+            int y = 116;
+            int[] order = { 0, 6, 1, 2, 3, 4, 5 };
+            for (int row = 0; row < order.Length; row++)
+            {
+                int section = order[row];
+                if (row == 0 || row == 4)
+                {
+                    list.Controls.Add(UiFonts.Own(new Label { Text = row == 0 ? "Understand matchups" : "Your workspace", ForeColor = Theme.TextColor, Font = UiFonts.Create("Segoe UI", 11, FontStyle.Bold), Bounds = new Rectangle(0, y, 390, 28) }));
+                    y += 32;
+                }
+                checks[section] = new RoundCheckBox { Text = TutorialOverlay.Sections[section], AutoCheck = false, TabStop = false, AccessibleDescription = "Completion status, updated when the tutorial is finished.", ForeColor = Theme.TextColor, Bounds = new Rectangle(0, y, 278, 26) };
+                states[section] = new Label { ForeColor = Theme.Muted, Bounds = new Rectangle(29, y + 27, 245, 20) };
+                var purpose = new Label { Text = purposes[section], ForeColor = Theme.Muted, Bounds = new Rectangle(29, y + 48, 352, 30) };
+                actions[section] = new SettingsButton { Bounds = new Rectangle(280, y + 4, 110, 34), Enabled = startTutorial != null, TabIndex = row + 1 };
+                actions[section].Click += (s, e) => launch(section);
+                list.Controls.AddRange(new Control[] { checks[section], states[section], purpose, actions[section] });
+                y += 86;
+            }
+            var startup = new RoundCheckBox { Text = "Show unfinished tutorials at startup", Checked = !TutorialPreferences.Hidden, ForeColor = Theme.TextColor, Bounds = new Rectangle(0, y + 12, 390, 30), TabIndex = 8 };
+            startup.CheckedChanged += (s, e) =>
             {
                 try
                 {
-                    TutorialPreferences.Save(hide.Checked);
+                    TutorialPreferences.Save(!startup.Checked);
                 }
                 catch (IOException) { status.Text = "Unable to save startup preference."; }
-                catch (UnauthorizedAccessException) { status.Text = "Unable to save startup preference."; }
+                catch (UnauthorizedAccessException) { status.Text = "Unable to save startup preference: access denied."; }
             };
-            panel.Controls.AddRange(new Control[] { hide, status, resume, replay });
-            panel.VisibleChanged += (s, e) => { if (panel.Visible) refresh(); };
+            status.Top = startup.Bottom + 8;
+            list.Controls.AddRange(new Control[] { startup, status });
+            panel.VisibleChanged += (s, e) => { if (panel.Visible) { refresh(); startup.Checked = !TutorialPreferences.Hidden; } };
             refresh();
         }
     }

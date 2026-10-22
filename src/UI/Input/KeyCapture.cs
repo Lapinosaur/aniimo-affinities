@@ -22,6 +22,8 @@ namespace AniimoAffinities
         private bool primaryReleased;
         private void BeginCapture()
         {
+            if (!Enabled || !Visible)
+                return;
             ShowValidation(false, false);
             pending = Keys.None;
             heldModifiers = Keys.None;
@@ -110,7 +112,8 @@ namespace AniimoAffinities
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
             Cursor = Cursors.Hand;
-            AccessibleRole = AccessibleRole.Text;
+            AccessibleRole = AccessibleRole.PushButton;
+            AccessibleDescription = "Press Enter or Space to change this shortcut. Release the new key to confirm. Escape cancels; Delete clears.";
         }
         private void RefreshLabel()
         {
@@ -127,6 +130,54 @@ namespace AniimoAffinities
         {
             base.OnEnter(e);
             Invalidate();
+        }
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            if (!Enabled)
+            {
+                RefreshLabel();
+                TestHeld = false;
+            }
+            Cursor = Enabled ? Cursors.Hand : Cursors.Default;
+            Invalidate();
+        }
+        protected override void OnVisibleChanged(EventArgs e)
+        {
+            base.OnVisibleChanged(e);
+            if (!Visible)
+                RefreshLabel();
+        }
+        protected override AccessibleObject CreateAccessibilityInstance()
+        {
+            return new CaptureAccess(this);
+        }
+        private sealed class CaptureAccess : ControlAccessibleObject
+        {
+            private readonly KeyCapture capture;
+            internal CaptureAccess(KeyCapture capture) : base(capture) { this.capture = capture; }
+            public override string Value
+            {
+                get
+                {
+                    return capture.listening ? "Waiting for shortcut" : capture.Text;
+                }
+            }
+            public override string DefaultAction
+            {
+                get
+                {
+                    return "Change shortcut";
+                }
+            }
+            public override void DoDefaultAction()
+            {
+                if (capture.Enabled && capture.Visible)
+                {
+                    capture.Focus();
+                    capture.BeginCapture();
+                }
+            }
         }
         protected override void OnLeave(EventArgs e)
         {
@@ -181,10 +232,16 @@ namespace AniimoAffinities
                     g.DrawPath(pen, outline);
                 Drawing.Text(g, Invalid ? "!" : "✓", Font, color, new RectangleF(Width - 24, 0, 20, Height), true);
             }
+            if (!Enabled)
+                using (var shade = new SolidBrush(Color.FromArgb(110, Theme.Surface)))
+                using (var outline = Drawing.Round(new RectangleF(2, 2, Width - 5, Height - 5), 6))
+                    g.FillPath(shade, outline);
         }
         // Inputs: focused field keystroke. Output: one binding or Delete unbind. Fallback: Tab/Escape retain navigation/cancel. Raises: none.
         protected override bool ProcessCmdKey(ref Message message, Keys keyData)
         {
+            if (!Enabled)
+                return base.ProcessCmdKey(ref message, keyData);
             Keys key = keyData & Keys.KeyCode, modifiers = keyData & Keys.Modifiers;
             if (key == Keys.Escape && listening)
             {

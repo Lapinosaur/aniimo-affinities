@@ -6,7 +6,7 @@
     <PlatformTarget>x64</PlatformTarget>
     <LangVersion>5</LangVersion>
     <RootNamespace>AniimoAffinities</RootNamespace>
-    <AssemblyName>AniimoAffinities</AssemblyName>
+    <AssemblyName>Affinisaur</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>

@@ -35,7 +35,7 @@ This project is one Windows Forms application, compiled into one portable execut
 
 ## Runtime and diagnostics
 
-`dist/AniimoAffinities.exe` includes only runtime sources and embedded assets. `dist/diagnostics/AniimoAffinities.Diagnostics.exe` compiles runtime sources plus test/preview tooling with a separate entry point. Diagnostics create a unique temporary preference directory before initializing any settings and remove it on exit; they do not change the user's preferences.
+`dist/Affinisaur.exe` includes only runtime sources and embedded assets. `dist/diagnostics/AniimoAffinities.Diagnostics.exe` compiles runtime sources plus test/preview tooling with a separate entry point. Diagnostics create a unique temporary preference directory before initializing any settings and remove it on exit; they do not change the user's preferences.
 
 The native app still targets the .NET Framework 4.x APIs and C# 5 compiler available on Windows. The optional SDK project targets .NET Framework 4.8 for IDE support. No runtime library or UI framework migration is included in this refactor.
 

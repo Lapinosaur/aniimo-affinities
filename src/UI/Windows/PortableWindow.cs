@@ -505,14 +505,14 @@ namespace AniimoAffinities
                     int height = (int)Math.Round(32 * AppliedWindowScale);
                     return new Rectangle(0, (coffee.Height - height) / 2, coffee.Width, height);
                 });
-                coffee.Click += (s, a) =>
+                coffee.Click += (s, a) => BusyOperation.OpenLink(this, coffee, "https://buymeacoffee.com/lapinosaur", error =>
                 {
-                    try
+                    if (error != null)
                     {
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://buymeacoffee.com/lapinosaur") { UseShellExecute = true });
+                        DiagnosticReport.Record(error);
+                        MessageBox.Show(this, "Unable to open your browser. Please try again.", "Open in your browser", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
-                    catch (System.ComponentModel.Win32Exception) { MessageBox.Show(this, "https://buymeacoffee.com/lapinosaur", "Open in your browser", MessageBoxButtons.OK, MessageBoxIcon.Information); }
-                };
+                });
                 var pin = CaptionButton("", "Always on top", false, true);
                 pinControl = pin;
                 pinKeyboard = new KeyboardHold(pin, () => { suppressPinClick = false; holdWatch.Restart(); holdTimer.Start(); }, CancelHold);

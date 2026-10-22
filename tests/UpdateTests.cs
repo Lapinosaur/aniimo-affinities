@@ -9,10 +9,36 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            int releaseCount;
+            string history = "[{\"tag_name\":\"v0.9.0\",\"draft\":false,\"prerelease\":false,\"body\":\"Older fixes\"},{\"tag_name\":\"v0.10.0\",\"draft\":false,\"prerelease\":false,\"body\":null},{\"tag_name\":\"v0.8.0\",\"draft\":false,\"prerelease\":false},{\"tag_name\":\"v0.11.0\",\"draft\":false,\"prerelease\":false},{\"tag_name\":\"v0.9.1\",\"draft\":true,\"prerelease\":false},{\"tag_name\":\"v0.9.2\",\"draft\":false,\"prerelease\":true}]";
+            var changes = ReleaseUpdates.ParseHistory(history, "0.8.0", "v0.10.0", out releaseCount);
+            if (releaseCount != 6 || changes.Length != 2 || changes[0].Version != "v0.10.0" || changes[1].Version != "v0.9.0" || changes[0].Notes != "")
+                throw new Exception("History must include only stable missing versions, ordered numerically, including versions without notes.");
+            var description = UpdateHistoryView.Describe(new ReleaseUpdate { Version = "v0.10.0", Changes = changes, HistoryComplete = true });
+            if (!description.Contains("2 newer versions") || !description.Contains("Older fixes") || !description.Contains("No release notes"))
+                throw new Exception("Update recap omitted versions or missing-note feedback.");
+            description = UpdateHistoryView.Describe(new ReleaseUpdate { Changes = new[] { new ReleaseChange { Version = "v1", Notes = "## Fixes\n<!-- internal marker -->\n- A fix" } } });
+            if (description.Contains("internal marker") || !description.Contains("incomplete or unavailable") || !description.Contains("A fix"))
+                throw new Exception("History fallback must be explicit and hide internal comments.");
             var current = new Version(ReleaseUpdates.CurrentVersion);
             string future = "v" + new Version(current.Major + 1, 0, 0);
             if (ReleaseUpdates.IsNewer("v0.0.0") || ReleaseUpdates.IsNewer("v" + ReleaseUpdates.CurrentVersion) || ReleaseUpdates.IsNewer(future + "-beta") || !ReleaseUpdates.IsNewer(future))
                 throw new Exception("Release version comparison failed.");
+            string manifest = new string('a', 64) + "  Affinisaur.exe\n" + new string('b', 64) + "  AniimoAffinities.exe\n";
+            if (ReleaseUpdates.Checksum(manifest, "Affinisaur.exe") != new string('a', 64) || ReleaseUpdates.Checksum(manifest) != new string('b', 64))
+                throw new Exception("Checksums must match the selected asset, not just the first manifest entry.");
+            foreach (bool reverse in new[] { false, true })
+            {
+                string newer = "{\"name\":\"Affinisaur.exe\",\"browser_download_url\":\"https://github.com/Lapinosaur/aniimo-affinities/releases/download/" + future + "/Affinisaur.exe\"}";
+                string legacy = newer.Replace("Affinisaur.exe", "AniimoAffinities.exe");
+                string checksums = newer.Replace("Affinisaur.exe", "SHA256SUMS.txt");
+                string json = "{\"tag_name\":\"" + future + "\",\"draft\":false,\"prerelease\":false,\"assets\":[" + (reverse ? legacy + "," + newer : newer + "," + legacy) + "," + checksums + "]}";
+                if (ReleaseUpdates.ParseRelease(json).AssetName != "Affinisaur.exe")
+                    throw new Exception("The new executable must be preferred regardless of asset order.");
+                json = "{\"tag_name\":\"" + future + "\",\"draft\":false,\"prerelease\":false,\"assets\":[" + legacy + "," + checksums + "]}";
+                if (ReleaseUpdates.ParseRelease(json).AssetName != "AniimoAffinities.exe")
+                    throw new Exception("Existing releases must remain downloadable.");
+            }
             byte[] payload = Encoding.UTF8.GetBytes("update fixture");
             string hash;
             using (var sha = SHA256.Create())
