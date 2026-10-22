@@ -16,7 +16,7 @@ namespace AniimoAffinities
             }
         }
         private readonly CancellationTokenSource cancellation = new CancellationTokenSource();
-        private bool downloading;
+        private bool downloading, ready;
         internal UpdateWindow(ReleaseUpdate update)
         {
             Text = "Update available";
@@ -27,7 +27,7 @@ namespace AniimoAffinities
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             Controls.Add(UiFonts.Own(new Label { Text = "Version " + update.Version + " is available", Location = new Point(24, 54), Size = new Size(382, 30), Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold) }));
-            var status = new Label { Text = "Download now. Install the next time you launch the app.", Location = new Point(24, 92), Size = new Size(382, 44) };
+            var status = new Label { Text = "Download now, then restart to install the update.", Location = new Point(24, 92), Size = new Size(382, 44) };
             Controls.Add(status);
             int percent = 0;
             var progress = new DrawingPanel { Location = new Point(24, 143), Size = new Size(382, 8), AccessibleRole = AccessibleRole.ProgressBar, AccessibleName = "Download progress" };
@@ -51,6 +51,21 @@ namespace AniimoAffinities
             };
             download.Click += (s, e) =>
             {
+                if (ready)
+                {
+                    try
+                    {
+                        if (!ReleaseUpdates.BeginInstall(Application.ExecutablePath))
+                            throw new System.IO.IOException("No prepared update is available.");
+                        Application.Exit();
+                    }
+                    catch (Exception error)
+                    {
+                        DiagnosticReport.Record(error);
+                        status.Text = "Unable to restart for the update. Your current app is still open. Try again.";
+                    }
+                    return;
+                }
                 downloading = true;
                 download.Enabled = skip.Enabled = false;
                 later.Text = "Cancel";
@@ -75,9 +90,13 @@ namespace AniimoAffinities
                     {
                         percent = 100;
                         progress.Invalidate();
-                        status.Text = "Verified and ready. The update will install on your next launch.";
+                        ready = true;
+                        skip.Visible = false;
+                        download.Text = "Restart now";
+                        download.Enabled = true;
+                        status.Text = "Verified and ready. Restart now to install and reopen the app.";
                     }
-                    later.Text = "Close";
+                    later.Text = ready ? "Restart later" : "Close";
                 };
                 worker.RunWorkerAsync();
             };
