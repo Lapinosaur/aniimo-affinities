@@ -22,6 +22,10 @@ namespace AniimoAffinities
                     main.Show();
                     matrix.Show();
                     Application.DoEvents();
+                    // Keep the 150% case within small CI desktops so native screen
+                    // constraints do not alter the geometry under test.
+                    main.MinimumSize = matrix.MinimumSize = Size.Empty;
+                    main.ClientSize = matrix.ClientSize = new Size(400, 300);
                     var mainSize = main.ClientSize;
                     var matrixSize = matrix.ClientSize;
                     foreach (float zoom in new[] { .5f, 1.5f, 1f, .5f, 1f })
