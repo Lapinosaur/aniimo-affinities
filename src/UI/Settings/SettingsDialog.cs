@@ -286,7 +286,7 @@ namespace AniimoAffinities
             };
             about.Click += (s, e) =>
             {
-                TransitionHeight(668);
+                TransitionHeight(690);
                 displaySection = true;
                 editor.Hide();
                 guidePanel.Hide();

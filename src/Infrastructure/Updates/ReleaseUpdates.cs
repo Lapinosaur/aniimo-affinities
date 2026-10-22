@@ -14,9 +14,15 @@ namespace AniimoAffinities
     {
         internal string Version, Download, Checksums;
     }
-    internal static class ReleaseUpdates
+    internal static partial class ReleaseUpdates
     {
-        internal const string CurrentVersion = "0.3.0";
+        internal static string CurrentVersion
+        {
+            get
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
+            }
+        }
         private const string Repository = "https://github.com/Lapinosaur/aniimo-affinities/releases/download/";
         private static string Folder
         {
@@ -60,13 +66,14 @@ namespace AniimoAffinities
                 throw new InvalidDataException("Release assets are incomplete.");
             return result;
         }
-        private static byte[] Fetch(string url, int limit)
+        private static byte[] Fetch(string url, int limit, Action<int> progress = null, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken))
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
             var request = (HttpWebRequest)WebRequest.Create(url);
             request.UserAgent = "AniimoAffinities/" + CurrentVersion;
             request.Timeout = 15000;
             request.ReadWriteTimeout = 15000;
+            using (cancellation.Register(request.Abort))
             using (var response = request.GetResponse())
             using (var input = response.GetResponseStream())
             using (var output = new MemoryStream())
@@ -77,7 +84,10 @@ namespace AniimoAffinities
                 {
                     if (output.Length + count > limit)
                         throw new InvalidDataException("Download exceeds the size limit.");
+                    cancellation.ThrowIfCancellationRequested();
                     output.Write(buffer, 0, count);
+                    if (progress != null)
+                        progress(response.ContentLength > 0 ? (int)(output.Length * 100 / response.ContentLength) : 0);
                 }
                 return output.ToArray();
             }
@@ -97,10 +107,11 @@ namespace AniimoAffinities
             using (var sha = SHA256.Create())
                 return BitConverter.ToString(sha.ComputeHash(bytes)).Replace("-", "");
         }
-        internal static void Prepare(ReleaseUpdate update, string target)
+        internal static void Prepare(ReleaseUpdate update, string target, Action<int> progress = null, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken))
         {
-            string expected = Checksum(Encoding.UTF8.GetString(Fetch(update.Checksums, 65536)));
-            byte[] bytes = Fetch(update.Download, 64 * 1024 * 1024);
+            string expected = Checksum(Encoding.UTF8.GetString(Fetch(update.Checksums, 65536, null, cancellation)));
+            byte[] bytes = Fetch(update.Download, 64 * 1024 * 1024, progress, cancellation);
+            cancellation.ThrowIfCancellationRequested();
             Stage(bytes, expected, update.Version, target);
         }
         internal static void Stage(byte[] bytes, string expected, string version, string target)
@@ -110,23 +121,12 @@ namespace AniimoAffinities
             if (!string.Equals(Hash(bytes), expected, StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("Checksum mismatch.");
             Directory.CreateDirectory(Folder);
-            string payload = Path.Combine(Folder, Guid.NewGuid().ToString("N") + ".exe");
-            File.WriteAllBytes(payload, bytes);
-            PreferenceFiles.WriteLines(Pending, new[] { Path.GetFullPath(target), payload, expected, version });
-        }
-        // The running executable cannot replace itself. A temporary copy waits for it to exit.
-        internal static bool BeginInstall(string target)
-        {
-            if (!File.Exists(Pending))
-                return false;
-            string[] plan = File.ReadAllLines(Pending);
-            if (plan.Length != 4 || !string.Equals(plan[0], target, StringComparison.OrdinalIgnoreCase))
-                return false;
-            Validate(plan);
-            string helper = Path.Combine(Folder, "installer-" + Guid.NewGuid().ToString("N") + ".exe");
-            File.Copy(target, helper);
-            Process.Start(new ProcessStartInfo(helper, "--apply-update " + Process.GetCurrentProcess().Id) { UseShellExecute = false, CreateNoWindow = true });
-            return true;
+            using (var updateLock = Lock())
+            {
+                string payload = Path.Combine(Folder, Guid.NewGuid().ToString("N") + ".exe");
+                File.WriteAllBytes(payload, bytes);
+                PreferenceFiles.WriteLines(Pending, new[] { Path.GetFullPath(target), payload, expected, version });
+            }
         }
         private static void Validate(string[] plan)
         {
@@ -134,40 +134,6 @@ namespace AniimoAffinities
                 throw new InvalidDataException("Invalid update plan.");
             if (!string.Equals(Hash(File.ReadAllBytes(plan[1])), plan[2], StringComparison.OrdinalIgnoreCase))
                 throw new InvalidDataException("Update verification failed.");
-        }
-        internal static void Install(int parentId, Action<string> launch = null)
-        {
-            try
-            {
-                using (var parent = Process.GetProcessById(parentId))
-                    if (!parent.WaitForExit(15000))
-                        throw new IOException("Please close Aniimo Affinities and try again.");
-            }
-            catch (ArgumentException) { }
-            string[] plan = File.ReadAllLines(Pending);
-            Validate(plan);
-            string backup = plan[0] + ".previous";
-            File.Copy(plan[0], backup, true);
-            try
-            {
-                File.Copy(plan[1], plan[0], true);
-                File.Delete(Pending);
-                if (launch != null)
-                    launch(plan[0]);
-                else
-                    Process.Start(new ProcessStartInfo(plan[0]) { UseShellExecute = true });
-            }
-            catch
-            {
-                File.Copy(backup, plan[0], true);
-                throw;
-            }
-            try
-            {
-                File.Delete(plan[1]);
-            }
-            catch (IOException) { }
-            catch (UnauthorizedAccessException) { }
         }
     }
 }

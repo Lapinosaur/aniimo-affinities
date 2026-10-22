@@ -12,6 +12,9 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            float fitted = WindowZoom.FitScale(1.5f, new SizeF(902, 592), new Size(1024, 728));
+            if (902 * fitted > 1008 || 592 * fitted > 712 || fitted > 1.5f)
+                throw new Exception("Zoom must fit the working area on small desktops.");
             float savedZoom = DisplaySettings.WindowScale;
             DisplaySettings.WindowScale = 1;
             try

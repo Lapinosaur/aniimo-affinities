@@ -36,6 +36,19 @@ namespace AniimoAffinities
                 tutorial.Show(tourSource);
                 Application.DoEvents();
                 var before = tourSource.TutorialSelection;
+                int appearance = Theme.Appearance;
+                foreach (int mode in new[] { 2, 0, appearance })
+                {
+                    Theme.Appearance = mode;
+                    Theme.ApplyAppearance();
+                    Application.DoEvents();
+                    var bubble = tutorial.Controls.OfType<DrawingPanel>().Single();
+                    if (tutorial.BackColor != Theme.Background || bubble.BackColor != Theme.Surface || bubble.Controls.OfType<Label>().Any(label => label.BackColor != Theme.Surface))
+                        throw new Exception("Tutorial did not follow the current theme.");
+                    var revision = typeof(TutorialOverlay).GetField("frameThemeRevision", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                    if ((int)revision.GetValue(tutorial) != Theme.Revision)
+                        throw new Exception("Tutorial retained old-theme preview captures.");
+                }
                 for (int step = 1; step < tutorial.StepCount; step++)
                     tutorial.NavigateStep(1);
                 if (tutorial.StepIndex != tutorial.StepCount - 1 || !tutorial.Controls.OfType<DrawingPanel>().SelectMany(panel => panel.Controls.OfType<CheckBox>()).Single().Visible)

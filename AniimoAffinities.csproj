@@ -9,7 +9,8 @@
     <AssemblyName>AniimoAffinities</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/package.json')), '&quot;version&quot;:\s*&quot;([^&quot;]+)&quot;').Groups[1].Value)</Version>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <ApplicationIcon>assets/branding/app.ico</ApplicationIcon>
   </PropertyGroup>

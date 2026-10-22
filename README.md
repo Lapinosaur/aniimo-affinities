@@ -19,7 +19,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 Windows x64 with .NET Framework 4.x (included in current Windows 10/11).
 Download `AniimoAffinities.exe` from the repository release and run it. No installer, server or WebView is required. The executable is not code-signed.
 
-The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits also offers a manual update check. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
+The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits also offers a manual update check, a privacy-conscious diagnostic report and local cache cleanup. The tutorial opt-out is stored outside the executable and survives updates. Each stable release must include `AniimoAffinities.exe` and `SHA256SUMS.txt`.
 
 ## Build and develop
 
@@ -52,3 +52,5 @@ The checked-in `types.txt`, `matchups.txt` and `matrix-emphasis.txt` are the bui
 Type icons originate from [ManuelGraf/AniimoWeaknessCalculator](https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg). They are community traces of game artwork. The source repository did not declare a license when retrieved; redistribution rights have not been established. No license grant for these third-party assets is implied.
 
 Unofficial fan tool, not affiliated with or endorsed by Aniimo or its rights holders. No blanket open-source license has been assigned to this initial publication.
+
+See [1.0 readiness](docs/1.0-readiness.md) for remaining manual acceptance checks and the CI publication procedure.

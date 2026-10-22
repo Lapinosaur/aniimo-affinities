@@ -46,6 +46,8 @@ namespace AniimoAffinities
         }
         internal static void Apply(PortableWindow window, float scale)
         {
+            var area = Screen.FromControl(window).WorkingArea;
+            scale = FitScale(scale, new SizeF(window.Width / window.AppliedWindowScale, window.Height / window.AppliedWindowScale), area.Size);
             float ratio = scale / window.AppliedWindowScale;
             if (Math.Abs(ratio - 1) < .001)
                 return;
@@ -72,6 +74,10 @@ namespace AniimoAffinities
             window.Invalidate(true);
             var work = Screen.FromControl(window).WorkingArea;
             window.Location = new Point(Math.Max(work.Left, Math.Min(window.Left, work.Right - window.Width)), Math.Max(work.Top, Math.Min(window.Top, work.Bottom - 40)));
+        }
+        internal static float FitScale(float requested, SizeF logicalSize, Size screen)
+        {
+            return Math.Min(requested, Math.Min((screen.Width - 16) / Math.Max(1, logicalSize.Width), (screen.Height - 16) / Math.Max(1, logicalSize.Height)));
         }
         private static Rectangle Scale(Rectangle r, float scale)
         {

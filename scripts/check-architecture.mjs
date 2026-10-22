@@ -17,7 +17,7 @@ for (const file of sources) {
   if (relative.startsWith('src/UI/Rendering/')) {
     assert(!/MainForm|MatrixDialog|RadarDialog|SettingsDialog/.test(source), `${relative}: renderers must not depend on view windows.`);
   }
-  if (!relative.endsWith('/PreferenceFiles.cs')) {
+  if (!relative.endsWith('/PreferenceFiles.cs') && !relative.endsWith('/UpdateInstaller.cs')) {
     assert(!/File\.(WriteAllText|WriteAllLines|Replace|Move)\(/.test(source), `${relative}: preference writes must use PreferenceFiles.`);
   }
 }

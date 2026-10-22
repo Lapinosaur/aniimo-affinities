@@ -16,6 +16,8 @@ namespace AniimoAffinities
         internal static Color Attack, Defense, AttackSurface, DefenseSurface, ReducedDamage, IncreasedDamage;
         internal static Color AccentForeground = Accent, HoverSurface = Anthracite, StrongBorder = Anthracite, Error = Color.FromArgb(245, 105, 115), TooltipShadow = Anthracite;
         internal static int Appearance = 1;
+        internal static int Revision;
+        internal static event Action Changed;
         private static readonly string AppearancePath = PreferenceFiles.FilePath("appearance.txt");
         internal static void LoadAppearance()
         {
@@ -94,6 +96,9 @@ namespace AniimoAffinities
                 if (form is PortableWindow && form.TopMost)
                     form.TransparencyKey = Background;
             }
+            Revision++;
+            if (Changed != null)
+                Changed();
         }
         internal static Color MultiplierInk(double value)
         {

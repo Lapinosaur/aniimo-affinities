@@ -65,6 +65,20 @@ namespace AniimoAffinities
                         }
                         return 0;
                     }
+                    if (args.Length == 2 && (args[0] == "--preview-storage" || args[0] == "--preview-update"))
+                    {
+                        using (PortableWindow form = args[0] == "--preview-storage" ? (PortableWindow)new StorageWindow() : new UpdateWindow(new ReleaseUpdate { Version = "v0.5.0" }))
+                        {
+                            form.Show();
+                            Application.DoEvents();
+                            using (var image = new Bitmap(form.Width, form.Height))
+                            {
+                                form.DrawToBitmap(image, new Rectangle(Point.Empty, form.Size));
+                                image.Save(args[1]);
+                            }
+                        }
+                        return 0;
+                    }
                     if (args.Length == 2 && args[0] == "--preview-lock-controls")
                     {
                         using (var form = new UnlockWindow(() => { }, () => { }, false, () => Point.Empty, point => { }))

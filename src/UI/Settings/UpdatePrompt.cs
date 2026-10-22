@@ -23,6 +23,13 @@ namespace AniimoAffinities
         }
         internal static void Check(Form owner, bool manual)
         {
+            foreach (Form form in Application.OpenForms)
+                if (form is UpdateWindow)
+                {
+                    if (manual)
+                        form.Activate();
+                    return;
+                }
             if (busy || owner == null || owner.IsDisposed)
                 return;
             busy = true;
@@ -36,6 +43,7 @@ namespace AniimoAffinities
                     return;
                 if (e.Error != null)
                 {
+                    DiagnosticReport.Record(e.Error);
                     if (manual)
                         MessageBox.Show(owner, "Unable to check for updates. Please try again later.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
@@ -47,24 +55,17 @@ namespace AniimoAffinities
                         MessageBox.Show(owner, "You're up to date. Version " + ReleaseUpdates.CurrentVersion + ".", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
-                if (MessageBox.Show(owner, "Version " + update.Version + " is available.\n\nDownload now and install the next time you launch the app?", "Update available", MessageBoxButtons.YesNo, MessageBoxIcon.Information) == DialogResult.Yes)
-                    Download(owner, update);
-            };
-            worker.RunWorkerAsync();
-        }
-        private static void Download(Form owner, ReleaseUpdate update)
-        {
-            busy = true;
-            string target = Application.ExecutablePath;
-            var worker = new BackgroundWorker();
-            worker.DoWork += (s, e) => ReleaseUpdates.Prepare(update, target);
-            worker.RunWorkerCompleted += (s, e) =>
-            {
-                busy = false;
-                worker.Dispose();
-                if (owner.IsDisposed)
-                    return;
-                MessageBox.Show(owner, e.Error == null ? "Update verified and ready. It will install the next time you launch this copy of the app." : "The update could not be downloaded or verified. Your current app is unchanged.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (!manual)
+                {
+                    try
+                    {
+                        if (System.IO.File.ReadAllText(PreferenceFiles.FilePath("skipped-update.txt")).Trim() == update.Version)
+                            return;
+                    }
+                    catch (System.IO.IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+                new UpdateWindow(update).Show(owner);
             };
             worker.RunWorkerAsync();
         }

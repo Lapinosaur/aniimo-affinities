@@ -46,6 +46,7 @@ namespace AniimoAffinities
         private readonly SettingsButton previous = new SettingsButton(), next = new SettingsButton(), skip = new SettingsButton();
         private int index;
         private bool loading;
+        private int frameThemeRevision = -1;
         private Rectangle imageBounds, spotlight;
         internal int StepCount
         {
@@ -110,6 +111,7 @@ namespace AniimoAffinities
             CancelButton = skip;
             bubble.Paint += (s, e) => { e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; using (var outline = Drawing.Round(new RectangleF(1, 1, bubble.Width - 3, bubble.Height - 3), Theme.PanelRadius)) using (var pen = new Pen(Theme.Border)) e.Graphics.DrawPath(pen, outline); };
             Shown += (s, e) => ShowStep();
+            Theme.Changed += RefreshTheme;
             Resize += (s, e) => { if (frames.ContainsKey(steps[index].View)) ArrangeStep(); };
         }
         internal void NavigateStep(int direction)
@@ -138,6 +140,13 @@ namespace AniimoAffinities
             loading = true;
             try
             {
+                if (frameThemeRevision != Theme.Revision)
+                {
+                    foreach (var cached in frames.Values)
+                        cached.Dispose();
+                    frames.Clear();
+                    frameThemeRevision = Theme.Revision;
+                }
                 var step = steps[index];
                 if (!frames.ContainsKey(step.View))
                     frames.Add(step.View, CapturePreview(step.View));
@@ -157,7 +166,27 @@ namespace AniimoAffinities
                     next.Focus();
                 Invalidate();
             }
-            finally { loading = false; }
+            finally
+            {
+                loading = false;
+                if (frameThemeRevision != Theme.Revision)
+                    RefreshTheme();
+            }
+        }
+        private void RefreshTheme()
+        {
+            BackColor = Theme.Background;
+            ForeColor = Theme.TextColor;
+            bubble.BackColor = Theme.Surface;
+            foreach (var label in new[] { counter, heading, body, error })
+            {
+                label.BackColor = Theme.Surface;
+                label.ForeColor = label == counter ? Theme.AccentForeground : label == error ? Theme.Error : Theme.TextColor;
+            }
+            dontShow.BackColor = Theme.Surface;
+            dontShow.ForeColor = Theme.TextColor;
+            if (!loading && IsHandleCreated && !IsDisposed && Visible)
+                BeginInvoke(new Action(() => { if (!IsDisposed && Visible) ShowStep(); }));
         }
         private Frame CapturePreview(string view)
         {
@@ -251,7 +280,7 @@ namespace AniimoAffinities
             if (!frames.TryGetValue(steps[index].View, out frame))
                 return;
             g.DrawImage(frame.Image, imageBounds);
-            using (var shade = new SolidBrush(Color.FromArgb(175, Theme.Anthracite)))
+            using (var shade = new SolidBrush(Color.FromArgb(175, Theme.Background)))
                 g.FillRectangle(shade, ClientRectangle);
             if (steps[index].Target != "all")
             {
@@ -292,8 +321,11 @@ namespace AniimoAffinities
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
+                Theme.Changed -= RefreshTheme;
                 foreach (var frame in frames.Values)
                     frame.Dispose();
+            }
             base.Dispose(disposing);
         }
     }

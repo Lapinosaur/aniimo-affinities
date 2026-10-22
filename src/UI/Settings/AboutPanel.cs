@@ -10,7 +10,7 @@ namespace AniimoAffinities
         private readonly Label status;
         internal AboutPanel()
         {
-            Size = new Size(412, 492);
+            Size = new Size(412, 514);
             BackColor = Theme.Background;
             AddText("Aniimo Affinities", 0, 28, 16, true, Theme.TextColor);
             AddText("Explore type matchups, matrices and affinity radars.", 34, 24, 9, false, Theme.Muted);
@@ -31,7 +31,13 @@ namespace AniimoAffinities
             Controls.Add(updates);
             Controls.Add(new Label { Text = "Version " + ReleaseUpdates.CurrentVersion, Location = new Point(0, 422), Size = new Size(200, 22), ForeColor = Theme.Muted });
             updates.BringToFront();
-            status = new Label { Location = new Point(0, 460), Size = new Size(412, 28), ForeColor = Theme.Error };
+            var diagnostics = new SettingsButton { Text = "Copy diagnostics", Location = new Point(0, 452), Size = new Size(200, 32) };
+            diagnostics.Click += (s, e) => { try { Clipboard.SetText(DiagnosticReport.Create()); diagnostics.Text = "Copied"; } catch (System.Runtime.InteropServices.ExternalException) { diagnostics.Text = "Try again"; } };
+            Controls.Add(diagnostics);
+            var storage = new SettingsButton { Text = "Local storage", Location = new Point(212, 452), Size = new Size(200, 32) };
+            storage.Click += (s, e) => { using (var dialog = new StorageWindow()) dialog.ShowDialog(FindForm()); };
+            Controls.Add(storage);
+            status = new Label { Location = new Point(0, 486), Size = new Size(412, 28), ForeColor = Theme.Error };
             Controls.Add(status);
         }
         private void AddText(string text, int top, int height, float size, bool bold, Color color)

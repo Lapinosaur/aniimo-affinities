@@ -1,0 +1,43 @@
+name: Publish stable release
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: write
+concurrency:
+  group: publish-stable
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - run: npm run format:check
+      - run: npm run check
+      - name: Publish tested executable and checksum
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content package.json | ConvertFrom-Json).version
+          $tag = "v$version"
+          $notes = "docs/releases/$tag.md"
+          if (!(Test-Path -LiteralPath $notes)) { throw "Missing release notes: $notes" }
+          $hash = (Get-FileHash dist/AniimoAffinities.exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          Set-Content dist/SHA256SUMS.txt "$hash  AniimoAffinities.exe" -Encoding ascii
+          gh release create $tag dist/AniimoAffinities.exe dist/SHA256SUMS.txt --target $env:GITHUB_SHA --title "Aniimo Affinities $tag" --notes-file $notes --draft
+          if ($LASTEXITCODE -ne 0) { throw 'Could not create draft. Existing releases are never overwritten.' }
+          gh release edit $tag --draft=false --prerelease=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Could not publish release.' }
+          # Releases created by GITHUB_TOKEN do not trigger release workflows.
+          gh workflow run discord-releases.yml -f "tag=$tag"
+          if ($LASTEXITCODE -ne 0) { throw 'Release published, but Discord dispatch failed. Retry only the announcement workflow.' }

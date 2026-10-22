@@ -17,7 +17,10 @@ export async function build(diagnostics = false) {
   const folder = diagnostics ? path.join(output, 'diagnostics') : output;
   await fs.mkdir(folder, { recursive: true });
   const executable = path.join(folder, diagnostics ? 'AniimoAffinities.Diagnostics.exe' : 'AniimoAffinities.exe');
-  const sources = await filesUnder(path.join(root, 'src'));
+  const metadata = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
+  const versionSource = path.join(folder, 'Version.g.cs');
+  await fs.writeFile(versionSource, `[assembly: System.Reflection.AssemblyVersion("${metadata.version}.0")]\n[assembly: System.Reflection.AssemblyFileVersion("${metadata.version}.0")]\n`);
+  const sources = [...await filesUnder(path.join(root, 'src')), versionSource];
   if (diagnostics) sources.push(...await filesUnder(path.join(root, 'tests')), ...await filesUnder(path.join(root, 'tools/Diagnostics')));
   run(compiler, [
     '/nologo', diagnostics ? '/target:exe' : '/target:winexe', '/platform:x64', '/optimize+', '/codepage:65001',
