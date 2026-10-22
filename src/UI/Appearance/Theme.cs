@@ -13,6 +13,14 @@ namespace AniimoAffinities
         internal static Color AccentSurface, AccentHover, AccentPressed, AccentLight, AccentInk;
         internal static Color Background = Anthracite, Surface = Anthracite, Border = Anthracite, Accent = Color.FromArgb(25, 197, 199), Muted = Ivory;
         internal static Color TextColor = Ivory;
+        // Opaque recessed content must never share the window transparency key.
+        internal static Color InsetSurface
+        {
+            get
+            {
+                return Color.FromArgb(Background.R, Background.G, Background.B + 1);
+            }
+        }
         internal static Color Attack, Defense, AttackSurface, DefenseSurface, ReducedDamage, IncreasedDamage;
         internal static Color AccentForeground = Accent, HoverSurface = Anthracite, StrongBorder = Anthracite, Error = Color.FromArgb(245, 105, 115), TooltipShadow = Anthracite;
         internal static int Appearance = 1;

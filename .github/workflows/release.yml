@@ -21,6 +21,12 @@ jobs:
           dotnet-version: '10.0.x'
       - run: npm run format:check
       - run: npm run check
+      # Insert the approved signing provider here, before validation and hashing.
+      - name: Verify release signing status
+        shell: pwsh
+        env:
+          REQUIRE_CODE_SIGNATURE: ${{ vars.REQUIRE_CODE_SIGNATURE }}
+        run: ./scripts/verify-signature.ps1 -RequireSigned:($env:REQUIRE_CODE_SIGNATURE -eq 'true')
       - name: Publish tested executable and checksum
         env:
           GH_TOKEN: ${{ github.token }}

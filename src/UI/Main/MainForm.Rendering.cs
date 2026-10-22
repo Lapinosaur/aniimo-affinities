@@ -80,7 +80,7 @@ namespace AniimoAffinities
                 return;
             }
             float centerHeight = preview.Sub >= 0 ? 112 : 64;
-            Drawing.Box(g, new RectangleF(cx - 29, cy - centerHeight / 2, 58, centerHeight), Theme.Background, Theme.Border, 16);
+            Drawing.Box(g, new RectangleF(cx - 29, cy - centerHeight / 2, 58, centerHeight), Theme.InsetSurface, Theme.Border, 16);
             if (preview.Sub >= 0)
             {
                 HighlightOrigin(g, new RectangleF(cx - 22, cy - 49, 44, 44), column, 0);
@@ -117,7 +117,7 @@ namespace AniimoAffinities
                     var multipliers = entries.Select(t => factors[column * 9 + t]).Distinct().OrderBy(multiplier => multiplier).ToArray();
                     string value = multipliers.Length == 1 ? Model.Factor(multipliers[0]) : Model.Factor(multipliers[0]) + "–" + Model.Factor(multipliers[multipliers.Length - 1]);
                     var valueBox = new RectangleF(arrowX - 7, cy - 40, arrowW + 14, 26);
-                    Drawing.Box(g, valueBox, Theme.Background, Theme.Border, 7);
+                    Drawing.Box(g, valueBox, Theme.InsetSurface, Theme.Border, 7);
                     using (var bold = UiFonts.Create("Segoe UI", multipliers.Length == 1 ? 10 : 8.5f, FontStyle.Bold))
                         Drawing.Text(g, value, bold, color, valueBox, true);
                 }
@@ -143,7 +143,7 @@ namespace AniimoAffinities
             var ordered = OriginGroups.Build(preview.Main, preview.Sub, column, entries);
             float cell = Math.Min(62, available / entries.Length), height = cell * entries.Length;
             float y = cy - height / 2;
-            Drawing.Box(g, new RectangleF(x, y, 54, height), Theme.Background, Theme.Border, 11);
+            Drawing.Box(g, new RectangleF(x, y, 54, height), Theme.InsetSurface, Theme.Border, 11);
             if (hoveringOrigin && affinityColumn == column)
             {
                 for (int first = 0; first < ordered.Length; first++)
@@ -202,7 +202,7 @@ namespace AniimoAffinities
             {
                 double angle = (-90 + i * 40) * Math.PI / 180;
                 float x = cx + (float)Math.Cos(angle) * 69, y = cy + (float)Math.Sin(angle) * 69;
-                using (var halo = new SolidBrush(Theme.Background))
+                using (var halo = new SolidBrush(Theme.InsetSurface))
                     g.FillEllipse(halo, x - 17, y - 17, 34, 34);
                 VectorIcon.Draw(g, Array.IndexOf(Model.Names, order[i]), new RectangleF(x - 11, y - 11, 22, 22));
             }

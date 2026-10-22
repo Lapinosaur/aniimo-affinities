@@ -17,6 +17,18 @@ namespace AniimoAffinities
             {
                 Theme.Appearance = mode;
                 Theme.ApplyAppearance();
+                using (var bitmap = new Bitmap(220, 220))
+                using (var graphics = Graphics.FromImage(bitmap))
+                {
+                    graphics.Clear(Theme.Background);
+                    RadarRenderer.DrawRadar(graphics, new PointF(110, 110), 90, false, false, new Selection());
+                    for (int x = 70; x < 150; x++)
+                        for (int y = 70; y < 150; y++)
+                            if (bitmap.GetPixel(x, y).ToArgb() == Theme.Background.ToArgb())
+                                throw new Exception("Radar interior contains transparent overlay pixels.");
+                    if (Theme.InsetSurface.ToArgb() == Theme.Background.ToArgb())
+                        throw new Exception("Recessed content must remain opaque when pinned.");
+                }
                 foreach (var brand in new[] { Color.FromArgb(145, 70, 255), Color.FromArgb(255, 0, 51), Color.FromArgb(255, 221, 0), Color.FromArgb(110, 118, 129) })
                     foreach (bool hover in new[] { false, true })
                     {

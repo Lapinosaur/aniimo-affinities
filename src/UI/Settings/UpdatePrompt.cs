@@ -9,7 +9,7 @@ namespace AniimoAffinities
         private static bool busy;
         internal static void OnStartup(Form owner)
         {
-            var timer = new Timer { Interval = 10000 };
+            var timer = new Timer { Interval = 1000 };
             owner.Disposed += (s, e) => timer.Dispose();
             timer.Tick += (s, e) =>
             {

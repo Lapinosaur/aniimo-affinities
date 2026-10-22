@@ -26,7 +26,7 @@ namespace AniimoAffinities
             for (int band = levels.Length - 1; band >= 0; band--)
             {
                 var polygon = Enumerable.Range(0, 9).Select(i => Vertex(center, radius * RadiusFraction(levels[band]), i)).ToArray();
-                using (var fill = new SolidBrush(band % 2 == 0 ? Theme.Background : Theme.HoverSurface))
+                using (var fill = new SolidBrush(band % 2 == 0 ? Theme.InsetSurface : Theme.HoverSurface))
                     g.FillPolygon(fill, polygon);
             }
             foreach (double level in levels)
