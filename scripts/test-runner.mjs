@@ -59,6 +59,7 @@ export async function runTests(executable, root, output, serial = false) {
     // Also retain console output when killed before the C# report can be written.
     await fs.writeFile(path.join(logs, `${group}.log`), log);
     console.log(`[${group}] ${result.ok ? 'PASS' : 'FAIL'} (${result.milliseconds} ms)`);
+    if (!result.ok) console.error(await fs.readFile(groupReport, 'utf8'));
     return { group, ...result };
   });
   const milliseconds = Math.round(performance.now() - started);

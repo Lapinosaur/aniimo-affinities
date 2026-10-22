@@ -48,3 +48,13 @@ jobs:
           # Releases created by GITHUB_TOKEN do not trigger release workflows.
           gh workflow run discord-releases.yml -f "tag=$tag"
           if ($LASTEXITCODE -ne 0) { throw 'Release published, but Discord dispatch failed. Retry only the announcement workflow.' }
+      - name: Upload validation reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-validation
+          path: |
+            dist/tests.txt
+            dist/tests.json
+            dist/test-results/
+          if-no-files-found: warn

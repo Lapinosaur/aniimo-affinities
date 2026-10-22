@@ -232,6 +232,7 @@ namespace AniimoAffinities
                 var state = (TeamPlan)typeof(MainForm).GetField("teamPlan", flags).GetValue(form);
                 var canvas = (Control)typeof(MainForm).GetField("canvas", flags).GetValue(form);
                 var baseline = canvas.Size;
+                var baselineWindow = form.Size;
                 var workArea = Screen.FromControl(form).WorkingArea;
                 form.Location = new System.Drawing.Point(workArea.Right - form.Width - 24, workArea.Top + 24);
                 int anchoredRight = form.Right, anchoredTop = form.Top;
@@ -245,8 +246,14 @@ namespace AniimoAffinities
                     var positionToggle = (SettingsButton)typeof(MainForm).GetField("teamToggle", flags).GetValue(form);
                     if (positionToggle.Glyph != "team-" + position)
                         throw new Exception("Team icon must follow panel position");
-                    if (canvas.Width < baseline.Width - 3 || canvas.Height < baseline.Height - 3)
-                        throw new Exception("Team board shrank existing content: " + position);
+                    bool side = position == "Left" || position == "Right";
+                    int panelWidth = side ? (int)(216 * form.AppliedWindowScale) : 0;
+                    int panelHeight = side ? 0 : (int)(104 * form.AppliedWindowScale);
+                    int targetWidth = Math.Max(form.MinimumSize.Width, Math.Min(baselineWindow.Width + panelWidth, anchoredRight - workArea.Left));
+                    int targetHeight = Math.Max(form.MinimumSize.Height, Math.Min(baselineWindow.Height + panelHeight, workArea.Bottom - anchoredTop));
+                    var expected = new Size(baseline.Width + targetWidth - baselineWindow.Width - panelWidth, baseline.Height + targetHeight - baselineWindow.Height - panelHeight);
+                    if (Math.Abs(canvas.Width - expected.Width) > 3 || Math.Abs(canvas.Height - expected.Height) > 3)
+                        throw new Exception("Team content size must account for available screen space: " + position + " expected " + expected + " actual " + canvas.Size);
                     if (form.Right != anchoredRight || form.Top != anchoredTop)
                         throw new Exception("Team layout must preserve the top-right window corner: " + position);
                 }
