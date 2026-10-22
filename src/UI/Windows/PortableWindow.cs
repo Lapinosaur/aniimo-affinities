@@ -199,7 +199,7 @@ namespace AniimoAffinities
         }
         private static string ViewTip(string view, string key)
         {
-            return ViewName(view) + "\nClick: open in a separate window" + (key.Length > 0 ? " (" + key + ")" : "") + "\nHold click or Space for 0.9 s: swap this view with the main view. The button takes the previous view's icon.";
+            return ViewName(view) + "\nClick: swap this view with the main view. The button takes the previous view's icon.\nHold click or Space for 0.9 s: open in a separate window" + (key.Length > 0 ? " (or " + key + ")" : "") + ".";
         }
         private KeyboardHold matrixKeyboard, radarKeyboard, pinKeyboard;
         private Button viewHoldTarget;
@@ -321,9 +321,9 @@ namespace AniimoAffinities
                     suppressRadarClick = true;
                     CancelRadarHold();
                     if (holdingMatrix)
-                        ToggleInlineMatrix();
+                        OpenMatrix();
                     else
-                        ToggleInlineRadar();
+                        OpenRadar();
                 }
             };
             Deactivate += (s, e) => CancelRadarHold();
@@ -427,7 +427,7 @@ namespace AniimoAffinities
                 var settings = CaptionButton("⚙", "Settings");
                 var matrix = CaptionButton("matrix", "Effectiveness matrix");
                 matrixControl = matrix;
-                matrix.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } OpenMatrix(); };
+                matrix.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } ToggleInlineMatrix(); };
                 matrixKeyboard = new KeyboardHold(matrix, () => { viewHoldTarget = matrix; holdingMatrix = true; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); }, CancelRadarHold);
                 matrix.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { viewHoldTarget = matrix; holdingMatrix = true; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); } };
                 matrix.MouseUp += (s, a) => CancelRadarHold();
@@ -436,7 +436,7 @@ namespace AniimoAffinities
                 RefreshMatrixShortcut();
                 var radar = CaptionButton("radar", "Affinity radar");
                 radarControl = radar;
-                radar.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } OpenRadar(); };
+                radar.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } ToggleInlineRadar(); };
                 RefreshRadarShortcut();
                 radarKeyboard = new KeyboardHold(radar, () => { viewHoldTarget = radar; holdingMatrix = false; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); }, CancelRadarHold);
                 radar.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { viewHoldTarget = radar; holdingMatrix = false; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); } };

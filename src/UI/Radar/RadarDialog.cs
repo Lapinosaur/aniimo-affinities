@@ -86,19 +86,27 @@ namespace AniimoAffinities
         }
         private void ConfigureLegend(DrawingPanel legend, string glyph, string title, string explanation)
         {
-            legend.Size = new Size(32, 32);
+            legend.Size = new Size(110, 32);
             legend.Cursor = Cursors.Help;
             legend.AccessibleName = title;
             legend.AccessibleDescription = explanation;
             legend.AccessibleRole = AccessibleRole.Graphic;
-            legend.Paint += (s, e) => { e.Graphics.Clear(Theme.Background); e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; Glyphs.Draw(e.Graphics, glyph, new RectangleF(7, 7, 18, 18), Theme.TextColor); };
+            legend.Paint += (s, e) =>
+            {
+                e.Graphics.Clear(Theme.Background);
+                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                Color color = glyph == "atk" ? Theme.Attack : Theme.Defense;
+                Glyphs.Draw(e.Graphics, glyph, new RectangleF(7, 7, 18, 18), color);
+                using (var font = UiFonts.Create("Segoe UI", 9))
+                    Drawing.Text(e.Graphics, title, font, color, new RectangleF(32, 0, 78, 32), false);
+            };
             Controls.Add(legend);
             tips.SetToolTip(legend, title + "\n" + explanation);
         }
         private void RefreshSelection()
         {
-            attackLegend.Location = new Point((int)((combined ? 414 : 209) * AppliedWindowScale), (int)(534 * AppliedWindowScale));
-            defenseLegend.Location = new Point((int)((combined ? 454 : 659) * AppliedWindowScale), (int)(534 * AppliedWindowScale));
+            attackLegend.Location = new Point((int)((combined ? 336 : 170) * AppliedWindowScale), (int)(534 * AppliedWindowScale));
+            defenseLegend.Location = new Point((int)((combined ? 454 : 620) * AppliedWindowScale), (int)(534 * AppliedWindowScale));
             selector.Arrange(selection.Main >= 0);
             foreach (var button in selector.Controls.OfType<IconButton>())
             {
