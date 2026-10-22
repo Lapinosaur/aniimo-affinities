@@ -1,0 +1,111 @@
+name: Discord release announcements
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing published release tag to announce (posts one message)
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: discord-release-${{ github.event.release.tag_name || inputs.tag }}
+  cancel-in-progress: false
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Publish release card
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISCORD_RELEASES_WEBHOOK: ${{ secrets.DISCORD_RELEASES_WEBHOOK }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sys
+          from urllib.request import Request, urlopen
+          from urllib.parse import quote, urlsplit
+          from urllib.error import HTTPError, URLError
+
+          def clean(value, limit):
+              text = str(value or '').replace('@', '@\u200b')
+              return text if len(text) <= limit else text[:limit - 1] + '\u2026'
+
+          def payload(release, repo):
+              base = 'https://github.com/' + repo
+              page = release['html_url']
+              if release.get('draft') or not page.startswith(base + '/releases/tag/'):
+                  raise ValueError('Only published releases from this repository may be announced')
+              links = []
+              for asset in release.get('assets', []):
+                  url = asset.get('browser_download_url', '')
+                  if asset.get('state') != 'uploaded' or not url.startswith(base + '/releases/download/'):
+                      continue
+                  name = re.sub(r'[\[\]()`*_<>]', '', clean(asset.get('name'), 90))
+                  size = asset.get('size', 0)
+                  label = f'{size / 1048576:.1f} MB' if size >= 1048576 else f'{size / 1024:.0f} KB'
+                  line = f'[{name}]({url}) \u00b7 {label}'
+                  if len('\n'.join(links + [line])) > 900:
+                      break
+                  links.append(line)
+              downloads = '\n'.join(links) if links else 'No downloadable files attached. Check the release page.'
+              return {
+                  'username': 'Lapinosaur Releases',
+                  'allowed_mentions': {'parse': []},
+                  'embeds': [{
+                      'author': {'name': 'Lapinosaur \u00b7 Tool updates', 'url': base},
+                      'title': clean(release.get('name') or release['tag_name'], 240),
+                      'url': page,
+                      'color': 0x19C5C7,
+                      'description': clean(release.get('body') or 'A new update is available.', 1800),
+                      'fields': [
+                          {'name': 'Version', 'value': clean(release['tag_name'], 100), 'inline': True},
+                          {'name': 'Channel', 'value': 'Preview build' if release.get('prerelease') else 'Stable release', 'inline': True},
+                          {'name': 'Downloads', 'value': downloads + f'\n[All files & release notes]({page})'},
+                          {'name': 'Community', 'value': 'Ideas & bugs: <#1562109423516917765>\nNeed help: <#1562649870320533554>'}
+                      ],
+                      'footer': {'text': clean(repo + ' \u00b7 Official GitHub release', 150)}
+                  }]
+              }
+
+          def main():
+              repo = os.environ['GITHUB_REPOSITORY']
+              with open(os.environ['GITHUB_EVENT_PATH'], encoding='utf-8') as stream:
+                  event = json.load(stream)
+              tag = (event.get('release') or {}).get('tag_name') or event.get('inputs', {}).get('tag')
+              if not tag:
+                  raise ValueError('An existing release tag is required')
+              # Re-fetch at publication time so attached downloads are current.
+              request = Request('https://api.github.com/repos/' + repo + '/releases/tags/' + quote(tag, safe=''), headers={
+                  'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                  'Accept': 'application/vnd.github+json', 'User-Agent': 'Lapinosaur-Releases'
+              })
+              with urlopen(request, timeout=30) as response:
+                  release = json.load(response)
+              body = json.dumps(payload(release, repo)).encode('utf-8')
+              hook = os.environ.get('DISCORD_RELEASES_WEBHOOK', '')
+              parsed = urlsplit(hook)
+              if parsed.scheme != 'https' or parsed.netloc != 'discord.com' or not re.fullmatch(r'/api/webhooks/[0-9]+/[A-Za-z0-9_-]+', parsed.path):
+                  raise ValueError('Configure the DISCORD_RELEASES_WEBHOOK repository secret')
+              request = Request(hook + '?wait=true', data=body, headers={
+                  'Content-Type': 'application/json', 'User-Agent': 'Lapinosaur-Releases'
+              }, method='POST')
+              # No blind retries: an ambiguous timeout may already have posted the message.
+              with urlopen(request, timeout=30) as response:
+                  message = json.load(response)
+              print('Release announcement delivered. Message ID: ' + message['id'])
+
+          if __name__ == '__main__':
+              try:
+                  main()
+              except HTTPError as error:
+                  print('Announcement failed: HTTP ' + str(error.code), file=sys.stderr)
+                  sys.exit(1)
+              except (URLError, TimeoutError, ValueError, KeyError) as error:
+                  # Never print request objects or URLs containing the webhook credential.
+                  print('Announcement failed (' + type(error).__name__ + '). Check the secret, release tag and service availability.', file=sys.stderr)
+                  sys.exit(1)
+          PY
