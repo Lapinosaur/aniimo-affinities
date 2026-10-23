@@ -43,7 +43,7 @@ namespace AniimoAffinities
         {
             return new PointF(center.X + directions[index].X * radius, center.Y + directions[index].Y * radius);
         }
-        internal static void DrawRadar(Graphics g, PointF center, float radius, bool attack, bool defense, Selection selection, int highlightedTypes = 0, Series[] comparison = null)
+        internal static void DrawRadar(Graphics g, PointF center, float radius, bool attack, bool defense, Selection selection, int highlightedTypes = 0, Series[] comparison = null, int highlightedSlot = -1)
         {
             bool comparing = comparison != null && comparison.Length > 0;
             double maximum = comparing ? ComparisonMaximum(comparison) : SharedMaximum(selection);
@@ -77,14 +77,17 @@ namespace AniimoAffinities
             double[] values = comparing ? (comparison.Length == 1 ? Model.Factors(comparison[0].Member.Main, comparison[0].Member.Sub) : null) : selection.Main < 0 ? null : Model.Factors(selection.Main, selection.Sub);
             if (comparing)
             {
-                foreach (var item in comparison)
+                foreach (var item in highlightedSlot < 0 ? comparison : comparison.OrderBy(item => item.Slot == highlightedSlot ? 1 : 0).ToArray())
                 {
                     var factors = Model.Factors(item.Member.Main, item.Member.Sub);
                     var ink = Theme.ComparisonInk(item.Slot);
+                    bool highlighted = item.Slot == highlightedSlot;
+                    if (highlightedSlot >= 0 && !highlighted)
+                        ink = Color.FromArgb(45, ink);
                     if (defense)
-                        DrawSeries(g, center, radius, factors, 9, ink, maximum, true);
+                        DrawSeries(g, center, radius, factors, 9, ink, maximum, true, highlighted);
                     if (attack)
-                        DrawSeries(g, center, radius, factors, 0, ink, maximum, true);
+                        DrawSeries(g, center, radius, factors, 0, ink, maximum, true, highlighted);
                 }
             }
             else if (values != null)
@@ -114,12 +117,12 @@ namespace AniimoAffinities
                     }
                 }
         }
-        private static void DrawSeries(Graphics g, PointF center, float radius, double[] values, int offset, Color color, double maximum, bool comparing = false)
+        private static void DrawSeries(Graphics g, PointF center, float radius, double[] values, int offset, Color color, double maximum, bool comparing = false, bool highlighted = false)
         {
             var points = Enumerable.Range(0, 9).Select(i => Vertex(center, radius * RadiusFraction(values[offset + order[i]], maximum), i)).ToArray();
-            using (var fill = new SolidBrush(Color.FromArgb(comparing ? 12 : 28, color)))
+            using (var fill = new SolidBrush(Color.FromArgb((highlighted ? 32 : comparing ? 12 : 28) * color.A / 255, color)))
                 g.FillPolygon(fill, points);
-            using (var pen = new Pen(color, 2))
+            using (var pen = new Pen(color, highlighted ? 3.5f : 2))
             {
                 g.DrawPolygon(pen, points);
             }

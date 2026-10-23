@@ -23,7 +23,7 @@ namespace AniimoAffinities
             MinimumSize = new Size(420, 320);
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
-            var document = new FlowLayoutPanel { Location = new Point(22, 52), Size = new Size(616, 488), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = "Conditions d'utilisation, confidentialité et licences" };
+            var document = new SlimFlowPanel { Location = new Point(22, 52), Size = new Size(616, 488), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = "Conditions d'utilisation, confidentialité et licences" };
             using (var stream = typeof(LegalWindow).Assembly.GetManifestResourceStream("legal.md"))
             using (var reader = new StreamReader(stream))
             {

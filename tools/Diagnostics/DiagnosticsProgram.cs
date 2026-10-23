@@ -23,6 +23,21 @@ namespace AniimoAffinities
             try
             {
                 ApplicationBootstrap.Initialize();
+                if (args.Length == 1 && args[0] == "--test-bubble-clicks")
+                {
+                    BubbleClickTests.Run();
+                    return 0;
+                }
+                if (args.Length == 1 && args[0] == "--test-transparency")
+                {
+                    TransparencyTests.Run();
+                    return 0;
+                }
+                if (args.Length == 2 && args[0] == "--profile-interactions")
+                {
+                    InteractionProbe.Run(args[1]);
+                    return 0;
+                }
                 if (args.Length == 2 && args[0] == "--profile-resources")
                 {
                     ResourceProbe.Run(args[1]);
@@ -70,18 +85,50 @@ namespace AniimoAffinities
                     TeamPreview.Save(args[0].Substring("--preview-".Length), args[1]);
                     return 0;
                 }
-                if (args.Length == 2 && new[] { "--preview-tutorial", "--preview-tutorial-news", "--preview-tutorial-selector", "--preview-tutorial-display", "--preview-tutorial-final" }.Contains(args[0]))
+                if (args.Length == 2 && new[] { "--preview-tutorial", "--preview-tutorial-shortcuts", "--preview-tutorial-radar-select", "--preview-tutorial-radar-hover", "--preview-tutorial-suggestions-coverage", "--preview-tutorial-suggestions-counter", "--preview-tutorial-suggestions-radar", "--preview-tutorial-suggestions-apply", "--preview-tutorial-pin", "--preview-tutorial-hold", "--preview-tutorial-hold-lock", "--preview-tutorial-locked", "--preview-tutorial-news", "--preview-tutorial-selector", "--preview-tutorial-display", "--preview-tutorial-final" }.Contains(args[0]))
                 {
+                    bool newsPreview = args[0] == "--preview-tutorial-news";
+                    if (newsPreview)
+                        new TutorialProgress { Sections = TutorialProgress.News }.Save();
                     using (var source = new MainForm())
-                    using (var tour = new TutorialOverlay(source))
+                    using (var tour = new TutorialOverlay(source, newsPreview))
                     {
                         source.Show();
                         Application.DoEvents();
                         tour.Show(source);
                         Application.DoEvents();
-                        int target = args[0] == "--preview-tutorial-news" ? tour.StepCount - 2 : args[0] == "--preview-tutorial-final" ? tour.StepCount - 1 : args[0] == "--preview-tutorial-display" ? 14 : args[0] == "--preview-tutorial-selector" ? 1 : 0;
+                        int target = args[0] == "--preview-tutorial-shortcuts" ? 14 : args[0] == "--preview-tutorial-radar-select" ? 8 : args[0] == "--preview-tutorial-radar-hover" ? 9 : args[0] == "--preview-tutorial-suggestions-coverage" ? 27 : args[0] == "--preview-tutorial-suggestions-counter" ? 28 : args[0] == "--preview-tutorial-suggestions-radar" ? 29 : args[0] == "--preview-tutorial-suggestions-apply" ? 30 : args[0] == "--preview-tutorial-pin" ? 10 : (args[0] == "--preview-tutorial-hold" || args[0] == "--preview-tutorial-hold-lock") ? 12 : args[0] == "--preview-tutorial-locked" ? 13 : args[0] == "--preview-tutorial-news" ? 2 : args[0] == "--preview-tutorial-final" ? tour.StepCount - 1 : args[0] == "--preview-tutorial-display" ? 16 : args[0] == "--preview-tutorial-selector" ? 1 : 0;
                         while (tour.StepIndex < target)
                             tour.NavigateStep(1);
+                        if (args[0].StartsWith("--preview-tutorial-radar-", StringComparison.Ordinal))
+                        {
+                            var clock = System.Diagnostics.Stopwatch.StartNew();
+                            while (clock.ElapsedMilliseconds < 5200)
+                            {
+                                Application.DoEvents();
+                                System.Threading.Thread.Sleep(15);
+                            }
+                        }
+                        if (args[0].StartsWith("--preview-tutorial-suggestions", StringComparison.Ordinal))
+                        {
+                            var animate = System.Diagnostics.Stopwatch.StartNew();
+                            int wait = args[0].EndsWith("apply", StringComparison.Ordinal) ? 5200 : 2800;
+                            while (animate.ElapsedMilliseconds < wait)
+                            {
+                                Application.DoEvents();
+                                System.Threading.Thread.Sleep(5);
+                            }
+                        }
+                        if (args[0].StartsWith("--preview-tutorial-hold", StringComparison.Ordinal))
+                        {
+                            var animation = System.Diagnostics.Stopwatch.StartNew();
+                            int wait = args[0] == "--preview-tutorial-hold-lock" ? 2200 : 1200;
+                            while (animation.ElapsedMilliseconds < wait)
+                            {
+                                Application.DoEvents();
+                                System.Threading.Thread.Sleep(5);
+                            }
+                        }
                         Application.DoEvents();
                         using (var image = new Bitmap(tour.Width, tour.Height))
                         {
@@ -127,7 +174,7 @@ namespace AniimoAffinities
                     }
                     return 0;
                 }
-                if (args.Length == 2 && (args[0] == "--preview-tooltip" || args[0] == "--preview-about-tooltip"))
+                if (args.Length == 2 && (args[0] == "--preview-tooltip" || args[0] == "--preview-shortcut-tooltip" || args[0] == "--preview-about-tooltip"))
                 {
                     bool about = args[0] == "--preview-about-tooltip";
                     using (var owner = about ? (Form)new SettingsDialog(KeyBindings.Defaults()) : new Form())
@@ -138,7 +185,7 @@ namespace AniimoAffinities
                             owner.Controls.Add(anchor);
                         owner.Show();
                         Application.DoEvents();
-                        bubble.Present(anchor, about ? anchor.AccessibleDescription : "Hold and drag to move overlay");
+                        bubble.Present(anchor, about ? anchor.AccessibleDescription : args[0] == "--preview-shortcut-tooltip" ? "Hold Ctrl and press a number to select an element. Ctrl+0 clears the row. Esc closes this window." : "Hold and drag to move overlay");
                         Application.DoEvents();
                         using (var image = new Bitmap(bubble.Width, bubble.Height))
                         {
@@ -210,7 +257,7 @@ namespace AniimoAffinities
                     }
                     return 0;
                 }
-                if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings"))
+                if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-display-theme-hover" || args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings"))
                 {
                     using (var form = new SettingsDialog(KeyBindings.Defaults()))
                     {
@@ -231,6 +278,13 @@ namespace AniimoAffinities
                             form.TutorialSection("Display");
                             var navigation = Message.Create(form.Handle, 0x100, (IntPtr)Keys.Tab, IntPtr.Zero);
                             form.PreFilterMessage(ref navigation);
+                        }
+                        if (args[0] == "--preview-display-theme-hover")
+                        {
+                            var display = form.Controls.OfType<DisplayDialog>().Single();
+                            var choice = display.Controls.OfType<Panel>().SelectMany(panel => panel.Controls.OfType<ThemePreview>()).Single(preview => preview.Mode == 2);
+                            typeof(Control).GetMethod("OnMouseEnter", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(choice, new object[] { EventArgs.Empty });
+                            Application.DoEvents();
                         }
                         using (var image = new Bitmap(form.Width, form.Height))
                         {

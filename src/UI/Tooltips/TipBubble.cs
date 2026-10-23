@@ -8,7 +8,81 @@ namespace AniimoAffinities
 {
     internal sealed class TipBubble : Form
     {
+        private sealed class BubbleButton : SettingsButton
+        {
+            internal BubbleButton()
+            {
+                TabStop = false;
+            }
+            protected override void WndProc(ref Message message)
+            {
+                if (message.Msg != 0x201)
+                {
+                    base.WndProc(ref message);
+                    return;
+                }
+                // Suppress focus only during native mouse-down. Keep normal
+                // accessibility/default-action activation available otherwise.
+                SetStyle(ControlStyles.Selectable, false);
+                try
+                {
+                    base.WndProc(ref message);
+                }
+                finally { SetStyle(ControlStyles.Selectable, true); }
+            }
+        }
+        internal bool ScrollGraphic;
+        private readonly SlimScrollPanel graphicScroll = new SlimScrollPanel { Visible = false };
+        private readonly DrawingPanel graphicContent = new DrawingPanel();
+        internal float Remaining;
         private string label; private bool below; private float arrowX;
+        private Action previewAction;
+        private readonly SettingsButton previewButton = new BubbleButton { Text = "Radar preview", AccessibleName = "Preview suggestion on radars", Visible = false };
+        private int FooterHeight
+        {
+            get
+            {
+                return applyAction != null || previewAction != null ? 44 : 0;
+            }
+        }
+        internal void SetPreviewAction(Action action)
+        {
+            bool changed = (previewAction == null) != (action == null);
+            previewAction = action;
+            previewButton.Visible = action != null;
+            if (changed && IsHandleCreated)
+                RecreateHandle();
+        }
+        private Action applyAction;
+        private readonly SettingsButton applyButton = new BubbleButton { Text = "Apply suggestion", Primary = true, AccessibleName = "Apply suggestion", Visible = false };
+        internal void SetApplyAction(Action action)
+        {
+            bool changed = (applyAction == null) != (action == null);
+            applyAction = action;
+            applyButton.Visible = action != null;
+            if (changed && IsHandleCreated)
+                RecreateHandle();
+        }
+        private Action dismissAction;
+        private readonly SettingsButton closeButton = new BubbleButton { Text = "×", Quiet = true, AccessibleName = "Close bubble", Visible = false, SurroundColor = () => Theme.Surface };
+        internal void SetDismissAction(Action action)
+        {
+            bool changed = (dismissAction == null) != (action == null);
+            dismissAction = action;
+            closeButton.Visible = action != null;
+            if (changed && IsHandleCreated)
+                RecreateHandle();
+        }
+        private Action openAction;
+        private readonly SettingsButton openButton = new BubbleButton { Glyph = "open", Text = "", Quiet = true, AccessibleName = "Open all suggestions", Visible = false, SurroundColor = () => Theme.Surface };
+        internal void SetOpenAction(Action action)
+        {
+            bool changed = (openAction == null) != (action == null);
+            openAction = action;
+            openButton.Visible = action != null;
+            if (changed && IsHandleCreated)
+                RecreateHandle();
+        }
         private Rectangle anchorBounds;
         private int arrowSide;
         private float arrowY;
@@ -71,7 +145,33 @@ namespace AniimoAffinities
             StartPosition = FormStartPosition.Manual;
             BackColor = Theme.Surface;
             DoubleBuffered = true;
+            Controls.Add(graphicScroll);
+            graphicScroll.Controls.Add(graphicContent);
+            graphicContent.Paint += (s, e) =>
+            {
+                if (graphicPainter != null)
+                    graphicPainter(e.Graphics, graphicContent.ClientRectangle);
+            };
+            Controls.Add(previewButton);
+            previewButton.Click += (s, e) => { if (previewAction != null) previewAction(); };
+            Controls.Add(applyButton);
+            applyButton.Click += (s, e) => { if (applyAction != null) applyAction(); };
+            Controls.Add(openButton);
+            Controls.Add(closeButton);
+            closeButton.Click += (s, e) => { if (dismissAction != null) dismissAction(); };
+            openButton.Click += (s, e) => { if (openAction != null) openAction(); };
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 8.25f, FontStyle.Bold));
+        }
+        protected override void WndProc(ref Message message)
+        {
+            // A native child Button asks its popup to activate before mouse-down.
+            // Keep the owner active, but deliver the click (MA_NOACTIVATE, not EAT).
+            if (message.Msg == 0x21)
+            {
+                message.Result = new IntPtr(3);
+                return;
+            }
+            base.WndProc(ref message);
         }
         protected override bool ShowWithoutActivation
         {
@@ -85,7 +185,9 @@ namespace AniimoAffinities
             get
             {
                 var p = base.CreateParams;
-                p.ExStyle |= 0x08000000 | 0x80 | 0x20;
+                p.ExStyle |= 0x08000000 | 0x80;
+                if (openAction == null && dismissAction == null && applyAction == null && previewAction == null)
+                    p.ExStyle |= 0x20;
                 return p;
             }
         }
@@ -131,7 +233,8 @@ namespace AniimoAffinities
             var measured = TextRenderer.MeasureText(text, Font, new Size(maxTextWidth, int.MaxValue), TextFlags);
             int textWidth = Math.Min(maxTextWidth, measured.Width + 2);
             measured = TextRenderer.MeasureText(text, Font, new Size(textWidth, int.MaxValue), TextFlags);
-            Size = new Size(textWidth + 20, measured.Height + 22);
+            textWidth = maxTextWidth;
+            Size = new Size(textWidth + 20, ShortcutText.Measure(text, Font, textWidth) + 22);
             if (rows.Count > 0)
             {
                 int width = 0, height = 0;
@@ -140,24 +243,40 @@ namespace AniimoAffinities
                     int inset = row.Main < 0 ? 0 : 42;
                     int suffix = double.IsNaN(row.Multiplier) ? 0 : 60;
                     var size = TextRenderer.MeasureText(row.Text.Length == 0 ? " " : row.Text, Font, new Size(maxTextWidth - inset - suffix, int.MaxValue), TextFlags);
-                    row.Height = Math.Max(row.Main < 0 ? 0 : 24, size.Height + 3);
+                    row.Height = Math.Max(row.Main < 0 ? 0 : 24, ShortcutText.Measure(row.Text, Font, maxTextWidth - inset - suffix) + 3);
                     width = Math.Max(width, size.Width + inset + suffix);
                     height += row.Height;
                 }
-                Size = new Size(Math.Min(maxTextWidth, width) + 24, height + 24);
+                Size = new Size(maxTextWidth + 24, height + 24);
             }
             if (illustration != null)
                 Size = new Size(Math.Max(QrSize + 24, Width), Height + QrSize + 12);
             if (graphicPainter != null && graphicSize.HasValue)
                 Size = new Size(graphicSize.Value.Width + 24, graphicSize.Value.Height + 24);
+            graphicScroll.Visible = ScrollGraphic && graphicPainter != null && graphicSize.HasValue;
+            if (ScrollGraphic && graphicPainter != null && graphicSize.HasValue)
+            {
+                Width += 16;
+                Height = Math.Min(Height + 30, Math.Min(540, screen.Height - 28));
+                graphicScroll.SetBounds(10, 38, Width - 18, Height - 54);
+                graphicContent.Size = graphicSize.Value;
+                graphicScroll.AutoScrollPosition = Point.Empty;
+                graphicContent.Invalidate();
+            }
+            Height += FooterHeight;
+            int actionWidth = applyAction != null && previewAction != null ? (Width - 32) / 2 : Width - 24;
+            previewButton.SetBounds(12, Height - 48, actionWidth, 32);
+            applyButton.SetBounds(previewAction != null ? 20 + actionWidth : 12, Height - 48, actionWidth, 32);
             Width += 6; // Reserve the side-arrow gutter without reducing the measured text area.
+            closeButton.SetBounds(Width - 39, 9, 26, 26);
+            openButton.SetBounds(Width - (dismissAction == null ? 39 : 67), 9, 26, 26);
             below = bounds.Bottom + 7 + Height <= screen.Bottom - 7;
             int left = Math.Max(screen.Left + 7, Math.Min(bounds.Left + (bounds.Width - Width) / 2, screen.Right - Width - 7));
             int top = below ? bounds.Bottom + 7 : Math.Max(screen.Top + 7, bounds.Top - Height - 7);
             arrowX = Math.Max(12, Math.Min(Width - 14, bounds.Left + bounds.Width / 2f - left));
             Location = new Point(left, top);
             Relocate(Bounds);
-            Show(anchor.FindForm());
+            Show(ApplicationTips.OwnerForm(anchor));
             Invalidate();
         }
         private void UpdateShape()
@@ -190,6 +309,8 @@ namespace AniimoAffinities
             using (var brush = new SolidBrush(Theme.TooltipShadow))
                 g.FillPath(brush, shadow);
             Drawing.Box(g, body, Theme.Surface, Theme.StrongBorder, 6);
+            if (Remaining > 0)
+                Drawing.ProgressOutline(g, new RectangleF(body.X + 1, body.Y + 1, body.Width - 2, body.Height - 2), 6, Remaining, Color.FromArgb(145, Theme.Accent), 1.5f);
             var points = ArrowPoints(body);
             using (var fill = new SolidBrush(Theme.Surface))
                 g.FillPolygon(fill, points);
@@ -199,11 +320,13 @@ namespace AniimoAffinities
                 g.DrawLines(border, points);
             if (graphicPainter != null)
             {
-                graphicPainter(g, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12));
+                if (graphicScroll.Visible)
+                    return;
+                graphicPainter(g, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12 - FooterHeight));
                 return;
             }
             if (rows.Count == 0)
-                TextRenderer.DrawText(g, label, Font, Rectangle.Round(new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12 - (illustration == null ? 0 : QrSize + 12))), Theme.TextColor, TextFlags);
+                ShortcutText.Layout(g, label, Font, Theme.TextColor, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12), true);
             else
             {
                 float y = body.Y + 6;
@@ -217,7 +340,7 @@ namespace AniimoAffinities
                             VectorIcon.Draw(g, row.Sub, new RectangleF(body.X + 28, y + 2, 17, 17));
                     }
                     int suffix = double.IsNaN(row.Multiplier) ? 0 : 60;
-                    TextRenderer.DrawText(g, row.Text, Font, Rectangle.Round(new RectangleF(body.X + 8 + inset, y + (row.Main < 0 ? 0 : 3), body.Width - 16 - inset - suffix, row.Height)), Theme.TextColor, TextFlags);
+                    ShortcutText.Layout(g, row.Text, Font, Theme.TextColor, new RectangleF(body.X + 8 + inset, y + (row.Main < 0 ? 0 : 3), body.Width - 16 - inset - suffix, row.Height), true);
                     if (suffix > 0)
                     {
                         var badge = new RectangleF(body.Right - 62, y + 1, 52, 20);

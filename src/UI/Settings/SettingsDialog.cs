@@ -43,6 +43,8 @@ namespace AniimoAffinities
                 appearance.Invalidate();
             };
             appearance.Click += (s, e) => { Theme.CycleAppearance(); updateAppearance(); };
+            Theme.Changed += updateAppearance;
+            Disposed += (s, e) => Theme.Changed -= updateAppearance;
             Controls.Add(appearance);
             updateAppearance();
             Controls.Add(new Label { Text = "Click a shortcut and press a key to change it.", ForeColor = Theme.Muted, Size = new Size(412, 22), Location = new Point(24, 52) });
@@ -180,14 +182,28 @@ namespace AniimoAffinities
             var typesTab = new SettingsButton { Text = "Types", Location = new Point(24, 82), Size = new Size(130, 30), TabIndex = 0, Primary = true };
             var windowTab = new SettingsButton { Text = "Window & overlay", Location = new Point(160, 82), Size = new Size(180, 30), TabIndex = 1 };
             var shortcutControls = Controls.Cast<Control>().Where(control => control.Top >= 126).ToArray();
-            var editor = new DisplayDialog(this, mainType, () => fields.Select(field => field.Binding).ToArray()) { Location = new Point(0, 124), Visible = false, Size = new Size(440, 422) };
+            var editor = new DisplayDialog(this, mainType, () => fields.Select(field => field.Binding).ToArray(), startTutorial == null ? (Action)null : () =>
+            {
+                var progress = TutorialProgress.Load();
+                progress.Sections = 1 << 3;
+                progress.Pending = false;
+                progress.Step = 0;
+                progress.Save();
+                startTutorial();
+            })
+            {
+                Location = new Point(0, 124),
+                Visible = false,
+                Size = new Size(440, 472)
+            };
+            Resize += (s, e) => { if (editor.Visible) editor.Height = Math.Max(200, ClientSize.Height - editor.Top - 16); };
             var display = new SettingsButton { Text = "Display", Location = new Point(346, 82), Size = new Size(90, 30), TabIndex = 2 };
             var aboutPanel = new AboutPanel { Location = new Point(24, 124), Visible = false };
             var about = new SettingsButton { Glyph = "info", AccessibleName = "About & Credits", Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
             tips.SetToolTip(about, "About & Credits · Creator, links and acknowledgements");
-            var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
+            var guidePanel = new Panel { Location = new Point(24, 82), Size = new Size(412, 156), Visible = false };
             AddTutorialChoices(guidePanel, startTutorial);
-            var backToSettings = new SettingsButton { Text = "Back to settings", Bounds = new Rectangle(24, 82, 412, 30), Visible = false, TabIndex = 0 };
+            var backToSettings = new SettingsButton { Text = "Settings", AccessibleName = "Back to settings", Bounds = new Rectangle(330, 82, 106, 34), Visible = false, TabIndex = 0 };
             Controls.Add(backToSettings);
             Resize += (s, e) => { if (guidePanel.Visible) guidePanel.Height = Math.Max(120, ClientSize.Height - guidePanel.Top - 16); };
             var guide = new SettingsButton { Glyph = "help", AccessibleName = "Tutorial", Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
@@ -262,7 +278,11 @@ namespace AniimoAffinities
                 display.Show();
                 guide.Primary = false;
                 guide.Invalidate();
-                TransitionHeight(594);
+                var workArea = Screen.FromControl(this).WorkingArea;
+                int displayHeight = Math.Min(670, workArea.Height - 32);
+                if (Top + displayHeight > workArea.Bottom)
+                    Top = Math.Max(workArea.Top, workArea.Bottom - displayHeight);
+                TransitionHeight(displayHeight);
                 displaySection = true;
                 foreach (var control in shortcutControls)
                     control.Visible = false;
@@ -270,7 +290,7 @@ namespace AniimoAffinities
                     if (hint != null)
                         hint.Visible = false;
                 heading.Text = "Display";
-                description.Text = "Window scale, text size and keyboard badges.";
+                description.Text = "Window scale, text size, keyboard badges and frosted glass.";
                 typesTab.Primary = false;
                 windowTab.Primary = false;
                 display.Primary = true;
@@ -305,8 +325,11 @@ namespace AniimoAffinities
                 typesTab.Hide();
                 windowTab.Hide();
                 display.Hide();
+                backToSettings.Parent = guidePanel;
+                backToSettings.Location = new Point(306, 0);
                 backToSettings.Show();
                 guidePanel.Show();
+                backToSettings.BringToFront();
                 guidePanel.Height = Math.Max(120, ClientSize.Height - guidePanel.Top - 16);
                 typesTab.Invalidate();
                 windowTab.Invalidate();

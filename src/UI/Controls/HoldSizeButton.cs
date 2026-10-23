@@ -86,31 +86,7 @@ namespace AniimoAffinities
             FinishPaint(g, Width, Height);
             if (progress <= 0 || !Enabled)
                 return;
-            using (var path = Drawing.Round(new RectangleF(1, 1, Width - 3, Height - 3), 7))
-            using (var pen = new Pen(Theme.Accent, 2))
-            {
-                path.Flatten();
-                var points = path.PathPoints;
-                float length = 0;
-                for (int i = 0; i < points.Length; i++)
-                    length += Distance(points[i], points[(i + 1) % points.Length]);
-                float remaining = length * progress;
-                for (int i = 0; i < points.Length && remaining > 0; i++)
-                {
-                    var a = points[i];
-                    var b = points[(i + 1) % points.Length];
-                    float distance = Distance(a, b);
-                    if (distance <= 0)
-                        continue;
-                    float fraction = Math.Min(1, remaining / distance);
-                    g.DrawLine(pen, a, new PointF(a.X + (b.X - a.X) * fraction, a.Y + (b.Y - a.Y) * fraction));
-                    remaining -= distance;
-                }
-            }
-        }
-        private static float Distance(PointF a, PointF b)
-        {
-            return (float)Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+            Drawing.ProgressOutline(g, new RectangleF(1, 1, Width - 3, Height - 3), 7, progress, Theme.Accent, 2);
         }
         protected override void Dispose(bool disposing)
         {

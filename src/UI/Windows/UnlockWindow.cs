@@ -77,7 +77,7 @@ namespace AniimoAffinities
             };
             button.Click += (s, e) => unlock();
             Controls.Add(button);
-            tips.SetToolTip(button, hotkeyAvailable ? "Unlock overlay · " + KeyBindings.Label(KeyBindings.Load(KeyBindings.FilePath)[11]) : "Unlock overlay");
+            tips.SetToolTip(button, hotkeyAvailable ? "Unlock overlay · " + ShortcutText.Mark(KeyBindings.Label(KeyBindings.Load(KeyBindings.FilePath)[11])) : "Unlock overlay");
             var grip = new Button { Location = new Point(104, 0), Size = new Size(32, 32), FlatStyle = FlatStyle.Flat, Text = "", AccessibleName = "Move overlay", Cursor = Cursors.SizeAll, BackColor = Theme.Surface };
             grip.FlatAppearance.BorderSize = 0;
             grip.FlatAppearance.MouseOverBackColor = Theme.Surface;

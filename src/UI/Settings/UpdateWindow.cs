@@ -35,8 +35,8 @@ namespace AniimoAffinities
             var progress = new DrawingPanel { Location = new Point(24, 143), Size = new Size(382, 8), AccessibleRole = AccessibleRole.ProgressBar, AccessibleName = "Download progress" };
             progress.Paint += (s, e) => { e.Graphics.Clear(Theme.Border); using (var brush = new SolidBrush(Theme.Accent)) e.Graphics.FillRectangle(brush, 0, 0, progress.Width * percent / 100f, progress.Height); };
             Controls.Add(progress);
-            var skip = new SettingsButton { Text = "Skip update", Location = new Point(24, 182), Size = new Size(114, 34) };
-            var later = new SettingsButton { Text = "Later", Location = new Point(146, 182), Size = new Size(114, 34) };
+            var skip = new SettingsButton { Text = "Skip this version", Location = new Point(24, 182), Size = new Size(114, 34) };
+            var later = new SettingsButton { Text = "Remind me later", Location = new Point(146, 182), Size = new Size(114, 34) };
             var download = new SettingsButton { Text = "Download", Primary = true, Location = new Point(268, 182), Size = new Size(138, 34) };
             Controls.Add(skip);
             Controls.Add(later);

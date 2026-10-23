@@ -26,6 +26,30 @@ namespace AniimoAffinities
         internal static Color AccentForeground = Accent, HoverSurface = Anthracite, StrongBorder = Anthracite, Error = Color.FromArgb(245, 105, 115), TooltipShadow = Anthracite;
         internal static int Appearance = 1;
         internal static int Revision;
+        private static object previewOwner;
+        private static int previewAppearance;
+        internal static bool PreviewingAppearance
+        {
+            get
+            {
+                return previewOwner != null;
+            }
+        }
+        internal static void PreviewAppearance(object owner, int mode)
+        {
+            if (owner == null || mode < 0 || mode > 2)
+                throw new ArgumentException("Invalid appearance preview.");
+            previewOwner = owner;
+            previewAppearance = mode;
+            ApplyAppearance();
+        }
+        internal static void EndAppearancePreview(object owner)
+        {
+            if (!ReferenceEquals(previewOwner, owner))
+                return;
+            previewOwner = null;
+            ApplyAppearance();
+        }
         private static readonly Color[] comparisonDark = { Color.FromArgb(255, 183, 112), Color.FromArgb(131, 188, 255), Color.FromArgb(105, 219, 150), Color.FromArgb(212, 175, 245), Color.FromArgb(255, 140, 183), Color.FromArgb(92, 222, 224) };
         private static readonly Color[] comparisonLight = { Color.FromArgb(151, 70, 18), Color.FromArgb(35, 91, 156), Color.FromArgb(25, 112, 62), Color.FromArgb(105, 53, 140), Color.FromArgb(166, 36, 94), Color.FromArgb(0, 108, 112) };
         internal static Color ComparisonInk(int slot)
@@ -57,20 +81,27 @@ namespace AniimoAffinities
         }
         internal static void CycleAppearance()
         {
-            int next = (Appearance + 1) % 3;
             try
             {
-                PreferenceFiles.WriteText(AppearancePath, next.ToString());
+                SaveAppearance((Appearance + 1) % 3);
             }
-            catch (System.IO.IOException) { return; }
-            catch (UnauthorizedAccessException) { return; }
-            Appearance = next;
+            catch (System.IO.IOException) { }
+            catch (UnauthorizedAccessException) { }
+        }
+        internal static void SaveAppearance(int mode)
+        {
+            if (mode < 0 || mode > 2)
+                throw new ArgumentOutOfRangeException("mode");
+            PreferenceFiles.WriteText(AppearancePath, mode.ToString());
+            Appearance = mode;
+            previewOwner = null;
             ApplyAppearance();
         }
         internal static void ApplyAppearance()
         {
-            bool light = Appearance == 2;
-            if (Appearance == 1)
+            int effective = previewOwner == null ? Appearance : previewAppearance;
+            bool light = effective == 2;
+            if (effective == 1)
             {
                 using (var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize"))
                     light = key == null || Convert.ToInt32(key.GetValue("AppsUseLightTheme", 1)) != 0;

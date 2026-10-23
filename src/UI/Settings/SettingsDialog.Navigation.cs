@@ -85,7 +85,7 @@ namespace AniimoAffinities
         public bool PreFilterMessage(ref Message message)
         {
             var target = Control.FromHandle(message.HWnd);
-            if (target == null || target.FindForm() != this)
+            if (target == null || target != this && !Contains(target))
                 return false;
             bool keyboard = message.Msg == 0x100 || message.Msg == 0x104;
             bool keyUp = message.Msg == 0x101 || message.Msg == 0x105;

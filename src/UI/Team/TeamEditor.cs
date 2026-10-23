@@ -54,7 +54,7 @@ namespace AniimoAffinities
             heading = new Label { Location = new Point(32, 82), Size = new Size(480, 20) };
             Controls.Add(heading);
             suggest = new SettingsButton { Text = "Suggest", Primary = true, AccessibleName = "Show team type suggestions", Location = new Point(540, 80), Size = new Size(110, 24) };
-            tips.SetToolTip(suggest, "Empty rows suggest complementary mono or dual combinations, accounting for the suggestions above. Rows without further coverage gains stay unsuggested. Use the row's + button or Ctrl+Enter to apply it. Selected rows show + on individual improvements. Uses the known members of the opposite team, even if incomplete; otherwise all nine single types. Red ring: weakness; green ring: resistance. Types only, not stats or moves.");
+            tips.SetGraphicTip(suggest, "Complementary suggestions. Coverage: all types. Counter: known opponents. Earlier proposals count as projected allies. Apply a row with + or Ctrl+Enter. Red: weakness; green: resistance. Elements only, no stats or moves.", SuggestionHelpGraphic.Size, SuggestionHelpGraphic.Draw);
             suggest.Click += (s, e) => { suggestions = !suggestions; suggest.Primary = suggestions; suggest.Invalidate(); RefreshSuggestions(); };
             Controls.Add(suggest);
             suggest.BringToFront();

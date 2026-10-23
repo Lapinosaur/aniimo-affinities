@@ -8,10 +8,40 @@ namespace AniimoAffinities
 {
     internal static class Drawing
     {
+        internal static void ProgressOutline(Graphics g, RectangleF bounds, float radius, float progress, Color color, float width)
+        {
+            using (var path = Round(bounds, radius))
+            using (var pen = new Pen(color, width))
+            {
+                path.Flatten();
+                var points = path.PathPoints;
+                Func<PointF, PointF, float> distance = (a, b) => (float)Math.Sqrt((b.X - a.X) * (b.X - a.X) + (b.Y - a.Y) * (b.Y - a.Y));
+                float length = 0;
+                for (int i = 0; i < points.Length; i++)
+                    length += distance(points[i], points[(i + 1) % points.Length]);
+                float remaining = length * Math.Max(0, Math.Min(1, progress));
+                for (int i = 0; i < points.Length && remaining > 0; i++)
+                {
+                    var a = points[i];
+                    var b = points[(i + 1) % points.Length];
+                    float segment = distance(a, b);
+                    if (segment <= 0)
+                        continue;
+                    float fraction = Math.Min(1, remaining / segment);
+                    g.DrawLine(pen, a, new PointF(a.X + (b.X - a.X) * fraction, a.Y + (b.Y - a.Y) * fraction));
+                    remaining -= segment;
+                }
+            }
+        }
         internal static GraphicsPath Round(RectangleF r, float radius)
         {
-            float d = radius * 2;
+            float d = Math.Min(Math.Max(0, radius * 2), Math.Min(r.Width, r.Height));
             var p = new GraphicsPath();
+            if (d <= 0)
+            {
+                p.AddRectangle(r);
+                return p;
+            }
             p.AddArc(r.X, r.Y, d, d, 180, 90);
             p.AddArc(r.Right - d, r.Y, d, d, 270, 90);
             p.AddArc(r.Right - d, r.Bottom - d, d, d, 0, 90);

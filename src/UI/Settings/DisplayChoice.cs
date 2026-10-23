@@ -56,6 +56,11 @@ namespace AniimoAffinities
                 Drawing.Text(g, Text, label, Checked ? Theme.AccentForeground : Theme.Muted, new RectangleF(8, 5, Width - 16, 18), true);
             if (BadgePreview)
             {
+                var saved = g.Save();
+                float fit = Math.Min(1, Math.Max(.4f, (Height - 28) / 42f));
+                g.TranslateTransform(Width / 2f, 23);
+                g.ScaleTransform(fit, fit);
+                g.TranslateTransform(-Width / 2f, -23);
                 float left = (Width - 42) / 2f;
                 Drawing.Box(g, new RectangleF(left, 27, 42, 38), Theme.Background, Theme.Border, 6);
                 int type = PreviewType();
@@ -73,12 +78,14 @@ namespace AniimoAffinities
                     using (var font = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold))
                         Drawing.Text(g, shortcut, font, Theme.TextColor, key, true);
                 }
+                g.Restore(saved);
                 PaintAvailability(g);
                 return;
             }
             if (WindowPreview)
             {
-                float width = 36 * PreviewScale, height = 22 * PreviewScale, left = (Width - width) / 2f, top = 62 - height;
+                float fit = Math.Min(1, Math.Max(.4f, (Height - 30) / 39f));
+                float width = 42 * PreviewScale * fit, height = 26 * PreviewScale * fit, left = (Width - width) / 2f, top = Height - 6 - height;
                 var ink = Checked ? Theme.AccentForeground : Theme.Muted;
                 Drawing.Box(g, new RectangleF(left, top, width, height), Theme.Background, ink, 3);
                 using (var pen = new Pen(ink))

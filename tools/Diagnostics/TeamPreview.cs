@@ -10,6 +10,68 @@ namespace AniimoAffinities
     {
         internal static void Save(string mode, string path)
         {
+            if (mode == "team-suggestion-help")
+            {
+                using (var owner = new Form())
+                using (var anchor = new Button())
+                using (var bubble = new TipBubble())
+                {
+                    owner.Controls.Add(anchor);
+                    owner.Show();
+                    bubble.Present(anchor, "Suggestion help", null, null, SuggestionHelpGraphic.Draw, SuggestionHelpGraphic.Size);
+                    using (var bitmap = new Bitmap(bubble.Width, bubble.Height))
+                    {
+                        bubble.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
+                        bitmap.Save(path);
+                    }
+                }
+                return;
+            }
+            if (mode == "team-glass-main" || mode == "team-glass-settings")
+            {
+                InteractiveGlassPreview.Save(mode, path);
+                return;
+            }
+            if (mode == "team-suggestions-window")
+            {
+                var sample = new TeamPlan();
+                sample.Allies[0].Main = 7;
+                sample.Allies[0].Sub = 4;
+                sample.Allies[1].Main = 2;
+                sample.Allies[1].Sub = 8;
+                sample.Allies[2].Main = 0;
+                sample.Allies[2].Sub = 1;
+                using (var window = new SuggestionsDialog(sample, 4, (slot, member) => false))
+                {
+                    window.Show();
+                    Application.DoEvents();
+                    using (var bitmap = new Bitmap(window.Width, window.Height))
+                    {
+                        window.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
+                        bitmap.Save(path);
+                    }
+                }
+                return;
+            }
+            if (mode == "team-suggestion-radar" || mode == "team-suggestion-radar-hover")
+            {
+                var previewPlan = TeamTests.Sample();
+                previewPlan.Allies[5].Main = previewPlan.Allies[5].Sub = -1;
+                var suggestion = TeamSuggestions.ComplementaryAdditions(previewPlan)[5];
+                using (var dialog = new SuggestionRadarDialog(previewPlan, 5, suggestion, new[] { 0, 1, 2 }))
+                {
+                    if (mode == "team-suggestion-radar-hover")
+                        dialog.HighlightedSlot = 5;
+                    dialog.Show();
+                    Application.DoEvents();
+                    using (var image = new Bitmap(dialog.Width, dialog.Height))
+                    {
+                        dialog.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
+                        image.Save(path);
+                    }
+                }
+                return;
+            }
             if (mode == "team-suggestion-tip" || mode == "team-counter-tip")
             {
                 var suggestionPlan = new TeamPlan();
@@ -26,6 +88,10 @@ namespace AniimoAffinities
                 {
                     owner.Controls.Add(anchor);
                     owner.Show();
+                    bubble.SetOpenAction(() => { });
+                    bubble.SetDismissAction(() => bubble.Hide());
+                    bubble.SetApplyAction(() => bubble.Hide());
+                    bubble.SetPreviewAction(() => bubble.Hide());
                     bubble.Present(anchor, TeamTypeSelector.RecommendationTip(recommendation), null, null,
                         (g, area) => SuggestionGraphic.Draw(g, area, recommendation, "Apply with + or Ctrl+Enter"), SuggestionGraphic.Size(recommendation));
                     using (var image = new Bitmap(bubble.Width, bubble.Height))
@@ -86,6 +152,7 @@ namespace AniimoAffinities
                     owner.Controls.Add(card);
                     owner.Show();
                     Application.DoEvents();
+                    bubble.Remaining = mode.StartsWith("team-support-tooltip") ? 0 : .65f;
                     if (mode.StartsWith("team-support-tooltip"))
                         bubble.Present(card, "Support Lapinosaur\nScan with your phone", null, support.QrCode);
                     else
@@ -147,7 +214,7 @@ namespace AniimoAffinities
                     typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(form, null);
                     var board = (TeamBoard)typeof(MainForm).GetField("teamBoard", flags).GetValue(form);
                     board.SelectCard(mode == "team-card-suggestions" ? 2 : 0);
-                    if (mode == "team-comparison" || mode == "team-comparison-six")
+                    if (mode == "team-comparison" || mode == "team-comparison-six" || mode == "team-comparison-hover")
                     {
                         typeof(MainForm).GetMethod("ToggleInlineRadar", flags).Invoke(form, null);
                         foreach (var card in board.Controls.OfType<TeamCard>().Take(mode == "team-comparison-six" ? 6 : 3))
@@ -158,6 +225,8 @@ namespace AniimoAffinities
                     typeof(TeamEditor).GetMethod("ShowMatchups", flags).Invoke(form, null);
                 form.Show();
                 Application.DoEvents();
+                if (mode == "team-comparison-hover")
+                    typeof(MainForm).GetField("teamPreview", flags).SetValue(form, 1);
                 if (mode.StartsWith("team-threats"))
                 {
                     ((SettingsButton)typeof(TeamEditor).GetField("threatToggle", flags).GetValue(form)).PerformClick();
@@ -174,12 +243,19 @@ namespace AniimoAffinities
                     if (mode == "team-threats-members-tip")
                         ((SettingsButton[])typeof(ThreatReportPanel).GetField("tabs", flags).GetValue(report))[2].PerformClick();
                     var table = (DataGridView)typeof(ThreatReportPanel).GetField("table", flags).GetValue(report);
+                    var longPlan = new TeamPlan();
+                    longPlan.Allies[0].Main = 0;
+                    longPlan.Allies[0].Sub = 6;
+                    typeof(ThreatReportPanel).GetField("mode", flags).SetValue(report, 2);
+                    report.UpdateReport(longPlan, false);
                     typeof(ThreatReportPanel).GetMethod("ShowCellTip", flags).Invoke(report, new object[] { 4, 0 });
                     var reportTips = (ApplicationTips)typeof(ThreatReportPanel).GetField("tips", flags).GetValue(report);
                     var painters = (System.Collections.Generic.Dictionary<Control, Action<Graphics, RectangleF>>)typeof(ApplicationTips).GetField("graphics", flags).GetValue(reportTips);
                     var sizes = (System.Collections.Generic.Dictionary<Control, Size>)typeof(ApplicationTips).GetField("graphicSizes", flags).GetValue(reportTips);
                     using (var bubble = new TipBubble())
                     {
+                        bubble.ScrollGraphic = true;
+                        bubble.SetDismissAction(() => bubble.Hide());
                         bubble.Present(table, table.Rows[0].Cells[4].ToolTipText, null, null, painters[table], sizes[table]);
                         Application.DoEvents();
                         using (var bitmap = new Bitmap(bubble.Width, bubble.Height))

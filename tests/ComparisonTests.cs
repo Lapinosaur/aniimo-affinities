@@ -41,6 +41,21 @@ namespace AniimoAffinities
                 }
                 if (events != 6 || selected.Main != originalMain || selected.Sub != originalSub || board.SelectedIndex != originalCard)
                     throw new Exception("Comparison checkboxes must not activate the ordinary card selection.");
+                var hoverField = typeof(MainForm).GetField("teamPreview", flags);
+                var enter = typeof(Control).GetMethod("OnMouseEnter", flags);
+                var leave = typeof(Control).GetMethod("OnMouseLeave", flags);
+                foreach (Control target in new Control[] { cards[2], cards[2].CompareCheck })
+                {
+                    enter.Invoke(target, new object[] { EventArgs.Empty });
+                    if ((int)hoverField.GetValue(main) != 2 || board.ComparedSlots.Length != 6 || events != 6
+                        || selected.Main != originalMain || selected.Sub != originalSub)
+                        throw new Exception("Card and checkbox hover must identify the ally without changing comparison or selection.");
+                    using (var hoverBitmap = new Bitmap(main.Width, main.Height))
+                        main.DrawToBitmap(hoverBitmap, new Rectangle(Point.Empty, hoverBitmap.Size));
+                    leave.Invoke(target, new object[] { EventArgs.Empty });
+                    if ((int)hoverField.GetValue(main) != -1)
+                        throw new Exception("Leaving an ally must clear its trace highlight.");
+                }
                 using (var bitmap = new Bitmap(main.Width, main.Height))
                     main.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
                 plan.Allies[2].Main = plan.Allies[2].Sub = -1;
@@ -51,7 +66,7 @@ namespace AniimoAffinities
                 var setLock = typeof(PortableWindow).GetMethod("SetOverlayLocked", flags);
                 setLock.Invoke(main, new object[] { true });
                 board.RefreshCards();
-                if (cards.Any(card => card.CompareCheck.Visible || card.SuggestButton.Visible) || board.ComparedSlots.Length != 5)
+                if (cards.Any(card => card.CompareCheck.Visible || card.SuggestButton.Visible || card.PreviewButton.Visible) || board.ComparedSlots.Length != 5)
                     throw new Exception("Lock must hide ally actions without losing comparison selections, including after refresh.");
                 setLock.Invoke(main, new object[] { false });
                 for (int i = 0; i < cards.Length; i++)

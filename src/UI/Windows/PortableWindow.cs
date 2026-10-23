@@ -118,10 +118,10 @@ namespace AniimoAffinities
             {
                 var shortcut = KeyBindings.Load(KeyBindings.FilePath)[11];
                 uint mods = 0x4000u | ((shortcut & Keys.Control) != 0 ? 2u : 0u) | ((shortcut & Keys.Alt) != 0 ? 1u : 0u) | ((shortcut & Keys.Shift) != 0 ? 4u : 0u);
-                unlockRegistered = shortcut != Keys.None && NativeMethods.RegisterHotKey(Handle, 0x414E, mods, (uint)(shortcut & Keys.KeyCode));
+                unlockRegistered = !TutorialSnapshot && shortcut != Keys.None && NativeMethods.RegisterHotKey(Handle, 0x414E, mods, (uint)(shortcut & Keys.KeyCode));
                 SetPinned(true);
                 unlockedStyle = NativeMethods.GetWindowLong(Handle, -20);
-                if (!NativeMethods.TrySetWindowStyle(Handle, unlockedStyle | 0x20 | 0x08000000))
+                if (!TutorialSnapshot && !NativeMethods.TrySetWindowStyle(Handle, unlockedStyle | 0x20 | 0x08000000))
                 {
                     if (unlockRegistered)
                         NativeMethods.UnregisterHotKey(Handle, 0x414E);
@@ -133,7 +133,7 @@ namespace AniimoAffinities
             }
             else
             {
-                if (!NativeMethods.TrySetWindowStyle(Handle, unlockedStyle))
+                if (!TutorialSnapshot && !NativeMethods.TrySetWindowStyle(Handle, unlockedStyle))
                 {
                     MessageBox.Show(this, "Windows could not unlock the overlay. Please try again.", "Overlay");
                     return;
@@ -158,6 +158,8 @@ namespace AniimoAffinities
                     Location = KeepCaptionVisible(new Rectangle(point, Size), Screen.FromPoint(Cursor.Position).WorkingArea, 54).Location;
                 }, LockedPanelToggle, () => LockedPanelGlyph);
                 PositionUnlockWindow();
+                if (TutorialSnapshot)
+                    unlockWindow.Opacity = 0;
                 unlockWindow.Show(this);
             }
             else if (unlockWindow != null)
@@ -254,7 +256,7 @@ namespace AniimoAffinities
         }
         private static string ViewTip(string view, string key)
         {
-            return ViewName(view) + "\nClick: swap this view with the main view. The button takes the previous view's icon.\nHold click or Space for 0.9 s: open in a separate window" + (key.Length > 0 ? " (or " + key + ")" : "") + ".";
+            return ViewName(view) + "\nClick: swap this view with the main view. The button takes the previous view's icon.\nHold click or Space for 0.9 s: open in a separate window" + (key.Length > 0 ? " (or " + ShortcutText.Mark(key) + ")" : "") + ".";
         }
         private KeyboardHold matrixKeyboard, radarKeyboard, pinKeyboard;
         private Button viewHoldTarget;
@@ -363,6 +365,9 @@ namespace AniimoAffinities
         private readonly Icon applicationIcon;
         internal PortableWindow()
         {
+            TransparencyPreferences.Changed += RefreshGlassPreference;
+            Shown += (s, e) => RefreshGlassPreference();
+            VisibleChanged += (s, e) => { if (Visible) RefreshGlassPreference(); else StopGlass(); };
             radarHoldTimer.Tick += (s, e) =>
             {
                 if (viewHoldTarget == null || !((holdingMatrix ? matrixKeyboard : radarKeyboard) != null && (holdingMatrix ? matrixKeyboard : radarKeyboard).Active) && (!viewHoldTarget.ClientRectangle.Contains(viewHoldTarget.PointToClient(Cursor.Position)) || (Control.MouseButtons & MouseButtons.Left) == 0))
@@ -434,7 +439,9 @@ namespace AniimoAffinities
         {
             if (disposing)
             {
-                UpdateGlass(false);
+                glassDisposed = true;
+                TransparencyPreferences.Changed -= RefreshGlassPreference;
+                StopGlass();
                 if (glassPool != null)
                     glassPool.Dispose();
             }
@@ -462,6 +469,9 @@ namespace AniimoAffinities
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
+            // Embedded settings pages are content, not independent windows.
+            if (!TopLevel)
+                return;
             using (new VisualUpdate(this))
             {
                 if (IsDisposed || Disposing)
@@ -584,8 +594,6 @@ namespace AniimoAffinities
                 ApplyWindowScale();
             }
         }
-        // Inputs: caption action. Output: consistent rounded surface, hover and keyboard focus.
-        // Artwork-only actions keep their supplied branding. Raises: none.
 
     }
 }

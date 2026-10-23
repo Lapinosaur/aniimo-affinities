@@ -104,7 +104,7 @@ namespace AniimoAffinities
         private void SetShortcutTip(IconButton button, string label)
         {
             button.AccessibleDescription = button.Shortcut.Length > 0 ? "Shortcut: " + button.Shortcut : "No shortcut";
-            tips.SetToolTip(button, label + (button.Shortcut.Length > 0 ? " · " + button.Shortcut : ""));
+            tips.SetToolTip(button, label + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
         }
         private double Factor(int attack, int defense)
         {

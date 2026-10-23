@@ -82,6 +82,19 @@ namespace AniimoAffinities
                 affinityHeader.Invalidate();
                 SaveTeam();
             };
+            teamBoard.SuggestionPreviewRequested += slot =>
+            {
+                var suggestion = TeamSuggestions.ComplementaryAdditions(teamPlan)[slot];
+                if (suggestion != null)
+                    using (var dialog = new SuggestionRadarDialog(teamPlan, slot, suggestion, teamBoard.ComparedSlots))
+                        if (dialog.ShowDialog(this) == DialogResult.OK)
+                            teamBoard.ApplySuggestion(slot, dialog.Series.Last().Member);
+            };
+            teamBoard.SuggestionsRequested += slot =>
+            {
+                using (var dialog = new SuggestionsDialog(teamPlan, slot, teamBoard.ApplySuggestion))
+                    dialog.ShowDialog(this);
+            };
             Deactivate += (s, e) => { teamPreview = -1; teamHovered = -1; teamCounter = -1; teamOpponentMask = 0; canvas.Invalidate(); };
             teamBody.Controls.Add(teamBoard);
             teamTransition = new PanelTransition(this, teamBody, teamBoard, canvas);
@@ -154,6 +167,8 @@ namespace AniimoAffinities
         }
         private void SaveTeam()
         {
+            if (TutorialSnapshot)
+                return;
             try
             {
                 TeamPreferences.Save(TeamPreferences.FilePath, teamPlan);

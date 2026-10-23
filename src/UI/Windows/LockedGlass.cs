@@ -247,13 +247,13 @@ namespace AniimoAffinities
             {
                 get; private set;
             }
-            internal GlassWindow()
+            internal GlassWindow(bool topMost = true)
             {
                 CreateHandle(new CreateParams
                 {
                     Caption = "Affinisaur glass",
                     Style = unchecked((int)0x80000000),
-                    ExStyle = 0x08000000 | 0x80 | 0x20 | 0x8 | 0x80000
+                    ExStyle = 0x08000000 | 0x80 | 0x20 | (topMost ? 0x8 : 0) | 0x80000
                 });
             }
             internal Rectangle Bounds

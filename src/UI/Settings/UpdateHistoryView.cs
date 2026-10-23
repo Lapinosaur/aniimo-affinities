@@ -37,7 +37,7 @@ namespace AniimoAffinities
             panel.Resize += (s, e) => { foreach (Control label in panel.Controls) label.MaximumSize = new Size(Math.Max(80, panel.ClientSize.Width - 40), 0); };
             return panel;
         }
-        private sealed class ReleaseNotesPanel : FlowLayoutPanel
+        private sealed class ReleaseNotesPanel : SlimFlowPanel
         {
             internal ReleaseNotesPanel()
             {

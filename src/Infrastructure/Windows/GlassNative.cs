@@ -56,6 +56,10 @@ namespace AniimoAffinities
         {
             SetWindowPos(window, IntPtr.Zero, bounds.X, bounds.Y, bounds.Width, bounds.Height, (uint)(0x14 | (show ? 0x40 : 0)));
         }
+        internal static void Behind(IntPtr window, IntPtr previous)
+        {
+            SetWindowPos(window, previous, 0, 0, 0, 0, 0x13);
+        }
         internal static void Hide(IntPtr window)
         {
             SetWindowPos(window, IntPtr.Zero, 0, 0, 0, 0, 0x97);

@@ -39,6 +39,8 @@ namespace AniimoAffinities
         private readonly bool rememberSession;
         private void SaveSession()
         {
+            if (TutorialSnapshot)
+                return;
             if (rememberSession)
                 new SessionState { Main = selection.Main, Sub = selection.Sub, Current = currentView, Radar = radarView, Matrix = matrixView }.Save(SessionState.FilePath);
         }
@@ -144,7 +146,7 @@ namespace AniimoAffinities
         }
         internal MainForm CreateTutorialPreview(bool showTeam = false, bool compare = false)
         {
-            var form = new MainForm();
+            var form = new MainForm { TutorialSnapshot = true };
             var selected = TutorialSelection;
             form.selection.Main = selected.Main;
             form.selection.Sub = selected.Sub;
@@ -220,9 +222,7 @@ namespace AniimoAffinities
                     {
                         if (TutorialNews.PrepareStartup())
                         {
-                            progress.Sections = TutorialProgress.News;
-                            progress.Step = 0;
-                            progress.Pending = false;
+                            TutorialNews.PrepareProgress(progress);
                             progress.Save();
                             StartTutorial();
                             return;
@@ -383,7 +383,7 @@ namespace AniimoAffinities
             {
                 button.Shortcut = KeyBindings.Label(bindings[button.Type < 0 ? 0 : Array.IndexOf(KeyBindings.Actions, Model.Names[button.Type])]);
                 button.AccessibleDescription = button.Shortcut.Length > 0 ? "Shortcut: " + button.Shortcut : "No shortcut";
-                tips.SetToolTip(button, (button.Type < 0 ? "All elements" : Model.Names[button.Type]) + (button.Shortcut.Length > 0 ? " · " + button.Shortcut : ""));
+                tips.SetToolTip(button, (button.Type < 0 ? "All elements" : Model.Names[button.Type]) + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
                 button.Invalidate();
             }
         }

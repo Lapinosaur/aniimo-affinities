@@ -47,7 +47,7 @@ namespace AniimoAffinities
                     y += 29;
                 }
                 Drawing.Text(g, "0 → 1  New coverage    ·    1 → 2  Backup", font, Theme.Muted, new RectangleF(x, y + 3, 345, 20), false);
-                Drawing.Text(g, action, font, Theme.TextColor, new RectangleF(x, y + 24, 345, 20), false);
+                ShortcutText.Layout(g, action, font, Theme.TextColor, new RectangleF(x, y + 24, 345, 20), true);
                 Drawing.Text(g, "Before: " + value.AppliedAllies + " applied + " + value.EarlierProposals.Length + " earlier proposals", font, Theme.Muted, new RectangleF(x, y + 44, 345, 20), false);
                 float proposalX = x;
                 foreach (var proposal in value.EarlierProposals)

@@ -37,14 +37,19 @@ namespace AniimoAffinities
         }
         protected override void OnPaint(PaintEventArgs e)
         {
-            e.Graphics.Clear(BackColor);
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            DrawScroll(e.Graphics);
+        }
+        internal void DrawScroll(Graphics graphics)
+        {
+            using (var background = new SolidBrush(BackColor))
+                graphics.FillRectangle(background, ClientRectangle);
+            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             if (maximum <= 0)
                 return;
             var thumb = Thumb;
             using (var path = Drawing.Round(thumb, thumb.Width / 2))
             using (var fill = new SolidBrush(dragging || hover || SystemInformation.HighContrast ? Theme.Muted : Theme.StrongBorder))
-                e.Graphics.FillPath(fill, path);
+                graphics.FillPath(fill, path);
         }
         private void Change(int next)
         {

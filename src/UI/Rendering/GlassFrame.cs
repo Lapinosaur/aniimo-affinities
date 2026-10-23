@@ -9,6 +9,15 @@ namespace AniimoAffinities
 {
     internal static class GlassFrame
     {
+        private const int SurfaceAlpha = 96, InsetAlpha = 115, HoverAlpha = 130;
+        private static Color GlassInk(Color ink)
+        {
+            if (ink != Theme.Muted)
+                return ink;
+            return Color.FromArgb((ink.R * 65 + Theme.TextColor.R * 35) / 100,
+                (ink.G * 65 + Theme.TextColor.G * 35) / 100,
+                (ink.B * 65 + Theme.TextColor.B * 35) / 100);
+        }
         internal static Rectangle FitBlurBounds(Region silhouette, Rectangle bounds, int radius)
         {
             // Native material has its own corner geometry. Keep its entire
@@ -58,11 +67,11 @@ namespace AniimoAffinities
         }
         // Convert only surface fills to premultiplied translucency. Foreground
         // text, glyphs, type colors and borders retain their original opacity.
-        internal static Region Prepare(Bitmap image)
+        internal static Region Prepare(Bitmap image, bool wholeWindow = false)
         {
             var backgrounds = new[] { Theme.Surface, Theme.InsetSurface, Theme.Background };
-            var alphas = new[] { 60, 85, 0 };
-            var inks = new[] { Theme.Border, Theme.Muted, Theme.TextColor, Theme.ReducedDamage, Theme.IncreasedDamage, Theme.AccentForeground };
+            var alphas = new[] { SurfaceAlpha, InsetAlpha, wholeWindow ? SurfaceAlpha : 0 };
+            var inks = new[] { Theme.Border, Theme.Muted, Theme.TextColor, Theme.ReducedDamage, Theme.IncreasedDamage, Theme.AccentForeground, Theme.StrongBorder, Theme.Surface, Theme.InsetSurface, Theme.HoverSurface };
             var rectangles = new List<Rectangle>();
             var previousRuns = new Dictionary<long, int>();
             var runs = new Dictionary<long, int>();
@@ -83,7 +92,7 @@ namespace AniimoAffinities
                     int start = -1;
                     for (int x = 0; x <= row.Length; x++)
                     {
-                        bool visible = x < row.Length && (row[x] & 0xffffff) != key;
+                        bool visible = x < row.Length && (wholeWindow || (row[x] & 0xffffff) != key);
                         if (visible && start < 0)
                             start = x;
                         if (!visible && start >= 0)
@@ -107,7 +116,7 @@ namespace AniimoAffinities
                         if (x == row.Length)
                             break;
                         int pixel = row[x] & 0xffffff;
-                        int alpha = !visible ? 0 : pixel == surface ? 60 : pixel == inset ? 85 : pixel == hover ? 105 : 255;
+                        int alpha = !visible ? 0 : pixel == key ? SurfaceAlpha : pixel == surface ? SurfaceAlpha : pixel == inset ? InsetAlpha : pixel == hover ? HoverAlpha : 255;
                         if (alpha == 255)
                         {
                             int converted;
@@ -143,7 +152,10 @@ namespace AniimoAffinities
             result = pixel | unchecked((int)0xff000000);
             foreach (var ink in inks)
                 if ((ink.ToArgb() & 0xffffff) == pixel)
+                {
+                    result = GlassInk(ink).ToArgb();
                     return false;
+                }
             int r = (pixel >> 16) & 255, g = (pixel >> 8) & 255, b = pixel & 255;
             double best = double.MaxValue;
             bool matched = false;
@@ -165,10 +177,13 @@ namespace AniimoAffinities
                     if (error > 1.5 || score >= best)
                         continue;
                     double removed = (1 - t) * (1 - alphas[i] / 255.0);
-                    int a = (int)Math.Round(255 * (1 - removed));
-                    int rr = Math.Max(0, Math.Min(a, (int)Math.Round(r - removed * bg.R)));
-                    int gg = Math.Max(0, Math.Min(a, (int)Math.Round(g - removed * bg.G)));
-                    int bb = Math.Max(0, Math.Min(a, (int)Math.Round(b - removed * bg.B)));
+                    int inkAlpha = ink == Theme.Surface ? SurfaceAlpha : ink == Theme.InsetSurface ? InsetAlpha : ink == Theme.HoverSurface ? HoverAlpha : 255;
+                    double removedInk = t * (1 - inkAlpha / 255.0);
+                    int a = (int)Math.Round(255 * (1 - removed - removedInk));
+                    Color outputInk = GlassInk(ink);
+                    int rr = Math.Max(0, Math.Min(a, (int)Math.Round(r - removed * bg.R - removedInk * ink.R + t * (outputInk.R - ink.R))));
+                    int gg = Math.Max(0, Math.Min(a, (int)Math.Round(g - removed * bg.G - removedInk * ink.G + t * (outputInk.G - ink.G))));
+                    int bb = Math.Max(0, Math.Min(a, (int)Math.Round(b - removed * bg.B - removedInk * ink.B + t * (outputInk.B - ink.B))));
                     result = (a << 24) | (rr << 16) | (gg << 8) | bb;
                     best = score;
                     matched = true;

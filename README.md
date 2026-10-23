@@ -10,7 +10,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
-See [what changed in v0.7.0](docs/releases/v0.7.0.md), including complementary suggestions, ally comparisons and the updated tutorials.
+See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive suggestion bubbles, radar previews and animated tutorials.
 
 - Select one or two types and explore their attack and defense affinities.
 - Switch between affinity diagrams, a color-coded effectiveness matrix and radar charts.
@@ -24,7 +24,11 @@ See [what changed in v0.7.0](docs/releases/v0.7.0.md), including complementary s
 - Check allies to compare their colored traces on the main Attack and Defense radars, with matching legends on their cards and a shared dynamic scale.
 - Inspect single-type, dual-type and member threat reports, with readable multipliers and individual matchup tooltips.
 - Lock the overlay for frosted surfaces with sharp foreground content and transparent gaps. Inactive ally actions are hidden while locked.
-- Play, resume or replay individual tutorials, with completion tracking and a separate Support tab.
+- Play, resume or replay compact individual tutorials, or launch all / unfinished tutorials. Animated demos use real controls without changing your team or settings; clickable progress points keep completion independent of navigation.
+- Preview Dark, System and Light themes and three independent frosted-glass options in Display. Hover is temporary; Apply commits. Main-window glass previews target the parent window.
+- Keep ordinary timed tooltips distinct from interactive suggestion bubbles: move into a bubble to use its controls, close it with the cross or leave its hover area.
+- Inspect complete matchup lists in scrollable hover bubbles, with a close button and no countdown.
+- Read consistent keyboard-key badges in tooltips and tutorials.
 - Settings and committed selections are remembered locally.
 
 ## Team planning in practice
@@ -33,15 +37,42 @@ Suggestions are planned in slot order. Their **before** counts include both appl
 
 ![Complementary gray suggestions on empty ally cards](docs/images/team-suggestions.png)
 
-![Graphical counter explanation against known opposing types](docs/images/suggestion-counter.png)
-
 Select several ally checkboxes to compare them on the main radars. Clicking a card selects its ordinary affinity view; checking its box controls comparison independently. Comparison checks are session-only and do not populate the separate radar window.
 
 ![Grouped dual-type threat report](docs/images/threat-report.png)
 
-Existing users receive a skippable **What's new** tour once for this feature update, even if they previously hid the introductory tutorial. Skip/Esc prevents automatic reopening; Help & Tutorial lets you resume or replay it. Existing completion history is retained. New installations follow the updated introductory tutorials.
+Existing users, including v0.7.0 users, receive a new three-step, skippable **What's new** tour once for v0.8.0, even if they previously hid the introductory tutorial. Skip/Esc prevents automatic reopening; Help & Tutorial lets you resume or replay it. Existing completion history is retained. New installations follow the updated introductory tutorials.
 
-![Tutorials and the new feature tour](docs/images/tutorials.png)
+![Compact tutorial list](docs/images/tutorials.png)
+
+![The skippable v0.8 feature tour](docs/images/tutorial-news.png)
+
+## Inspect before applying
+
+Suggestion bubbles include **Radar preview** and **Apply suggestion**. The top-right open button opens a persistent window with one tab per suggested ally and the current suggestion selected. Type icons remain visible in each tab.
+
+![Interactive suggestion bubble with preview and apply actions](docs/images/suggestion-counter.png)
+
+Compare the proposed ally with your team, hover a legend to emphasize one trace, then apply directly from the radar preview. Applying recalculates remaining proposals. Main-radar traces also highlight when you hover a checked ally card.
+
+![Suggested ally radar comparison](docs/images/suggestion-radar.png)
+
+![Browse all suggestions](docs/images/suggestions-window.png)
+
+![Illustrated suggestion help and keyboard keys](docs/images/suggestion-help.png)
+
+![Scrollable matchup details](docs/images/matchup-bubble.png)
+
+![Keyboard-key badges in tooltips](docs/images/shortcut-tooltip.png)
+
+![Keyboard-key badges in tutorials](docs/images/tutorial-shortcuts.png)
+
+## Preview your display
+
+Display combines text size, window scale, keyboard badges, theme and glass previews. Glass can be enabled separately for the locked overlay, secondary windows and the main window. A slightly stronger translucent veil and more contrasted secondary labels improve readability while keeping the background visible. Hover previews restore on exit without saving; use Apply to commit. The lock preview links to the animated pin/hold tutorial.
+
+![Display settings with theme and glass previews](docs/images/display-settings.png)
+
 
 ## Run
 

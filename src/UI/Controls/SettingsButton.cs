@@ -7,7 +7,7 @@ namespace AniimoAffinities
 {
     internal class SettingsButton : InteractiveButton
     {
-        internal bool Primary, Quiet, Segment;
+        internal bool Primary, Quiet, Segment, KeyBadges;
         protected override bool IsBusy
         {
             get
@@ -39,6 +39,7 @@ namespace AniimoAffinities
         internal Color Brand = Color.Empty;
         internal Color Surround = Color.Empty;
         internal Func<Color> SurroundColor;
+        internal Action<Graphics> PaintSurround;
         private bool hover, pressed;
         private readonly Timer busyTimer = new Timer { Interval = 40 };
         private string idleText, idleDescription;
@@ -150,7 +151,10 @@ namespace AniimoAffinities
             var g = e.Graphics;
             g.ScaleTransform(zoom, zoom);
             Color surround = SurroundColor == null ? (Surround.IsEmpty ? Theme.Background : Surround) : SurroundColor();
-            g.Clear(surround);
+            if (PaintSurround == null)
+                g.Clear(surround);
+            else
+                PaintSurround(g);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             Color fill = Primary ? ((pressed || InteractionPressed) ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? surround : Theme.Surface;
             if (!Brand.IsEmpty)
@@ -200,7 +204,10 @@ namespace AniimoAffinities
             else if (Quiet)
                 Glyphs.Draw(g, "reset", new RectangleF((Width - 16) / 2f, (Height - 16) / 2f, 16, 16), hover ? Theme.TextColor : Theme.Muted);
             else
-                Drawing.Text(g, Text, Font, !Enabled ? Theme.Muted : Primary ? (Segment ? Theme.AccentForeground : Theme.AccentInk) : Theme.TextColor, new RectangleF(4, 0, Width - 8, Height), true);
+                if (KeyBadges)
+                    ShortcutText.Layout(g, Text, Font, Theme.TextColor, new RectangleF(8, Math.Max(0, (Height - Font.GetHeight(g) - 6) / 2), Width - 16, Height), true);
+                else
+                    Drawing.Text(g, Text, Font, !Enabled ? Theme.Muted : Primary ? (Segment ? Theme.AccentForeground : Theme.AccentInk) : Theme.TextColor, new RectangleF(4, 0, Width - 8, Height), true);
             FinishPaint(g, Width, Height, false);
         }
     }

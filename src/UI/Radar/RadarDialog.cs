@@ -54,7 +54,7 @@ namespace AniimoAffinities
                 var button = new IconButton { Type = type, Glyph = "reset", TabIndex = i == 0 ? 9 : i - 1, Shortcut = KeyBindings.Label(bindings[i]), AccessibleName = i == 0 ? "Clear types" : Model.Names[type] };
                 button.Click += (s, e) => { if (action == 0) selection.Clear(); else selection.Toggle(type); RefreshSelection(); };
                 selector.Controls.Add(button);
-                tips.SetToolTip(button, button.AccessibleName + (button.Shortcut.Length > 0 ? " · " + button.Shortcut : ""));
+                tips.SetToolTip(button, button.AccessibleName + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
                 button.AccessibleDescription = button.Shortcut.Length > 0 ? "Shortcut: " + button.Shortcut : "No shortcut";
             }
             var modes = new TypeSelector { IconModes = true, Location = new Point(784, 38), Height = 54, TabIndex = 10, AccessibleName = "Radar layout" };

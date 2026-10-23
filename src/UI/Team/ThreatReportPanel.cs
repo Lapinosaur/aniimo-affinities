@@ -93,7 +93,7 @@ namespace AniimoAffinities
             table.CellPainting += PaintCell;
             table.ShowCellToolTips = false;
             table.CellMouseEnter += (s, e) => ShowCellTip(e.ColumnIndex, e.RowIndex);
-            table.CellMouseLeave += (s, e) => tips.SetRegionTip(table, "", Rectangle.Empty);
+
             table.Scroll += (s, e) => tips.SetRegionTip(table, "", Rectangle.Empty);
             table.CellEnter += (s, e) => { if (table.Focused) ShowCellTip(e.ColumnIndex, e.RowIndex); };
             table.AccessibleName = "Team threat table";
@@ -105,6 +105,8 @@ namespace AniimoAffinities
         {
             if (column < 0)
                 return;
+            tips.SetHoverBubble(table, false);
+            tips.SetScrollableGraphic(table, false);
             string text = row < 0 ? table.Columns[column].ToolTipText : table.Rows[row].Cells[column].ToolTipText;
             if (row >= 0 && table.Rows[row].Tag is Entry)
             {
@@ -112,10 +114,15 @@ namespace AniimoAffinities
                 var matches = entry.Exchanges.Where(item => column == 1 ? item.Received > 1.0001 : column == 2 ? item.Received < .9999 : true).ToArray();
                 if (matches.Length > 0)
                 {
-                    int shown = Math.Min(6, matches.Length);
+                    int shown = matches.Length;
+                    tips.SetHoverBubble(table, true);
+                    tips.SetScrollableGraphic(table, true);
                     tips.SetRegionTip(table, text, table.GetCellDisplayRectangle(column, row, true), (g, bounds) =>
                     {
-                        for (int i = 0; i < shown; i++)
+                        var clip = g.VisibleClipBounds;
+                        int first = Math.Max(0, (int)Math.Floor((clip.Top - bounds.Y) / 82));
+                        int last = Math.Min(shown, (int)Math.Ceiling((clip.Bottom - bounds.Y) / 82));
+                        for (int i = first; i < last; i++)
                         {
                             var item = matches[i];
                             float top = bounds.Y + i * 82;
@@ -134,9 +141,8 @@ namespace AniimoAffinities
                             Glyphs.Draw(g, "atk", new RectangleF(bounds.X + 126, y + 40, 14, 14), Theme.Muted);
                             Drawing.Text(g, Model.Factor(item.Dealt), Font, OutcomeInk(item.Dealt, false), new RectangleF(bounds.X + 147, y + 36, 67, 22), false);
                         }
-                        if (matches.Length > shown)
-                            Drawing.Text(g, "+" + (matches.Length - shown) + " other matchups", Font, Theme.Muted, new RectangleF(bounds.X + 4, bounds.Y + shown * 82, 240, 22), false);
-                    }, new Size(250, shown * 82 + (matches.Length > shown ? 22 : 0)));
+
+                    }, new Size(250, shown * 82));
                     return;
                 }
                 tips.SetRegionTip(table, text, table.GetCellDisplayRectangle(column, row, true), (g, bounds) =>

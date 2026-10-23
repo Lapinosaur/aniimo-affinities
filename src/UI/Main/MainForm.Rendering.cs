@@ -101,7 +101,8 @@ namespace AniimoAffinities
             if (inlineRadar)
             {
                 float radius = RadarRenderer.FitRadius(new SizeF(box.Width, box.Height - 68));
-                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview, teamCounter == column ? teamOpponentMask : 0, comparison);
+                int highlightedSlot = comparison.Any(item => item.Slot == teamPreview) ? teamPreview : -1;
+                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview, teamCounter == column ? teamOpponentMask : 0, comparison, highlightedSlot);
                 return;
             }
             float centerHeight = preview.Sub >= 0 ? 112 : 64;
