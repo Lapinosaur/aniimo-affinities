@@ -10,13 +10,47 @@ namespace AniimoAffinities
     {
         private readonly UnlockWindow source;
         private readonly LockedGlass.GlassWindow surface = new LockedGlass.GlassWindow();
+        private readonly Timer fadeTimer = new Timer { Interval = 16 };
+        private readonly System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+        private readonly System.Collections.Generic.Dictionary<Control, Fade> fades = new System.Collections.Generic.Dictionary<Control, Fade>();
+        internal sealed class Fade
+        {
+            private float from, target;
+            private double started;
+            internal bool Active
+            {
+                get; private set;
+            }
+            internal Fade(float value)
+            {
+                from = target = value;
+            }
+            internal float Sample(float next, double now)
+            {
+                float progress = (float)Math.Max(0, Math.Min(1, (now - started) / 180));
+                float eased = progress * progress * (3 - 2 * progress);
+                float value = progress >= 1 ? target : from + (target - from) * eased;
+                if (next != target)
+                {
+                    from = value;
+                    target = next;
+                    started = now;
+                }
+                Active = value != target;
+                return value;
+            }
+        }
         private bool queued, rendering, disposed, failed;
         internal UnlockAppearance(UnlockWindow window)
         {
             source = window;
             AssignHandle(window.Handle);
             foreach (Control control in source.Controls)
+            {
+                fades.Add(control, new Fade(source.ButtonOpacity(control)));
                 control.Invalidated += Invalidated;
+            }
+            fadeTimer.Tick += (s, e) => Queue();
             Render();
         }
         private void Invalidated(object sender, InvalidateEventArgs e)
@@ -32,6 +66,10 @@ namespace AniimoAffinities
         }
         internal static Bitmap Compose(UnlockWindow window)
         {
+            return Compose(window, window.ButtonOpacity);
+        }
+        private static Bitmap Compose(UnlockWindow window, Func<Control, float> opacity)
+        {
             var image = new Bitmap(window.Width, window.Height);
             using (var graphics = Graphics.FromImage(image))
             {
@@ -46,7 +84,7 @@ namespace AniimoAffinities
                     {
                         control.DrawToBitmap(button, new Rectangle(Point.Empty, button.Size));
                         var matrix = new ColorMatrix();
-                        matrix.Matrix33 = window.ButtonOpacity(control);
+                        matrix.Matrix33 = opacity(control);
                         attributes.SetColorMatrix(matrix);
                         graphics.DrawImage(button, control.Bounds, 0, 0, button.Width, button.Height, GraphicsUnit.Pixel, attributes);
                     }
@@ -62,19 +100,30 @@ namespace AniimoAffinities
             if (!source.Visible || owner != null && owner.TutorialSnapshot)
             {
                 surface.Hide();
+                fadeTimer.Stop();
                 return;
             }
             rendering = true;
             try
             {
-                using (var image = Compose(source))
+                bool animating = false;
+                double now = clock.Elapsed.TotalMilliseconds;
+                using (var image = Compose(source, control =>
+                {
+                    var fade = fades[control];
+                    float value = fade.Sample(source.ButtonOpacity(control), now);
+                    animating |= fade.Active;
+                    return value;
+                }))
                     if (!GlassNative.Present(surface.Handle, image, source.Location))
                     {
                         failed = true;
+                        fadeTimer.Stop();
                         surface.Hide();
                         source.Opacity = 1;
                         return;
                     }
+                fadeTimer.Enabled = animating;
                 source.Opacity = 1.0 / 255;
                 Position();
             }
@@ -102,6 +151,7 @@ namespace AniimoAffinities
         public void Dispose()
         {
             disposed = true;
+            fadeTimer.Dispose();
             foreach (Control control in source.Controls)
                 control.Invalidated -= Invalidated;
             ReleaseHandle();

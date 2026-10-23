@@ -12,6 +12,17 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            var fade = new UnlockAppearance.Fade(.18f);
+            if (fade.Sample(1, 0) != .18f || !fade.Active)
+                throw new Exception("Hover must start fading without an opacity jump.");
+            float middle = fade.Sample(1, 90);
+            if (middle <= .18f || middle >= 1 || fade.Sample(.18f, 90) != middle)
+                throw new Exception("Reversing a hover fade must preserve its current opacity.");
+            if (fade.Sample(.18f, 270) != .18f || fade.Active)
+                throw new Exception("The fade must settle and stop animating.");
+            var lockFade = new UnlockAppearance.Fade(1);
+            if (lockFade.Sample(1, 90) != 1 || lockFade.Active)
+                throw new Exception("The padlock must never animate its opacity.");
             using (var toolbar = new UnlockWindow(() => { }, () => { }, false, () => Point.Empty, point => { }))
             {
                 toolbar.Location = new Point(-2000, -2000);
