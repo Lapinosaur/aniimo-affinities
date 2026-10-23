@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Reflection;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace AniimoAffinities
@@ -9,6 +10,32 @@ namespace AniimoAffinities
     {
         internal static void Save(string mode, string path)
         {
+            if (mode == "team-suggestion-tip" || mode == "team-counter-tip")
+            {
+                var suggestionPlan = new TeamPlan();
+                if (mode == "team-counter-tip")
+                {
+                    suggestionPlan.Opponents[0].Main = 0;
+                    suggestionPlan.Opponents[0].Sub = 5;
+                    suggestionPlan.Opponents[1].Main = 7;
+                }
+                var recommendation = TeamSuggestions.ComplementaryAdditions(suggestionPlan)[mode == "team-counter-tip" ? 0 : 2];
+                using (var owner = new Form())
+                using (var anchor = new Button { Text = "+" })
+                using (var bubble = new TipBubble())
+                {
+                    owner.Controls.Add(anchor);
+                    owner.Show();
+                    bubble.Present(anchor, TeamTypeSelector.RecommendationTip(recommendation), null, null,
+                        (g, area) => SuggestionGraphic.Draw(g, area, recommendation, "Apply with + or Ctrl+Enter"), SuggestionGraphic.Size(recommendation));
+                    using (var image = new Bitmap(bubble.Width, bubble.Height))
+                    {
+                        bubble.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
+                        image.Save(path);
+                    }
+                }
+                return;
+            }
             if (mode == "team-legal")
             {
                 using (var window = new LegalWindow())
@@ -94,7 +121,17 @@ namespace AniimoAffinities
             var plan = TeamTests.Sample();
             plan.Allies[0].Name = "";
             plan.Allies[2].Name = "";
-            using (PortableWindow form = mode == "team-editor" || mode == "team-opponents" || mode == "team-keyboard" || mode == "team-matchups" ? (PortableWindow)new TeamEditor(plan, () => { }) : new MainForm())
+            if (mode == "team-card-suggestions")
+            {
+                for (int i = 1; i < plan.Allies.Length; i++)
+                    plan.Allies[i] = new TeamMember();
+                foreach (var opponent in plan.Opponents)
+                    opponent.Main = opponent.Sub = -1;
+            }
+            if (mode == "team-suggestions" || mode == "team-threats-grouped" || mode == "team-threats-matchup-tip")
+                for (int i = 1; i < plan.Allies.Length; i++)
+                    plan.Allies[i] = new TeamMember();
+            using (PortableWindow form = mode == "team-editor" || mode == "team-suggestions" || mode.StartsWith("team-threats") || mode == "team-opponents" || mode == "team-keyboard" || mode == "team-matchups" ? (PortableWindow)new TeamEditor(plan, () => { }) : new MainForm())
             {
                 var flags = BindingFlags.Instance | BindingFlags.NonPublic;
                 if (form is MainForm)
@@ -109,12 +146,68 @@ namespace AniimoAffinities
                     stored.Position = mode == "team-side" ? "Right" : "Bottom";
                     typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(form, null);
                     var board = (TeamBoard)typeof(MainForm).GetField("teamBoard", flags).GetValue(form);
-                    board.SelectCard(0);
+                    board.SelectCard(mode == "team-card-suggestions" ? 2 : 0);
+                    if (mode == "team-comparison" || mode == "team-comparison-six")
+                    {
+                        typeof(MainForm).GetMethod("ToggleInlineRadar", flags).Invoke(form, null);
+                        foreach (var card in board.Controls.OfType<TeamCard>().Take(mode == "team-comparison-six" ? 6 : 3))
+                            card.CompareCheck.Checked = true;
+                    }
                 }
                 if (mode == "team-matchups")
                     typeof(TeamEditor).GetMethod("ShowMatchups", flags).Invoke(form, null);
                 form.Show();
                 Application.DoEvents();
+                if (mode.StartsWith("team-threats"))
+                {
+                    ((SettingsButton)typeof(TeamEditor).GetField("threatToggle", flags).GetValue(form)).PerformClick();
+                    if (mode == "team-threats-grouped" || mode == "team-threats-members")
+                    {
+                        var report = (ThreatReportPanel)typeof(TeamEditor).GetField("threatReport", flags).GetValue(form);
+                        ((SettingsButton[])typeof(ThreatReportPanel).GetField("tabs", flags).GetValue(report))[mode == "team-threats-members" ? 2 : 1].PerformClick();
+                    }
+                    Application.DoEvents();
+                }
+                if (mode == "team-threats-matchup-tip" || mode == "team-threats-members-tip")
+                {
+                    var report = (ThreatReportPanel)typeof(TeamEditor).GetField("threatReport", flags).GetValue(form);
+                    if (mode == "team-threats-members-tip")
+                        ((SettingsButton[])typeof(ThreatReportPanel).GetField("tabs", flags).GetValue(report))[2].PerformClick();
+                    var table = (DataGridView)typeof(ThreatReportPanel).GetField("table", flags).GetValue(report);
+                    typeof(ThreatReportPanel).GetMethod("ShowCellTip", flags).Invoke(report, new object[] { 4, 0 });
+                    var reportTips = (ApplicationTips)typeof(ThreatReportPanel).GetField("tips", flags).GetValue(report);
+                    var painters = (System.Collections.Generic.Dictionary<Control, Action<Graphics, RectangleF>>)typeof(ApplicationTips).GetField("graphics", flags).GetValue(reportTips);
+                    var sizes = (System.Collections.Generic.Dictionary<Control, Size>)typeof(ApplicationTips).GetField("graphicSizes", flags).GetValue(reportTips);
+                    using (var bubble = new TipBubble())
+                    {
+                        bubble.Present(table, table.Rows[0].Cells[4].ToolTipText, null, null, painters[table], sizes[table]);
+                        Application.DoEvents();
+                        using (var bitmap = new Bitmap(bubble.Width, bubble.Height))
+                        {
+                            bubble.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bubble.Size));
+                            bitmap.Save(path);
+                        }
+                    }
+                    return;
+                }
+                if (mode == "team-threats-help")
+                {
+                    var report = (ThreatReportPanel)typeof(TeamEditor).GetField("threatReport", flags).GetValue(form);
+                    foreach (Control container in report.Controls)
+                        foreach (Control control in container.Controls)
+                            if (control.AccessibleName == "Show matchup legend")
+                                using (var bubble = new TipBubble())
+                                {
+                                    bubble.Present(control, control.AccessibleDescription, null, null, report.DrawLegend, new Size(280, 250));
+                                    Application.DoEvents();
+                                    using (var bitmap = new Bitmap(bubble.Width, bubble.Height))
+                                    {
+                                        bubble.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bubble.Size));
+                                        bitmap.Save(path);
+                                    }
+                                    return;
+                                }
+                }
                 if (mode == "team-transition")
                 {
                     var main = (MainForm)form;

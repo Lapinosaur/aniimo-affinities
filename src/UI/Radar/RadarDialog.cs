@@ -78,8 +78,8 @@ namespace AniimoAffinities
             chart.Size = new Size(900, 450);
             chart.Paint += (s, e) => PaintChart(e.Graphics);
             Controls.Add(chart);
-            ConfigureLegend(attackLegend, "atk", "Attack", "Higher values deal more damage. Uses the best available attacking type.\nFixed scale: 0 to ×2.56 · Amber curve.");
-            ConfigureLegend(defenseLegend, "def", "Defense", "Lower values mean less damage received. Combines both selected types.\nFixed scale: 0 to ×2.56 · Blue curve.");
+            ConfigureLegend(attackLegend, "atk", "Attack", "Higher values deal more damage. Uses the best available attacking type.\nSolid line and round points · Scale shared with defense.\nTeal: effective · Purple: ineffective.");
+            ConfigureLegend(defenseLegend, "def", "Defense", "Lower values mean less damage received. Combines both selected types.\nSolid line and square points · Scale shared with attack.\nTeal: resistance · Purple: weakness.");
             Activated += (s, e) => selector.Invalidate(true);
             Deactivate += (s, e) => selector.Invalidate(true);
             RefreshSelection();
@@ -96,6 +96,10 @@ namespace AniimoAffinities
                 e.Graphics.Clear(Theme.Background);
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 Color color = glyph == "atk" ? Theme.Attack : Theme.Defense;
+                using (var pen = new Pen(color, 2))
+                {
+                    e.Graphics.DrawLine(pen, 7, 29, 100, 29);
+                }
                 Glyphs.Draw(e.Graphics, glyph, new RectangleF(7, 7, 18, 18), color);
                 using (var font = UiFonts.Create("Segoe UI", 9))
                     Drawing.Text(e.Graphics, title, font, color, new RectangleF(32, 0, 78, 32), false);

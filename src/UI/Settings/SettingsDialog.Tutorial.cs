@@ -24,20 +24,20 @@ namespace AniimoAffinities
             var summary = new Label { ForeColor = Theme.TextColor, Bounds = new Rectangle(0, 0, 390, 24) };
             var explanation = new Label { Text = "Checks mark completed tutorials. Each tour can be played independently.", ForeColor = Theme.Muted, Bounds = new Rectangle(0, 26, 390, 38) };
             list.Controls.AddRange(new Control[] { summary, explanation });
-            var checks = new RoundCheckBox[7];
-            var actions = new SettingsButton[7];
-            var states = new Label[7];
-            string[] purposes = { "Select types and read damage multipliers.", "Compare attacking rows and defending columns.", "Compare strengths across types and views.", "Keep the app above a game and lock the overlay.", "Assign, test and resolve shortcut conflicts.", "Adjust theme, text and window size safely.", "Compare allies with known opponents." };
+            var checks = new RoundCheckBox[TutorialOverlay.Sections.Length];
+            var actions = new SettingsButton[TutorialOverlay.Sections.Length];
+            var states = new Label[TutorialOverlay.Sections.Length];
+            string[] purposes = { "Select types and read damage multipliers.", "Compare attacking rows and defending columns.", "Compare strengths across types and views.", "Keep the app above a game and lock the overlay.", "Assign, test and resolve shortcut conflicts.", "Adjust theme, text and window size safely.", "Suggestions, projected teams and ally radar traces.", "Discover new suggestions, reports and comparisons." };
             var status = new Label { ForeColor = Theme.Muted, Bounds = new Rectangle(0, 756, 390, 44) };
             var resume = new SettingsButton { Text = "Resume paused tour", Bounds = new Rectangle(0, 68, 390, 34), TabIndex = 0 };
             list.Controls.Add(resume);
             Action refresh = () =>
             {
                 var progress = TutorialProgress.Load();
-                summary.Text = Enumerable.Range(0, 7).Count(i => (progress.Completed & (1 << i)) != 0) + " of 7 tutorials completed";
+                summary.Text = Enumerable.Range(0, TutorialOverlay.Sections.Length).Count(i => (progress.Completed & (1 << i)) != 0) + " of " + TutorialOverlay.Sections.Length + " tutorials completed";
                 resume.Enabled = progress.Pending && startTutorial != null;
                 resume.Text = progress.Pending ? "Resume paused tour" : "No paused tour";
-                for (int i = 0; i < 7; i++)
+                for (int i = 0; i < TutorialOverlay.Sections.Length; i++)
                 {
                     if (checks[i] == null)
                         continue;
@@ -70,13 +70,13 @@ namespace AniimoAffinities
             };
             resume.Click += (s, e) => launch(-1);
             int y = 116;
-            int[] order = { 0, 6, 1, 2, 3, 4, 5 };
+            int[] order = { 7, 0, 6, 1, 2, 3, 4, 5 };
             for (int row = 0; row < order.Length; row++)
             {
                 int section = order[row];
-                if (row == 0 || row == 4)
+                if (row == 0 || row == 1 || row == 5)
                 {
-                    list.Controls.Add(UiFonts.Own(new Label { Text = row == 0 ? "Understand matchups" : "Your workspace", ForeColor = Theme.TextColor, Font = UiFonts.Create("Segoe UI", 11, FontStyle.Bold), Bounds = new Rectangle(0, y, 390, 28) }));
+                    list.Controls.Add(UiFonts.Own(new Label { Text = row == 0 ? "New features" : row == 1 ? "Understand matchups" : "Your workspace", ForeColor = Theme.TextColor, Font = UiFonts.Create("Segoe UI", 11, FontStyle.Bold), Bounds = new Rectangle(0, y, 390, 28) }));
                     y += 32;
                 }
                 checks[section] = new RoundCheckBox { Text = TutorialOverlay.Sections[section], AutoCheck = false, TabStop = false, AccessibleDescription = "Completion status, updated when the tutorial is finished.", ForeColor = Theme.TextColor, Bounds = new Rectangle(0, y, 278, 26) };
@@ -87,7 +87,7 @@ namespace AniimoAffinities
                 list.Controls.AddRange(new Control[] { checks[section], states[section], purpose, actions[section] });
                 y += 86;
             }
-            var startup = new RoundCheckBox { Text = "Show unfinished tutorials at startup", Checked = !TutorialPreferences.Hidden, ForeColor = Theme.TextColor, Bounds = new Rectangle(0, y + 12, 390, 30), TabIndex = 8 };
+            var startup = new RoundCheckBox { Text = "Show unfinished tutorials at startup", Checked = !TutorialPreferences.Hidden, ForeColor = Theme.TextColor, Bounds = new Rectangle(0, y + 12, 390, 30), TabIndex = 9 };
             startup.CheckedChanged += (s, e) =>
             {
                 try

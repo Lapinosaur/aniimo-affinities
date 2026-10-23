@@ -22,9 +22,16 @@ namespace AniimoAffinities
             }
         }
         internal static Color Attack, Defense, AttackSurface, DefenseSurface, ReducedDamage, IncreasedDamage;
+        internal static Color Unfavorable, Favorable;
         internal static Color AccentForeground = Accent, HoverSurface = Anthracite, StrongBorder = Anthracite, Error = Color.FromArgb(245, 105, 115), TooltipShadow = Anthracite;
         internal static int Appearance = 1;
         internal static int Revision;
+        private static readonly Color[] comparisonDark = { Color.FromArgb(255, 183, 112), Color.FromArgb(131, 188, 255), Color.FromArgb(105, 219, 150), Color.FromArgb(212, 175, 245), Color.FromArgb(255, 140, 183), Color.FromArgb(92, 222, 224) };
+        private static readonly Color[] comparisonLight = { Color.FromArgb(151, 70, 18), Color.FromArgb(35, 91, 156), Color.FromArgb(25, 112, 62), Color.FromArgb(105, 53, 140), Color.FromArgb(166, 36, 94), Color.FromArgb(0, 108, 112) };
+        internal static Color ComparisonInk(int slot)
+        {
+            return (TextColor.GetBrightness() < .5f ? comparisonLight : comparisonDark)[slot];
+        }
         internal static event Action Changed;
         private static readonly string AppearancePath = PreferenceFiles.FilePath("appearance.txt");
         internal static void LoadAppearance()
@@ -91,10 +98,13 @@ namespace AniimoAffinities
             StrongBorder = Blend(Background, TextColor, 0.52f);
             Error = light ? Color.FromArgb(177, 35, 55) : Color.FromArgb(245, 105, 115);
             TooltipShadow = Blend(Background, Anthracite, 0.26f);
+            // Orange/blue identify direction; favorable/unfavorable colors describe outcomes.
             Attack = light ? Color.FromArgb(151, 70, 18) : Color.FromArgb(255, 183, 112);
             Defense = light ? Color.FromArgb(35, 91, 156) : Color.FromArgb(131, 188, 255);
             AttackSurface = Blend(Surface, Attack, 0.10f);
             DefenseSurface = Blend(Surface, Defense, 0.10f);
+            Unfavorable = light ? Color.FromArgb(173, 35, 45) : Color.FromArgb(255, 128, 136);
+            Favorable = light ? Color.FromArgb(25, 112, 62) : Color.FromArgb(105, 219, 150);
             ReducedDamage = light ? Color.FromArgb(105, 53, 140) : Color.FromArgb(212, 175, 245);
             IncreasedDamage = light ? AccentForeground : Blend(Accent, TextColor, .22f);
             foreach (Form form in Application.OpenForms)
@@ -111,6 +121,10 @@ namespace AniimoAffinities
         internal static Color MultiplierInk(double value)
         {
             return value < .999 ? ReducedDamage : value > 1.001 ? IncreasedDamage : Muted;
+        }
+        internal static Color MatchupInk(double value, bool incoming)
+        {
+            return MultiplierInk(incoming ? (value == 0 ? double.PositiveInfinity : 1 / value) : value);
         }
         internal static Color MultiplierFill(double value)
         {

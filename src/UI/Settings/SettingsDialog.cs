@@ -184,7 +184,7 @@ namespace AniimoAffinities
             var display = new SettingsButton { Text = "Display", Location = new Point(346, 82), Size = new Size(90, 30), TabIndex = 2 };
             var aboutPanel = new AboutPanel { Location = new Point(24, 124), Visible = false };
             var about = new SettingsButton { Glyph = "info", AccessibleName = "About & Credits", Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
-            tips.SetToolTip(about, "About & Credits � Creator, links and acknowledgements");
+            tips.SetToolTip(about, "About & Credits · Creator, links and acknowledgements");
             var guidePanel = new Panel { Location = new Point(24, 124), Size = new Size(412, 156), Visible = false };
             AddTutorialChoices(guidePanel, startTutorial);
             var backToSettings = new SettingsButton { Text = "Back to settings", Bounds = new Rectangle(24, 82, 412, 30), Visible = false, TabIndex = 0 };

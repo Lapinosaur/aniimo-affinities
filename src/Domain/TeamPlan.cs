@@ -18,10 +18,27 @@ namespace AniimoAffinities
         {
             return string.IsNullOrWhiteSpace(Name) ? (opponent ? "Opponent " : "Ally ") + (index + 1) : Name;
         }
+        internal static string JoinNames(string[] names, TeamMember[] members)
+        {
+            var labels = new string[names.Length];
+            string previousPrefix = "";
+            for (int i = 0; i < names.Length; i++)
+            {
+                string prefix = string.IsNullOrWhiteSpace(members[i].Name)
+                    ? (names[i].StartsWith("Ally ", StringComparison.Ordinal) ? "Ally " : names[i].StartsWith("Opponent ", StringComparison.Ordinal) ? "Opponent " : "") : "";
+                labels[i] = prefix.Length > 0 && prefix == previousPrefix ? names[i].Substring(prefix.Length) : names[i];
+                previousPrefix = prefix;
+            }
+            return string.Join(" & ", labels);
+        }
     }
 
     internal sealed class TeamPlan
     {
+        internal struct MatchupCounts
+        {
+            internal int Total, Strong, Weak;
+        }
         internal readonly TeamMember[] Allies = Enumerable.Range(0, 6).Select(i => new TeamMember()).ToArray();
         internal readonly TeamMember[] Opponents = Enumerable.Range(0, 6).Select(i => new TeamMember()).ToArray();
         internal string Position = "Bottom";
@@ -38,14 +55,27 @@ namespace AniimoAffinities
         }
         internal string Summary(TeamMember member)
         {
-            var known = Opponents.Where(x => x.Known).ToArray();
             if (!member.Known)
                 return "Choose elements";
-            if (known.Length == 0)
+            var counts = CountMatchups(member);
+            if (counts.Total == 0)
                 return "No known opponents";
-            int coverage = known.Count(x => Damage(member, x) > 1.0001);
-            int threats = known.Count(x => Damage(x, member) > 1.0001);
-            return "Strong vs " + coverage + "/" + known.Length + " · Weak vs " + threats + "/" + known.Length;
+            return "Strong vs " + counts.Strong + "/" + counts.Total + " · Weak vs " + counts.Weak + "/" + counts.Total;
+        }
+        internal MatchupCounts CountMatchups(TeamMember member)
+        {
+            var result = new MatchupCounts();
+            foreach (var opponent in Opponents)
+            {
+                if (!opponent.Known)
+                    continue;
+                result.Total++;
+                if (Damage(member, opponent) > 1.0001)
+                    result.Strong++;
+                if (Damage(opponent, member) > 1.0001)
+                    result.Weak++;
+            }
+            return result;
         }
     }
 }

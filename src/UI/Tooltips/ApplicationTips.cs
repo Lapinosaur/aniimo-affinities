@@ -10,9 +10,36 @@ namespace AniimoAffinities
     {
         private readonly Dictionary<Control, string> labels = new Dictionary<Control, string>();
         private readonly Dictionary<Control, Func<Rectangle>> anchors = new Dictionary<Control, Func<Rectangle>>();
+        private readonly Dictionary<Control, Action<Graphics, RectangleF>> graphics = new Dictionary<Control, Action<Graphics, RectangleF>>();
+        private readonly Dictionary<Control, Size> graphicSizes = new Dictionary<Control, Size>();
+        internal void SetGraphicTip(Control control, string description, Size size, Action<Graphics, RectangleF> paint)
+        {
+            SetToolTip(control, description);
+            graphics[control] = paint;
+            graphicSizes[control] = size;
+        }
         internal void SetAnchorBounds(Control control, Func<Rectangle> bounds)
         {
             anchors[control] = bounds;
+        }
+        internal void SetRegionTip(Control control, string text, Rectangle bounds, Action<Graphics, RectangleF> paint = null, Size? size = null)
+        {
+            SetToolTip(control, text);
+            if (paint != null && size.HasValue)
+            {
+                graphics[control] = paint;
+                graphicSizes[control] = size.Value;
+            }
+            else
+            {
+                graphics.Remove(control);
+                graphicSizes.Remove(control);
+            }
+            SetAnchorBounds(control, () => bounds);
+            if (string.IsNullOrWhiteSpace(text))
+                Hide();
+            else
+                Enter(control, EventArgs.Empty);
         }
         private readonly Timer timer = new Timer();
         private readonly TipBubble bubble = new TipBubble();
@@ -23,6 +50,13 @@ namespace AniimoAffinities
         {
             return new ApplicationTips();
         }
+        internal void ShowTip(Control control)
+        {
+            if (disposed || control.IsDisposed || !control.Enabled || !control.Visible)
+                return;
+            Enter(control, EventArgs.Empty);
+            PresentTip(false);
+        }
         private ApplicationTips()
         {
             timer.Interval = 450;
@@ -30,6 +64,8 @@ namespace AniimoAffinities
         }
         internal void SetToolTip(Control control, string text)
         {
+            graphics.Remove(control);
+            graphicSizes.Remove(control);
             string previous;
             bool refresh = ReferenceEquals(anchor, control) && labels.TryGetValue(control, out previous) && previous != text;
             if (!labels.ContainsKey(control))
@@ -60,6 +96,8 @@ namespace AniimoAffinities
             control.Disposed -= RemoveControl;
             labels.Remove(control);
             anchors.Remove(control);
+            graphics.Remove(control);
+            graphicSizes.Remove(control);
             if (ReferenceEquals(anchor, control))
                 Hide();
         }
@@ -80,6 +118,10 @@ namespace AniimoAffinities
         }
         private void Tick(object sender, EventArgs e)
         {
+            PresentTip(true);
+        }
+        private void PresentTip(bool requireActive)
+        {
             timer.Stop();
             if (displayed)
             {
@@ -89,7 +131,7 @@ namespace AniimoAffinities
             if (anchor == null || anchor.IsDisposed || !anchor.Visible || !anchor.Enabled)
                 return;
             owner = anchor.FindForm();
-            if (owner == null || Form.ActiveForm != owner)
+            if (owner == null || requireActive && Form.ActiveForm != owner)
                 return;
             string text;
             if (!labels.TryGetValue(anchor, out text) || string.IsNullOrWhiteSpace(text))
@@ -98,7 +140,9 @@ namespace AniimoAffinities
             owner.LocationChanged += Leave;
             Func<Rectangle> bounds;
             var support = anchor as SupportButton;
-            bubble.Present(anchor, text, anchors.TryGetValue(anchor, out bounds) ? bounds() : anchor.ClientRectangle, support == null ? null : support.QrCode);
+            Action<Graphics, RectangleF> paint;
+            graphics.TryGetValue(anchor, out paint);
+            bubble.Present(anchor, text, anchors.TryGetValue(anchor, out bounds) ? bounds() : anchor.ClientRectangle, support == null ? null : support.QrCode, paint, paint == null ? (Size?)null : graphicSizes[anchor]);
             displayed = true;
             if (support != null && SupportPlacement != null)
                 bubble.Relocate(SupportPlacement(bubble.Bounds));
@@ -145,6 +189,8 @@ namespace AniimoAffinities
             }
             labels.Clear();
             anchors.Clear();
+            graphics.Clear();
+            graphicSizes.Clear();
         }
     }
 }

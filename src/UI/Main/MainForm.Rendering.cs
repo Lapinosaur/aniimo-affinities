@@ -14,17 +14,18 @@ namespace AniimoAffinities
             originHits.Clear();
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
+            var comparison = ComparisonSeries();
             if (preview.Main < 0 && currentView == "matrix")
             {
                 DrawInlineMatrix(g, 12);
                 return;
             }
-            if (preview.Main < 0)
+            if (preview.Main < 0 && comparison.Length == 0)
             {
                 PaintEmptyState(g);
                 return;
             }
-            int a = preview.Main, b = preview.Sub;
+            int a = comparison.Length > 0 ? comparison[0].Member.Main : preview.Main, b = comparison.Length > 0 ? comparison[0].Member.Sub : preview.Sub;
             string name = Model.Names[a] + (b >= 0 ? " + " + Model.Names[b] : "");
             float width = (canvas.Width - 36) / 2f;
             var factors = Model.Factors(a, b);
@@ -35,10 +36,23 @@ namespace AniimoAffinities
                 return;
             }
             for (int column = 0; column < 2; column++)
-                DrawCard(g, new RectangleF(12 + column * (width + 12), cardTop, width, canvas.Height - cardTop - 12), column, factors, name);
+                DrawCard(g, new RectangleF(12 + column * (width + 12), cardTop, width, canvas.Height - cardTop - 12), column, factors, name, comparison);
         }
         private void PaintAffinityHeader(object sender, PaintEventArgs e)
         {
+            var comparison = ComparisonSeries();
+            if (comparison.Length > 0)
+            {
+                if (!TopMost)
+                {
+                    e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                    Glyphs.Draw(e.Graphics, "team", new RectangleF(18, 12, 36, 36), Theme.AccentForeground);
+                    using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
+                        Drawing.Text(e.Graphics, "Team comparison", title, Theme.TextColor, new RectangleF(70, 5, 500, 35), false);
+                    Drawing.Text(e.Graphics, comparison.Length + " selected · Colors shown on ally cards", Font, Theme.Muted, new RectangleF(72, 39, 420, 20), false);
+                }
+                return;
+            }
             if (preview.Main < 0)
                 return;
             var g = e.Graphics;
@@ -72,10 +86,10 @@ namespace AniimoAffinities
                 }
         }
         // Inputs: shared projections. Output: two directed diagrams, grouping equal multipliers. Fallback: dash for empty groups. Raises: none.
-        private void DrawCard(Graphics g, RectangleF box, int column, double[] factors, string name)
+        private void DrawCard(Graphics g, RectangleF box, int column, double[] factors, string name, RadarRenderer.Series[] comparison)
         {
             Drawing.Box(g, box, Theme.Surface, Theme.Border, Theme.PanelRadius);
-            Drawing.Box(g, new RectangleF(box.X + 16, box.Y + 16, 32, 32), Theme.AccentSurface, Theme.AccentSurface, 9);
+            Drawing.Box(g, new RectangleF(box.X + 16, box.Y + 16, 32, 32), Theme.InsetSurface, Theme.Border, 9);
             Glyphs.Draw(g, column == 0 ? "atk" : "def", new RectangleF(box.X + 22, box.Y + 22, 20, 20), Theme.AccentForeground);
             using (var bold = UiFonts.Create("Segoe UI", 13, FontStyle.Bold))
                 Drawing.Text(g, column == 0 ? "Attack" : "Defense", bold, column == 0 ? Theme.Attack : Theme.Defense, new RectangleF(box.X + 60, box.Y + 11, box.Width - 76, 27), false);
@@ -86,8 +100,8 @@ namespace AniimoAffinities
             float cy = box.Y + 68 + (box.Height - 68) / 2, cx = box.X + box.Width / 2;
             if (inlineRadar)
             {
-                float radius = Math.Max(30, Math.Min(box.Width / 2 - 80, (box.Height - 68) / 2 - 65));
-                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview, teamCounter == column ? teamOpponentMask : 0);
+                float radius = RadarRenderer.FitRadius(new SizeF(box.Width, box.Height - 68));
+                RadarRenderer.DrawRadar(g, new PointF(cx, cy - 4), radius, column == 0, column == 1, preview, teamCounter == column ? teamOpponentMask : 0, comparison);
                 return;
             }
             float centerHeight = preview.Sub >= 0 ? 112 : 64;
@@ -111,7 +125,7 @@ namespace AniimoAffinities
             for (int side = 0; side < 2; side++)
             {
                 var entries = Enumerable.Range(0, 9).Where(t => side == 0 ? factors[column * 9 + t] < 1 : factors[column * 9 + t] > 1).ToArray();
-                Color color = column == side ? Theme.Muted : Theme.AccentForeground;
+                Color color = column == side ? Theme.ReducedDamage : Theme.IncreasedDamage;
                 float outer = side == 0 ? box.X + 12 : box.Right - 66;
                 DrawStack(g, entries, factors, column, outer, cy, box.Height - 100);
                 float arrowX = side == 0 ? box.X + 78 : cx + 39, arrowW = box.Width / 2 - 117;

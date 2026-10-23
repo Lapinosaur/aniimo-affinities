@@ -15,6 +15,29 @@ namespace AniimoAffinities
         private Rectangle obstruction;
         private bool arranging;
         internal bool TransitionLayout;
+        internal event Action ComparisonChanged;
+        internal event Action TeamChanged;
+        private bool overlayLocked;
+        internal void SetOverlayLocked(bool value)
+        {
+            overlayLocked = value;
+            RefreshActions();
+        }
+        private void RefreshActions()
+        {
+            for (int i = 0; i < cards.Length; i++)
+            {
+                cards[i].CompareCheck.Visible = !overlayLocked && plan.Allies[i].Known;
+                cards[i].SuggestButton.Visible = !overlayLocked && !plan.Allies[i].Known && cards[i].Suggestion != null;
+            }
+        }
+        internal int[] ComparedSlots
+        {
+            get
+            {
+                return Enumerable.Range(0, cards.Length).Where(i => plan.Allies[i].Known && cards[i].CompareCheck.Checked).ToArray();
+            }
+        }
         internal int SelectedIndex
         {
             get; private set;
@@ -48,6 +71,26 @@ namespace AniimoAffinities
             {
                 int index = i;
                 cards[i] = new TeamCard(plan, index) { TabIndex = i };
+                cards[i].SuggestButton.Click += (s, e) =>
+                {
+                    if (plan.Allies[index].Known)
+                        return;
+                    var addition = TeamSuggestions.ComplementaryAdditions(plan)[index];
+                    if (addition == null)
+                        return;
+                    plan.Allies[index].Main = addition.Types.Main;
+                    plan.Allies[index].Sub = addition.Types.Sub;
+                    RefreshCards();
+                    if (TeamChanged != null)
+                        TeamChanged();
+                };
+                cards[i].CompareCheck.CheckedChanged += (s, e) =>
+                {
+                    cards[index].Invalidate();
+                    if (ComparisonChanged != null)
+                        ComparisonChanged();
+                };
+                tips.SetToolTip(cards[i].CompareCheck, "Include this ally in both radars. Its card color identifies its traces. Space toggles the checkbox.");
                 cards[i].Click += (s, e) => select(index);
                 cards[i].MouseEnter += (s, e) => { if (onCardHover != null) onCardHover(index); };
                 cards[i].MouseLeave += (s, e) => { if (onCardHover != null) onCardHover(-1); };
@@ -57,6 +100,8 @@ namespace AniimoAffinities
                 cards[i].CounterHovered += counter =>
                 {
                     tips.SetToolTip(cards[index], counter < 0 ? cards[index].DefaultTooltip : cards[index].CounterTooltip(counter == 0));
+                    if (counter < 0 && cards[index].Suggestion != null)
+                        SuggestionGraphic.Attach(tips, cards[index], cards[index].Suggestion, "Click the suggestion button to apply");
                     int mask = 0;
                     if (counter >= 0)
                         foreach (var opponent in plan.Opponents.Where(x => x.Known && (counter == 0 ? TeamPlan.Damage(plan.Allies[index], x) : TeamPlan.Damage(x, plan.Allies[index])) > 1.0001))
@@ -75,24 +120,37 @@ namespace AniimoAffinities
         }
         internal void RefreshCards()
         {
+            var additions = TeamSuggestions.ComplementaryAdditions(plan);
             for (int i = 0; i < 6; i++)
             {
                 var member = plan.Allies[i];
+                cards[i].CompareCheck.Enabled = member.Known;
+                cards[i].Suggestion = additions[i];
+                cards[i].SuggestButton.AccessibleName = "Apply suggested elements for " + member.Title(i);
+                string advice = TeamTypeSelector.RecommendationTip(additions[i], "Click the suggestion button to apply");
+                cards[i].SuggestButton.AccessibleDescription = additions[i] == null ? "" : "Apply " + Model.Names[additions[i].Types.Main] + (additions[i].Types.Sub < 0 ? "" : " and " + Model.Names[additions[i].Types.Sub]);
+                SuggestionGraphic.Attach(tips, cards[i].SuggestButton, additions[i], "Click the suggestion button to apply");
+                cards[i].CompareCheck.AccessibleName = "Compare " + member.Title(i) + " on radars";
+                if (!member.Known)
+                    cards[i].CompareCheck.Checked = false;
                 string detail = member.Known ? "[types:" + member.Main + "," + member.Sub + "]" + member.Title(i) : member.Title(i);
                 if (member.Known)
                 {
                     detail += "\n\nHover to preview · Click to select\nHover counters for matchups";
                 }
                 else
-                    detail += "\n\nClick to choose this ally's elements.";
+                    detail += "\n\n" + (additions[i] == null ? "Click to choose this ally's elements." : advice);
                 cards[i].AccessibleName = member.Title(i);
                 cards[i].AccessibleDescription = member.Title(i) + ". " + plan.Summary(member);
                 if (member.Known)
                     cards[i].AccessibleDescription += ". " + Model.Names[member.Main] + (member.Sub >= 0 ? " + " + Model.Names[member.Sub] : "") + ". Focus to preview; Enter or Space to select.";
                 cards[i].DefaultTooltip = detail;
                 tips.SetToolTip(cards[i], detail);
+                if (additions[i] != null)
+                    SuggestionGraphic.Attach(tips, cards[i], additions[i], "Click the suggestion button to apply");
                 cards[i].Invalidate();
             }
+            RefreshActions();
             Arrange();
         }
         private void Arrange()
@@ -147,7 +205,26 @@ namespace AniimoAffinities
         private readonly int index;
         private int hoveredElement = -1;
         private int hoveredCounter = -1;
-        internal bool Selected;
+        private bool selected;
+        internal bool Selected
+        {
+            get
+            {
+                return selected;
+            }
+            set
+            {
+                selected = value;
+                CompareCheck.BackColor = value ? Theme.AccentSurface : Theme.Surface;
+            }
+        }
+        internal readonly RoundCheckBox CompareCheck = new RoundCheckBox { Text = "", TabIndex = 0, Size = new Size(24, 24) };
+        internal readonly SettingsButton SuggestButton = new SettingsButton { Glyph = "suggest", Quiet = true, Text = "", TabIndex = 0, Visible = false };
+        internal TeamSuggestions.Recommendation Suggestion;
+        private Color CardSurface()
+        {
+            return Selected || InteractionPressed ? Theme.AccentSurface : Theme.Surface;
+        }
         protected override bool IsSelected
         {
             get
@@ -231,6 +308,21 @@ namespace AniimoAffinities
             index = slot;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
+            Controls.Add(CompareCheck);
+            Controls.Add(SuggestButton);
+            CompareCheck.SurfaceColor = CardSurface;
+            SuggestButton.SurroundColor = CardSurface;
+            CompareCheck.BackColor = Theme.Surface;
+            CompareCheck.Enabled = plan.Allies[index].Known;
+        }
+        protected override void OnLayout(LayoutEventArgs e)
+        {
+            base.OnLayout(e);
+            float scale = WindowZoom.Factor(this);
+            if (CompareCheck != null)
+                CompareCheck.SetBounds(Math.Max(0, Width - (int)(31 * scale)), (int)(4 * scale), (int)(24 * scale), (int)(24 * scale));
+            if (SuggestButton != null)
+                SuggestButton.SetBounds(Math.Max(0, Width - (int)(33 * scale)), (int)(2 * scale), (int)(28 * scale), (int)(28 * scale));
         }
         private static void DrawScore(Graphics g, RectangleF bounds, string glyph, int count, int total)
         {
@@ -251,34 +343,39 @@ namespace AniimoAffinities
             g.SmoothingMode = SmoothingMode.AntiAlias;
             float w = Width / scale, h = Height / scale;
             Drawing.Box(g, new RectangleF(1, 1, w - 3, h - 3), Selected || InteractionPressed ? Theme.AccentSurface : Theme.Surface, Selected || cardHovered ? Theme.Accent : Theme.Border, Theme.ControlRadius);
+            if (CompareCheck.Checked)
+                using (var legend = new Pen(Theme.ComparisonInk(index), 3) { StartCap = LineCap.Round, EndCap = LineCap.Round })
+                    g.DrawLine(legend, 12, 28, 38, 28);
             if (Selected)
             {
                 Drawing.Box(g, new RectangleF(3, 10, 3, h - 20), Theme.Accent, Color.Transparent, 1);
-                Glyphs.Draw(g, "check", new RectangleF(w - 23, 9, 13, 13), Theme.AccentForeground);
             }
             var member = plan.Allies[index];
             bool compact = h < 80 && w >= 180;
             using (var font = UiFonts.Create("Segoe UI", 9, FontStyle.Bold))
-                Drawing.Text(g, member.Title(index), font, Theme.TextColor, new RectangleF(10, 5, w - (Selected ? 37 : 20), 22), false);
-            if (member.Known)
+            using (var brush = new SolidBrush(Theme.TextColor))
+            using (var format = new StringFormat { LineAlignment = StringAlignment.Center, FormatFlags = StringFormatFlags.NoWrap, Trimming = StringTrimming.EllipsisCharacter })
+                g.DrawString(member.Title(index), font, brush, new RectangleF(10, 5, Math.Max(1, w - 43), 22), format);
+            var shown = member.Known ? member : Suggestion == null ? null : Suggestion.Types;
+            if (shown != null)
             {
-                for (int slot = 0; slot < (member.Sub >= 0 ? 2 : 1); slot++)
+                for (int slot = 0; slot < (shown.Sub >= 0 ? 2 : 1); slot++)
                 {
-                    int type = slot == 0 ? member.Main : member.Sub;
+                    int type = slot == 0 ? shown.Main : shown.Sub;
                     var bounds = ElementBounds(slot);
                     Drawing.Box(g, bounds, hoveredElement == type ? Theme.AccentSurface : Theme.Surface, hoveredElement == type ? Theme.Accent : Theme.Surface, 7);
-                    VectorIcon.Draw(g, type, new RectangleF(bounds.X + 2, bounds.Y + 2, bounds.Width - 4, bounds.Height - 4));
+                    VectorIcon.Draw(g, type, new RectangleF(bounds.X + 2, bounds.Y + 2, bounds.Width - 4, bounds.Height - 4), !member.Known);
                 }
             }
-            var opponents = plan.Opponents.Where(x => x.Known).ToArray();
-            if (member.Known && opponents.Length > 0)
+            var counts = plan.CountMatchups(member);
+            if (member.Known && counts.Total > 0)
             {
-                DrawScore(g, CounterBounds(0), "atk", opponents.Count(x => TeamPlan.Damage(member, x) > 1.0001), opponents.Length);
-                DrawScore(g, CounterBounds(1), "def", opponents.Count(x => TeamPlan.Damage(x, member) > 1.0001), opponents.Length);
+                DrawScore(g, CounterBounds(0), "atk", counts.Strong, counts.Total);
+                DrawScore(g, CounterBounds(1), "def", counts.Weak, counts.Total);
             }
             else
                 using (var font = UiFonts.Create("Segoe UI", 7))
-                    Drawing.Text(g, member.Known ? "No opponents" : "Choose elements", font, Theme.Muted, new RectangleF(compact ? 80 : 10, compact ? 33 : h - 27, compact ? w - 90 : w - 20, 20), false);
+                    Drawing.Text(g, member.Known ? "No opponents" : Suggestion != null ? SuggestionGraphic.Title(Suggestion) : "Choose elements", font, Theme.Muted, new RectangleF(compact ? 80 : 10, compact ? 33 : h - 27, compact ? w - 90 : w - 20, 20), false);
             FinishPaint(g, w, h);
         }
     }

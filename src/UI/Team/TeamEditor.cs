@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
-    internal sealed class TeamEditor : PortableWindow
+    internal sealed partial class TeamEditor : PortableWindow
     {
         protected override bool CompactCaption
         {
@@ -23,6 +23,9 @@ namespace AniimoAffinities
         private readonly SettingsButton clear;
         private bool confirmClear;
         private readonly Label heading;
+        private readonly SettingsButton suggest;
+        private bool suggestions = true;
+        private readonly DrawingPanel elementLegend = new DrawingPanel();
         private bool enemy;
         private readonly Timer saveTimer = new Timer { Interval = 400 };
         internal TeamEditor(TeamPlan value, Action onChanged)
@@ -48,10 +51,43 @@ namespace AniimoAffinities
             Controls.Add(mine);
             Controls.Add(opponents);
             Controls.Add(matchups);
-            heading = new Label { Location = new Point(32, 82), Size = new Size(620, 20) };
+            heading = new Label { Location = new Point(32, 82), Size = new Size(480, 20) };
             Controls.Add(heading);
-            rows.SetBounds(18, 104, 634, 310);
+            suggest = new SettingsButton { Text = "Suggest", Primary = true, AccessibleName = "Show team type suggestions", Location = new Point(540, 80), Size = new Size(110, 24) };
+            tips.SetToolTip(suggest, "Empty rows suggest complementary mono or dual combinations, accounting for the suggestions above. Rows without further coverage gains stay unsuggested. Use the row's + button or Ctrl+Enter to apply it. Selected rows show + on individual improvements. Uses the known members of the opposite team, even if incomplete; otherwise all nine single types. Red ring: weakness; green ring: resistance. Types only, not stats or moves.");
+            suggest.Click += (s, e) => { suggestions = !suggestions; suggest.Primary = suggestions; suggest.Invalidate(); RefreshSuggestions(); };
+            Controls.Add(suggest);
+            suggest.BringToFront();
+            rows.SetBounds(18, 104, 634, 276);
             Controls.Add(rows);
+            elementLegend.SetBounds(32, 382, 620, 24);
+            elementLegend.AccessibleRole = AccessibleRole.StaticText;
+            elementLegend.AccessibleName = "Element legend: red ring means weakness; green ring means resistance; plus means suggested coverage improvement.";
+            elementLegend.Paint += (s, e) =>
+            {
+                var graphics = e.Graphics;
+                graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+                string[] labels = { "Weakness", "Resistance", "Suggested" };
+                for (int i = 0; i < labels.Length; i++)
+                {
+                    int x = i * 160;
+                    Color color = i == 0 ? Theme.Unfavorable : i == 1 ? Theme.Favorable : Theme.AccentForeground;
+                    using (var pen = new Pen(color, 2))
+                    {
+                        if (i < 2)
+                            graphics.DrawEllipse(pen, x + 3, 5, 12, 12);
+                        else
+                        {
+                            graphics.DrawLine(pen, x + 3, 11, x + 15, 11);
+                            graphics.DrawLine(pen, x + 9, 5, x + 9, 17);
+                        }
+                    }
+                    Drawing.Text(graphics, labels[i], Font, Theme.TextColor, new RectangleF(x + 24, 0, 132, 24), false);
+                }
+            };
+            tips.SetToolTip(elementLegend, "Weakness / resistance: damage received by this member. Suggested: on empty rows, complementary mono or dual combinations evaluated from top to bottom. Apply it with the row's + or Ctrl+Enter; ordinary element clicks remain individual choices.");
+            Controls.Add(elementLegend);
+            elementLegend.BringToFront();
             const string guidance = "Leave unknown slots empty. Results use only known elements.\nType matchups only: no stats, moves or team synergy are assumed.";
             var info = new SettingsButton { Glyph = "info", AccessibleName = "Team planning information", AccessibleDescription = guidance, Location = new Point(22, 414), Size = new Size(30, 30) };
             tips.SetToolTip(info, guidance);
@@ -84,10 +120,15 @@ namespace AniimoAffinities
             var done = new SettingsButton { Text = "Done", Primary = true, Location = new Point(540, 414), Size = new Size(110, 32) };
             done.Click += (s, e) => Close();
             Controls.Add(done);
+            InitializeThreatReport();
             BuildRows();
         }
         private void BuildRows()
         {
+            suggest.Visible = true;
+            elementLegend.Visible = true;
+            rows.Height = 276;
+            heading.Width = 480;
             confirmClear = false;
             clear.Text = "Clear all";
             clear.Visible = true;
@@ -117,6 +158,14 @@ namespace AniimoAffinities
                 rows.Controls.Add(name);
                 rows.Controls.Add(elements);
             }
+            RefreshSuggestions();
+            RefreshThreatReport();
+        }
+        private void RefreshSuggestions()
+        {
+            var additions = suggestions ? TeamSuggestions.ComplementaryAdditions(plan, enemy) : null;
+            foreach (var filter in rows.Controls.OfType<TeamTypeSelector>())
+                filter.SetSuggestions(suggestions ? plan : null, enemy, additions);
         }
         private void ShowRowShortcuts(int slot, bool active, bool nameFocused)
         {
@@ -148,6 +197,10 @@ namespace AniimoAffinities
         }
         private void ShowMatchups()
         {
+            suggest.Visible = false;
+            elementLegend.Visible = false;
+            rows.Height = 310;
+            heading.Width = 620;
             confirmClear = false;
             clear.Visible = false;
             foreach (Control old in rows.Controls.Cast<Control>().ToArray())
@@ -164,6 +217,8 @@ namespace AniimoAffinities
         }
         private void Save()
         {
+            RefreshSuggestions();
+            RefreshThreatReport();
             saveTimer.Stop();
             saveTimer.Start();
             status.Text = "Saving…";

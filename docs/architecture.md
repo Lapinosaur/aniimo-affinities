@@ -39,6 +39,16 @@ This project is one Windows Forms application, compiled into one portable execut
 
 The native app still targets the .NET Framework 4.x APIs and C# 5 compiler available on Windows. The optional SDK project targets .NET Framework 4.8 for IDE support. No runtime library or UI framework migration is included in this refactor.
 
+## Locked overlay glass
+
+`PortableWindow.Glass` enables glass only while the overlay is locked. Simple pinning keeps the existing opaque surfaces and color-key background. `LockedGlass` uses separate click-through native accent windows for the visible surface bounds and a premultiplied layered foreground for sharp text, icons and borders. The main host retains its unlock hotkey; the independent unlock bar stays interactive. Unlocking removes the companion surfaces from the desktop and restores normal opacity; hiding the host hides its active surfaces too. Disposing the host destroys all companion handles.
+
+`GlassFrame` processes only the application's own rendering; it never captures the desktop. Background-key pixels remain fully transparent, surface fills receive alpha, and foreground pixels remain opaque. Native composition updates the blurred desktop continuously; the foreground is refreshed after content invalidation or layout/theme changes. Windows 10/11 accent composition is capability-probed, with ordinary opaque content retained if composition is unavailable or high-contrast mode is active. Windows 11's optional corner attribute is not required on Windows 10. Actual Windows 10 visual validation still requires a Windows 10 host.
+
+Native backdrops and foreground use lightweight NativeWindow handles, not WinForms forms. They have no ownership chain. A per-main-window GlassPool prepares a bounded reserve of 112 backdrop handles in short timer slices after the window is shown; prepared surfaces are parked outside the virtual desktop. Lock acquires the reserve, unlock returns it, and closing the host destroys it. Locking immediately after startup can still take the cold path before the reserve is ready. Placement and dragging use a single deferred native positioning batch, with a synchronous fallback on failure. Z-order repair runs only after a native stacking change, not during movement. Invalidations are coalesced, detached controls are unsubscribed, and per-frame color conversion reuses repeated pixel results.
+
+The `glass` and `light-glass-radar` diagnostic previews capture native composition over a checkerboard, unlike ordinary offscreen previews. Regression coverage checks surface separation, foreground alpha, lock/pin transitions, input pass-through and companion cleanup.
+
 ## Data ownership
 
 The text projections were exported from the internal Aniimo model. This standalone repository does not contain that private parent application. Preserve the type order and resource filenames when updating data: the native model uses the order for all 81 selections. Tests verify single/dual-type factor parity and matrix consistency. See `data/README.md` for the formats.

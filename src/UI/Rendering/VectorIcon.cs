@@ -12,9 +12,15 @@ namespace AniimoAffinities
     internal static class VectorIcon
     {
         // Inputs: embedded SVG and destination. Output: vector icon. Fallback: none. Raises: malformed paths. Effects: paints only supplied graphics.
-        internal static void Draw(Graphics g, int type, RectangleF box)
+        internal static void Draw(Graphics g, int type, RectangleF box, bool grayscale = false)
         {
-            using (var brush = new SolidBrush(Model.Colors[type]))
+            Color color = Model.Colors[type];
+            if (grayscale)
+            {
+                int gray = (int)(color.R * .299 + color.G * .587 + color.B * .114);
+                color = Color.FromArgb(gray, gray, gray);
+            }
+            using (var brush = new SolidBrush(color))
                 g.FillEllipse(brush, box);
             var state = g.Save();
             g.TranslateTransform(box.X + box.Width * .15f, box.Y + box.Height * .15f);

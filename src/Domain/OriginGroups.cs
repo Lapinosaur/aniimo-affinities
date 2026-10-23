@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 
 namespace AniimoAffinities
 {
@@ -11,14 +10,30 @@ namespace AniimoAffinities
             var combined = Model.Factors(main, sub);
             var first = Model.Factors(main, -1);
             var second = sub < 0 ? null : Model.Factors(sub, -1);
-            return targets.Select(type =>
+            var result = new OriginEntry[targets.Length];
+            for (int i = 0; i < targets.Length; i++)
             {
+                int type = targets[i];
                 double sign = combined[column * 9 + type] - 1;
                 int mask = (first[column * 9 + type] - 1) * sign > 0.000001 ? 1 : 0;
                 if (second != null && (second[column * 9 + type] - 1) * sign > 0.000001)
                     mask |= 2;
-                return new OriginEntry { Type = type, Mask = mask };
-            }).OrderBy(entry => entry.Mask == 2 ? 1 : entry.Mask == 3 ? .5 : 0).ToArray();
+                var entry = new OriginEntry { Type = type, Mask = mask };
+                // At most nine displayed types: insert without allocating a
+                // sorting pipeline, retaining input order within each group.
+                int position = i;
+                while (position > 0 && Priority(result[position - 1].Mask) > Priority(mask))
+                {
+                    result[position] = result[position - 1];
+                    position--;
+                }
+                result[position] = entry;
+            }
+            return result;
+        }
+        private static int Priority(int mask)
+        {
+            return mask == 2 ? 2 : mask == 3 ? 1 : 0;
         }
     }
 }

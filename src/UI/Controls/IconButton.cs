@@ -18,6 +18,8 @@ namespace AniimoAffinities
         }
         internal RectangleF GroupShape;
         internal string Shortcut = "";
+        internal double IncomingFactor = double.NaN;
+        internal bool Suggested;
         internal IconButton()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
@@ -78,6 +80,18 @@ namespace AniimoAffinities
                 using (var badgeFont = UiFonts.Create(Font.FontFamily, 6f, FontStyle.Bold))
                     Drawing.Text(g, Badge, badgeFont, Theme.AccentForeground, badgeBounds, true);
             }
+            if (!double.IsNaN(IncomingFactor) && Math.Abs(IncomingFactor - 1) > .0001)
+            {
+                Color ink = IncomingFactor > 1 ? Theme.Unfavorable : Theme.Favorable;
+                using (var pen = new Pen(ink, 2))
+                    g.DrawEllipse(pen, 9, (Height - 24) / 2f, 24, 24);
+            }
+            if (Suggested)
+                using (var pen = new Pen(Theme.AccentForeground, 2))
+                {
+                    g.DrawLine(pen, 3, 7, 9, 7);
+                    g.DrawLine(pen, 6, 4, 6, 10);
+                }
             if (DisplaySettings.ShowBadges && Shortcut.Length > 0 && Form.ActiveForm == FindForm())
             {
                 g.ResetClip();

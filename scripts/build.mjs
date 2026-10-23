@@ -3,6 +3,7 @@ import path from 'node:path';
 import { runTests } from './test-runner.mjs';
 import { spawnSync } from 'node:child_process';
 import { root, output, filesUnder, resources } from './project.mjs';
+import { checkTextEncoding } from './text-encoding.mjs';
 
 export function run(command, args, options = {}) {
   const result = spawnSync(command, args, { cwd: root, encoding: 'utf8', timeout: 120000, ...options });
@@ -12,6 +13,7 @@ export function run(command, args, options = {}) {
   if (result.status !== 0) throw new Error(`${path.basename(command)} failed (exit ${result.status}).`);
 }
 export async function build(diagnostics = false) {
+  await checkTextEncoding();
   if (process.platform !== 'win32') throw new Error('Building requires Windows and .NET Framework 4.x.');
   const compiler = path.join(process.env.WINDIR, 'Microsoft.NET/Framework64/v4.0.30319/csc.exe');
   await fs.access(compiler);
@@ -36,6 +38,6 @@ export async function build(diagnostics = false) {
 export async function test(serial = false) {
   await build();
   const executable = await build(true);
-  run(process.execPath, ['--test', 'scripts/test-runner.test.mjs']);
+  run(process.execPath, ['--test', 'scripts/test-runner.test.mjs', 'scripts/text-encoding.test.mjs']);
   await runTests(executable, root, output, serial);
 }

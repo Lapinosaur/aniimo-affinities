@@ -60,12 +60,17 @@ namespace AniimoAffinities
                     ComponentPreview.Save(args[1]);
                     return 0;
                 }
+                if (args.Length == 2 && (args[0] == "--preview-glass" || args[0] == "--preview-glass-radar" || args[0] == "--preview-glass-matrix"))
+                {
+                    GlassPreview.Save(args[1], args[0] == "--preview-glass-radar" ? "radar" : args[0] == "--preview-glass-matrix" ? "matrix" : "main");
+                    return 0;
+                }
                 if (args.Length == 2 && args[0].StartsWith("--preview-team"))
                 {
                     TeamPreview.Save(args[0].Substring("--preview-".Length), args[1]);
                     return 0;
                 }
-                if (args.Length == 2 && new[] { "--preview-tutorial", "--preview-tutorial-selector", "--preview-tutorial-display", "--preview-tutorial-final" }.Contains(args[0]))
+                if (args.Length == 2 && new[] { "--preview-tutorial", "--preview-tutorial-news", "--preview-tutorial-selector", "--preview-tutorial-display", "--preview-tutorial-final" }.Contains(args[0]))
                 {
                     using (var source = new MainForm())
                     using (var tour = new TutorialOverlay(source))
@@ -74,7 +79,7 @@ namespace AniimoAffinities
                         Application.DoEvents();
                         tour.Show(source);
                         Application.DoEvents();
-                        int target = args[0] == "--preview-tutorial-final" ? tour.StepCount - 1 : args[0] == "--preview-tutorial-display" ? 14 : args[0] == "--preview-tutorial-selector" ? 1 : 0;
+                        int target = args[0] == "--preview-tutorial-news" ? tour.StepCount - 2 : args[0] == "--preview-tutorial-final" ? tour.StepCount - 1 : args[0] == "--preview-tutorial-display" ? 14 : args[0] == "--preview-tutorial-selector" ? 1 : 0;
                         while (tour.StepIndex < target)
                             tour.NavigateStep(1);
                         Application.DoEvents();
@@ -122,16 +127,18 @@ namespace AniimoAffinities
                     }
                     return 0;
                 }
-                if (args.Length == 2 && args[0] == "--preview-tooltip")
+                if (args.Length == 2 && (args[0] == "--preview-tooltip" || args[0] == "--preview-about-tooltip"))
                 {
-                    using (var owner = new Form())
+                    bool about = args[0] == "--preview-about-tooltip";
+                    using (var owner = about ? (Form)new SettingsDialog(KeyBindings.Defaults()) : new Form())
                     using (var bubble = new TipBubble())
                     {
-                        var anchor = new Button { Text = "Grass", Size = new Size(80, 30) };
-                        owner.Controls.Add(anchor);
+                        var anchor = about ? owner.Controls.OfType<SettingsButton>().Single(button => button.AccessibleName == "About & Credits") : (Control)new Button { Text = "Grass", Size = new Size(80, 30) };
+                        if (!about)
+                            owner.Controls.Add(anchor);
                         owner.Show();
                         Application.DoEvents();
-                        bubble.Present(anchor, "Hold and drag to move overlay");
+                        bubble.Present(anchor, about ? anchor.AccessibleDescription : "Hold and drag to move overlay");
                         Application.DoEvents();
                         using (var image = new Bitmap(bubble.Width, bubble.Height))
                         {
@@ -265,7 +272,7 @@ namespace AniimoAffinities
                     }
                     return 0;
                 }
-                if (args.Length == 2 && (args[0] == "--preview" || args[0] == "--preview-child" || args[0] == "--preview-inline-matrix" || args[0] == "--preview-inline-radar" || args[0] == "--preview-small" || args[0] == "--preview-empty" || args[0] == "--preview-overlay"))
+                if (args.Length == 2 && (args[0] == "--preview" || args[0] == "--preview-child" || args[0] == "--preview-inline-matrix" || args[0] == "--preview-inline-radar" || args[0] == "--preview-small" || args[0] == "--preview-empty" || args[0] == "--preview-overlay" || args[0] == "--preview-locked-overlay"))
                 {
                     using (var form = new MainForm(false, args[0] == "--preview-child"))
                     {
@@ -283,6 +290,11 @@ namespace AniimoAffinities
                             typeof(MainForm).GetMethod("RefreshSelection", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(form, null);
                         form.Show();
                         Application.DoEvents();
+                        if (args[0] == "--preview-locked-overlay")
+                        {
+                            typeof(PortableWindow).GetMethod("SetOverlayLocked", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Invoke(form, new object[] { true });
+                            Application.DoEvents();
+                        }
                         using (var image = new Bitmap(form.Width, form.Height))
                         {
                             form.DrawToBitmap(image, new Rectangle(Point.Empty, form.Size));

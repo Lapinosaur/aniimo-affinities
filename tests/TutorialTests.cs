@@ -42,11 +42,35 @@ namespace AniimoAffinities
                 restored = TutorialProgress.Load(tutorialTestPath);
                 if (!restored.Pending || restored.Step != 1 || restored.Completed != 0)
                     throw new Exception("Legacy resume must survive without inventing completion history.");
+                File.WriteAllText(tutorialTestPath, "tour-v2\n127\n18\npending\n63\n127\n0,0,0,0,0,0,1");
+                restored = TutorialProgress.Load(tutorialTestPath);
+                if (restored.Completed != 63 || restored.SectionSteps[6] != 1 || restored.SectionSteps[7] != 0 || restored.Started != 127)
+                    throw new Exception("Adding the news tour must preserve seven-section user progress.");
                 File.WriteAllText(tutorialTestPath, "tour-v1\n0\n999\npending");
                 if (TutorialProgress.Load(tutorialTestPath).Pending || TutorialProgress.Load(tutorialTestPath).Sections != TutorialProgress.All)
                     throw new Exception("Invalid tutorial progress must safely reset");
             }
             finally { if (File.Exists(tutorialTestPath)) File.Delete(tutorialTestPath); }
+            TutorialPreferences.Save(true);
+            if (File.Exists(TutorialNews.FilePath))
+                File.Delete(TutorialNews.FilePath);
+            if (!TutorialNews.PrepareStartup() || !TutorialNews.ReturningUser || TutorialNews.PrepareStartup())
+                throw new Exception("Returning users must be offered news once, even with old tutorials hidden.");
+            using (var newsSource = new MainForm())
+            {
+                new TutorialProgress { Sections = TutorialProgress.News, Completed = 127 }.Save();
+                using (var news = new TutorialOverlay(newsSource, true))
+                {
+                    news.Show();
+                    if (news.StepCount != 4)
+                        throw new Exception("The news-only tour must contain three new-feature steps and its finish page.");
+                    news.Controls.OfType<DrawingPanel>().SelectMany(panel => panel.Controls.OfType<SettingsButton>()).Single(button => button.Text == "Skip · Esc").PerformClick();
+                    var skipped = TutorialProgress.Load();
+                    if (skipped.Pending || skipped.Completed != 127 || TutorialNews.PrepareStartup())
+                        throw new Exception("Skipping news must preserve old completion and prevent automatic reopening.");
+                }
+            }
+            TutorialPreferences.Save(false);
             using (var source = new MainForm())
             {
                 new TutorialProgress { Sections = 2 }.Save();

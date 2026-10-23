@@ -12,6 +12,26 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            var choices = KeyBindings.Choices();
+            var mapping = KeyBindings.Defaults();
+            for (int slot = 0; slot < mapping.Length; slot++)
+                for (int code = 0; code <= 255; code++)
+                    foreach (var modifiers in new[] { Keys.None, Keys.Control, Keys.Shift, Keys.Alt, Keys.Control | Keys.Alt })
+                    {
+                        var candidate = (Keys[])mapping.Clone();
+                        candidate[slot] = (Keys)code | modifiers;
+                        var assigned = candidate.Where(key => key != Keys.None).ToArray();
+                        bool expected = assigned.Distinct().Count() == assigned.Length && candidate.Select((key, index) => key == Keys.None || choices.Contains(index < 10 ? key : key & Keys.KeyCode)).All(valid => valid);
+                        if (KeyBindings.Valid(candidate) != expected)
+                            throw new Exception("Binding validation changed for a key, modifier or duplicate assignment.");
+                    }
+            for (int code = 0; code <= 255; code++)
+                foreach (var modifiers in new[] { Keys.None, Keys.Control, Keys.Shift, Keys.Alt })
+                {
+                    var key = (Keys)code | modifiers;
+                    if (KeyBindings.IsChoice(key) != choices.Contains(key))
+                        throw new Exception("Allocation-free key validation must preserve the exact allowed key set.");
+                }
             using (var settings = new SettingsDialog(KeyBindings.Defaults()))
             {
                 settings.Show();
@@ -238,12 +258,37 @@ namespace AniimoAffinities
             {
                 ready.Show();
                 Application.DoEvents();
+                var header = (Control)typeof(MainForm).GetField("affinityHeader", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ready);
+                int normalHeaderHeight = header.Height;
+                int normalWindowHeight = ready.Height;
+                int normalMinimumHeight = ready.MinimumSize.Height;
                 ready.SetPinned(true);
                 if (!ready.TopMost || ready.TransparencyKey != Theme.Background || ready.TransparencyKey == Theme.Surface)
                     throw new Exception("Pinned overlay must clear the background and retain cards");
+                if (header.Height >= normalHeaderHeight || header.Height < 32 * ready.AppliedWindowScale)
+                    throw new Exception("Pinned header must retain only the toolbar space");
+                var setLock = typeof(PortableWindow).GetMethod("SetOverlayLocked", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                var body = (Control)typeof(MainForm).GetField("canvas", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ready);
+                int pinnedBodyHeight = body.Height;
+                int pinnedWindowHeight = ready.Height;
+                int pinnedHeaderHeight = header.Height;
+                setLock.Invoke(ready, new object[] { true });
+                if (!ready.OverlayLocked || header.Height != 0)
+                    throw new Exception("Locked overlay must not reserve an empty title band");
+                if (body.Height != pinnedBodyHeight || ready.Height != pinnedWindowHeight - pinnedHeaderHeight)
+                    throw new Exception("Lock must shrink the window without enlarging its content");
+                setLock.Invoke(ready, new object[] { false });
+                if (header.Height < 32 * ready.AppliedWindowScale)
+                    throw new Exception("Unlock must restore toolbar space");
+                if (ready.Height != pinnedWindowHeight || body.Height != pinnedBodyHeight)
+                    throw new Exception("Unlock must restore window height without stretching cards");
                 ready.SetPinned(false);
                 if (ready.TopMost || ready.TransparencyKey != Color.Empty)
                     throw new Exception("Unpin must restore the opaque window");
+                if (header.Height != normalHeaderHeight)
+                    throw new Exception("Unpin must restore the title space");
+                if (ready.Height != normalWindowHeight || ready.MinimumSize.Height != normalMinimumHeight)
+                    throw new Exception("Pin/lock cycle must restore window and minimum height");
                 var close = ((Panel)typeof(PortableWindow).GetField("captionPanel", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ready)).Controls.OfType<Button>().SingleOrDefault(button => button.AccessibleName == "Close (Alt+F4)");
                 if (close == null || ready.FormBorderStyle != FormBorderStyle.None)
                     throw new Exception("Caption not ready");

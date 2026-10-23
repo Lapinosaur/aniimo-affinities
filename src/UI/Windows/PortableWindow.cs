@@ -75,6 +75,9 @@ namespace AniimoAffinities
         protected virtual void OnOverlayLockChanged()
         {
         }
+        protected virtual void OnPinnedChanged()
+        {
+        }
         internal int VisualUpdateDepth;
         protected virtual bool ContentOnly
         {
@@ -166,6 +169,7 @@ namespace AniimoAffinities
             CancelHold();
             OnOverlayLockChanged();
             Invalidate(true);
+            UpdateGlass(locked);
         }
         private void PositionUnlockWindow()
         {
@@ -349,9 +353,11 @@ namespace AniimoAffinities
         // Keep the dark key equal to the painted background so antialiased text has no colored fringe.
         internal void SetPinned(bool pinned)
         {
+            UpdateGlass(false);
             TopMost = pinned;
             TransparencyKey = pinned ? Theme.Background : Color.Empty;
             RefreshWindowFrame();
+            OnPinnedChanged();
             Invalidate(true);
         }
         private readonly Icon applicationIcon;
@@ -426,6 +432,12 @@ namespace AniimoAffinities
         }
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                UpdateGlass(false);
+                if (glassPool != null)
+                    glassPool.Dispose();
+            }
             base.Dispose(disposing);
             if (disposing)
             {

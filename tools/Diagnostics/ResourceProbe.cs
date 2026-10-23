@@ -68,12 +68,26 @@ namespace AniimoAffinities
                     elapsed = clock.Elapsed.TotalMilliseconds;
                     allocated = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize - start;
                 }
+                var team = TeamTests.Sample();
+                double checksum = 0;
+                for (int i = 0; i < 1000; i++)
+                    checksum += TeamPlan.Damage(team.Allies[i % 6], team.Opponents[i % 2]);
+                var lookupClock = new Stopwatch();
+                long lookupStart = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize;
+                lookupClock.Start();
+                for (int i = 0; i < 100000; i++)
+                    checksum += TeamPlan.Damage(team.Allies[i % 6], team.Opponents[i % 2]);
+                lookupClock.Stop();
+                long lookupBytes = AppDomain.CurrentDomain.MonitoringTotalAllocatedMemorySize - lookupStart;
                 File.WriteAllLines(report, new[]{
                     "Open/close cycles: 20 (60 forms)","Forms retained after collection: "+retained,
                     "GDI resources before/after: "+beforeGdi+" / "+afterGdi,
                     "USER resources before/after: "+beforeUser+" / "+afterUser,
                     "200 unchanged display updates: "+elapsed.ToString("F2",System.Globalization.CultureInfo.InvariantCulture)+" ms",
-                    "Managed bytes allocated during unchanged updates: "+allocated
+                    "Managed bytes allocated during unchanged updates: "+allocated,
+                    "100000 damage lookups: "+lookupClock.Elapsed.TotalMilliseconds.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)+" ms",
+                    "Managed bytes allocated during damage lookups: "+lookupBytes,
+                    "Damage checksum: "+checksum.ToString("R", System.Globalization.CultureInfo.InvariantCulture)
                 });
             }
         }

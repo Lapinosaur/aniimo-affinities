@@ -17,6 +17,14 @@ namespace AniimoAffinities
         {
             return Enumerable.Range(0, 10).Select(i => (Keys)((int)Keys.D0 + i)).Concat(Enumerable.Range((int)Keys.A, 26).Select(i => (Keys)i)).Concat(Enumerable.Range((int)Keys.F1, 12).Select(i => (Keys)i)).ToArray();
         }
+        internal static bool IsChoice(Keys key)
+        {
+            return key >= Keys.D0 && key <= Keys.D9 || key >= Keys.A && key <= Keys.Z || key >= Keys.F1 && key <= Keys.F12;
+        }
+        internal static Keys NormalizeNumber(Keys key)
+        {
+            return key >= Keys.NumPad0 && key <= Keys.NumPad9 ? (Keys)((int)Keys.D0 + (int)key - (int)Keys.NumPad0) : key;
+        }
         internal static string Label(Keys key)
         {
             if (key == Keys.None)
@@ -26,8 +34,20 @@ namespace AniimoAffinities
         }
         internal static bool Valid(Keys[] keys)
         {
-            var assigned = keys.Where(key => key != Keys.None).ToArray();
-            return keys.Length == Actions.Length && assigned.Distinct().Count() == assigned.Length && keys.Select((key, index) => key == Keys.None || (index < 10 ? Choices().Contains(key) : Choices().Contains(key & Keys.KeyCode))).All(valid => valid);
+            if (keys.Length != Actions.Length)
+                return false;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                var key = keys[i];
+                if (key == Keys.None)
+                    continue;
+                if (!IsChoice(i < 10 ? key : key & Keys.KeyCode))
+                    return false;
+                for (int j = 0; j < i; j++)
+                    if (keys[j] == key)
+                        return false;
+            }
+            return true;
         }
         // Inputs: saved per-user bindings. Output: complete unique map. Fallback: defaults on invalid/missing data. Raises: none for filesystem/config errors.
         internal static Keys[] Load(string path)
@@ -59,8 +79,7 @@ namespace AniimoAffinities
                 return -1;
             if ((modifiers & (Keys.Control | Keys.Alt)) != 0)
                 return -1;
-            if (key >= Keys.NumPad0 && key <= Keys.NumPad9)
-                key = (Keys)((int)Keys.D0 + (int)key - (int)Keys.NumPad0);
+            key = NormalizeNumber(key);
             if (modifiers == Keys.Shift && !(key >= Keys.D0 && key <= Keys.D9))
                 return -1;
             return Array.IndexOf(keys, key);

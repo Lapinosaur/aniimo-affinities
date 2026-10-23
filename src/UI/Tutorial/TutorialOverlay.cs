@@ -13,11 +13,11 @@ namespace AniimoAffinities
         private readonly MainForm source;
         private readonly bool persist;
         private readonly TutorialProgress progress;
-        internal static readonly string[] Sections = { "Types & affinities", "Effectiveness matrix", "Affinity radar & views", "Pin & locked overlay", "Keyboard shortcuts", "Display & appearance", "Team planning" };
+        internal static readonly string[] Sections = { "Types & affinities", "Effectiveness matrix", "Affinity radar & views", "Pin & locked overlay", "Keyboard shortcuts", "Display & appearance", "Team planning", "What's new" };
         private readonly int[] sectionIds;
         internal static int SectionForStep(int step)
         {
-            return step >= 17 ? 6 : step == 16 ? -1 : step < 5 ? 0 : step < 7 ? 1 : step < 10 ? 2 : step < 12 ? 3 : step < 14 ? 4 : 5;
+            return step >= 23 ? 7 : step >= 17 ? 6 : step == 16 ? -1 : step < 5 ? 0 : step < 7 ? 1 : step < 10 ? 2 : step < 12 ? 3 : step < 14 ? 4 : 5;
         }
         private readonly TourStep[] steps ={
             new TourStep("main","all","Welcome to Affinisaur","Explore how types interact, compare matchups and keep useful information over your game. This guided preview leaves your selections and settings untouched."),
@@ -38,8 +38,14 @@ namespace AniimoAffinities
             new TourStep("display","appearance","Theme and window controls","The appearance button cycles Dark, System and Light. Esc closes custom windows, Alt+F4 closes the active window, and the minus button minimizes. Your selected types, view layout and display preferences are remembered."),
             new TourStep("main","all","You're ready","This tour is complete. Settings > Help & Tutorial records your completed tutorials. Play, resume or replay each tutorial individually. The option below controls startup only."),
             new TourStep("team","team","Build a useful comparison","Open the team editor to enter allies and opponents. Names are optional. Enter only elements you know: empty opponents are excluded and missing second elements are never guessed."),
-            new TourStep("team","team","Preview, then select","Hover an ally to preview its affinities temporarily. Click to keep the selection. A selected card keeps its check mark and accent strip after the pointer leaves. Attack counts favorable opponents; defense counts threats."),
-            new TourStep("team","team-tools","Place your team panel","Use the arrows to place the panel beside, above or below the main view. The panel button shows or hides it. In locked overlay mode, hold its compact panel button to toggle it.")
+            new TourStep("team","team","Preview, then select","Hover an ally to preview its affinities temporarily. Click the card to keep the selection and accent strip. The checkbox is separate: it includes that ally in the main radars. Attack counts favorable opponents; defense counts threats."),
+            new TourStep("team","team-tools","Place your team panel","Use the arrows to place the panel beside, above or below the main view. In locked mode, hold its compact panel button to toggle it. Selection and suggestion buttons are hidden while locked; your selected traces remain."),
+            new TourStep("team","team","Apply a suggested ally","Empty cards show gray proposed types. Suggested coverage builds general coverage; Suggested counter targets known opposing members. Hover for the graphical breakdown, then use the sparkle button to apply. Applying restores the colors and reveals the comparison checkbox."),
+            new TourStep("team","team","Read the projected team","Suggestions are planned in slot order. Before/after counts include filled allies AND proposals in earlier empty slots, even before you apply them. A first answer adds coverage; further answers add backups. Applying any slot recalculates the remaining proposals."),
+            new TourStep("team-radar","all","Compare and investigate","Check several allies for separate colored traces on the main Attack and Defense radars; each card shows its trace color. Uncheck all to return to ordinary selection. In the editor, the threat report groups single types, dual types and members; hover for individual matchups."),
+            new TourStep("team","team","New: complementary suggestions","Empty cards now propose gray elemental icons. The sparkle applies the complete suggestion. Coverage targets general types; Counter targets known opponents. Suggestions continue with backup answers after initial coverage is complete."),
+            new TourStep("team","team","New: explain every suggestion","Hover a suggestion to see opposing type icons, attack and defense factors, and answer counts before and after. Earlier proposed slots are included in this projected team: they are not applied automatically. Applying a proposal refreshes the rest."),
+            new TourStep("team-radar","all","New: compare your allies","Card checkboxes add colored ally traces to the main radars. Match the colors to the legends on the cards. The threat report explains individual matchups with type icons and multipliers. In locked mode, unavailable card actions disappear while your traces remain.")
         };
         private sealed class Frame : IDisposable
         {
@@ -114,9 +120,22 @@ namespace AniimoAffinities
             previous.Text = "Previous";
             previous.TabIndex = 1;
             previous.Click += (s, e) => NavigateStep(-1);
-            skip.Text = "Pause · Esc";
+            skip.Text = progress.Sections == TutorialProgress.News ? "Skip · Esc" : "Pause · Esc";
             skip.TabIndex = 2;
-            skip.Click += (s, e) => Close();
+            skip.Click += (s, e) =>
+            {
+                if (persist && progress.Sections == TutorialProgress.News)
+                {
+                    progress.Pending = false;
+                    try
+                    {
+                        progress.Save();
+                    }
+                    catch (IOException) { error.Text = "Unable to save. Try Skip again."; return; }
+                    catch (UnauthorizedAccessException) { error.Text = "Unable to save. Try Skip again."; return; }
+                }
+                Close();
+            };
             next.Text = "Next";
             next.Primary = true;
             next.TabIndex = 3;
@@ -244,8 +263,8 @@ namespace AniimoAffinities
             Form host;
             var selected = source.TutorialSelection;
             var keys = source.TutorialBindings;
-            if (view == "main" || view == "team")
-                host = source.CreateTutorialPreview(view == "team");
+            if (view == "main" || view == "team" || view == "team-radar")
+                host = source.CreateTutorialPreview(view != "main", view == "team-radar");
             else if (view == "matrix")
                 host = new MatrixDialog(selected.Sub < 0 ? -1 : selected.Main, keys, selected.Main, selected.Sub);
             else if (view == "radar")

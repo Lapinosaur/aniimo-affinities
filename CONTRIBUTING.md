@@ -46,6 +46,8 @@ Open `AniimoAffinities.csproj` in Visual Studio or a C# IDE. The SDK project is 
 
 GitHub Actions runs formatting, architecture, compilation and tests on Windows, then uploads the tested executable and report. It does not publish a release automatically.
 
+Every portable build validates UTF-8 in runtime sources and shipped text resources, including the legal document. Invalid byte sequences, replacement characters and common mojibake patterns fail the build with a filename and line number. Save edited files as UTF-8; restore corrupted text from its intended wording instead of deleting accents or replacing user data.
+
 ## Static analysis
 
 The SDK project enables the explicit CA rules in `.editorconfig`; compiler warnings also fail the build. `AnalysisMode=None` avoids implicitly changing the rule set; each listed rule is enabled explicitly. Add rules gradually rather than suppressing all warnings. Use a narrowly scoped, justified suppression only for a proven non-security use (the random display preview is cosmetic). The canonical distributable is still built with the Framework compiler; the SDK output in `bin/` is only for development checks. First lint may restore .NET Framework reference assemblies.

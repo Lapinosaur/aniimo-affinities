@@ -279,9 +279,8 @@ namespace AniimoAffinities
             if (key == Keys.F4 && modifiers == Keys.Alt)
                 return base.ProcessCmdKey(ref message, keyData);
             Keys physicalKey = key;
-            if (key >= Keys.NumPad0 && key <= Keys.NumPad9)
-                key = (Keys)((int)Keys.D0 + (int)key - (int)Keys.NumPad0);
-            if ((AllowModifiers || modifiers == Keys.None || modifiers == Keys.Shift && key >= Keys.D0 && key <= Keys.D9) && KeyBindings.Choices().Contains(key))
+            key = KeyBindings.NormalizeNumber(key);
+            if ((AllowModifiers || modifiers == Keys.None || modifiers == Keys.Shift && key >= Keys.D0 && key <= Keys.D9) && KeyBindings.IsChoice(key))
             {
                 if (AllowModifiers)
                     key |= modifiers;

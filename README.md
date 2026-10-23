@@ -10,6 +10,8 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
+See [what changed in v0.7.0](docs/releases/v0.7.0.md), including complementary suggestions, ally comparisons and the updated tutorials.
+
 - Select one or two types and explore their attack and defense affinities.
 - Switch between affinity diagrams, a color-coded effectiveness matrix and radar charts.
 - Pin the app or hold to lock a minimal overlay, with dedicated move and resize controls.
@@ -17,8 +19,29 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 - Use Ctrl + Up / Ctrl + Down to resize from 50% to 150% in 25% steps.
 - Plan two teams of six, preview a member on hover and click to keep the selection.
 - Place the team panel beside, above or below the main view.
+- Fill empty ally slots with complementary mono/dual-type suggestions. **Suggested coverage** builds general coverage; **Suggested counter** responds to known opposing members. Further suggestions add backup answers after initial coverage is complete.
+- Inspect graphical suggestion explanations: opposing type icons, attack/defense multipliers and projected answer counts. Gray proposed types become colored when applied.
+- Check allies to compare their colored traces on the main Attack and Defense radars, with matching legends on their cards and a shared dynamic scale.
+- Inspect single-type, dual-type and member threat reports, with readable multipliers and individual matchup tooltips.
+- Lock the overlay for frosted surfaces with sharp foreground content and transparent gaps. Inactive ally actions are hidden while locked.
 - Play, resume or replay individual tutorials, with completion tracking and a separate Support tab.
 - Settings and committed selections are remembered locally.
+
+## Team planning in practice
+
+Suggestions are planned in slot order. Their **before** counts include both applied allies and earlier unapplied proposals. The explanation lists these separately and shows the earlier proposals in gray. Applying one slot does not apply the others; it recalculates the remaining suggestions. Coverage is a type-based heuristic, not a guarantee of an optimal team: it does not use species, moves or combat statistics.
+
+![Complementary gray suggestions on empty ally cards](docs/images/team-suggestions.png)
+
+![Graphical counter explanation against known opposing types](docs/images/suggestion-counter.png)
+
+Select several ally checkboxes to compare them on the main radars. Clicking a card selects its ordinary affinity view; checking its box controls comparison independently. Comparison checks are session-only and do not populate the separate radar window.
+
+![Grouped dual-type threat report](docs/images/threat-report.png)
+
+Existing users receive a skippable **What's new** tour once for this feature update, even if they previously hid the introductory tutorial. Skip/Esc prevents automatic reopening; Help & Tutorial lets you resume or replay it. Existing completion history is retained. New installations follow the updated introductory tutorials.
+
+![Tutorials and the new feature tour](docs/images/tutorials.png)
 
 ## Run
 

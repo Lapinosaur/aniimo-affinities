@@ -7,6 +7,7 @@ namespace AniimoAffinities
 {
     internal sealed class RoundCheckBox : CheckBox
     {
+        internal Func<Color> SurfaceColor;
         internal RoundCheckBox()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
@@ -43,24 +44,27 @@ namespace AniimoAffinities
         {
             Cursor = Enabled && AutoCheck ? Cursors.Hand : Cursors.Default;
             var g = e.Graphics;
-            g.Clear(BackColor);
+            Color surface = SurfaceColor == null ? BackColor : SurfaceColor();
+            g.Clear(surface);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            float diameter = Math.Max(14, Math.Min(20, Font.Height));
-            var circle = new RectangleF(3, (Height - diameter) / 2, diameter, diameter);
-            using (var brush = new SolidBrush(Checked && Enabled ? Theme.Accent : Theme.Surface))
+            float zoom = WindowZoom.Factor(this);
+            float diameter = Math.Max(14 * zoom, Math.Min(20 * zoom, Font.Height));
+            var circle = new RectangleF(3 * zoom, (Height - diameter) / 2, diameter, diameter);
+            using (var brush = new SolidBrush(Checked && Enabled ? Theme.Accent : SurfaceColor == null ? Theme.Surface : surface))
                 g.FillEllipse(brush, circle);
-            using (var pen = new Pen(Enabled ? Checked ? Theme.AccentForeground : Theme.StrongBorder : Theme.Border, 1.3f))
+            using (var pen = new Pen(Enabled ? Checked ? Theme.AccentForeground : Theme.StrongBorder : Theme.Border, 1.3f * zoom))
                 g.DrawEllipse(pen, circle);
             if (Checked)
-                using (var pen = new Pen(Enabled ? Theme.AccentInk : Theme.Muted, 1.8f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
+                using (var pen = new Pen(Enabled ? Theme.AccentInk : Theme.Muted, 1.8f * zoom) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
                     g.DrawLines(pen, new[] { new PointF(circle.X + diameter * .25f, circle.Y + diameter * .5f), new PointF(circle.X + diameter * .43f, circle.Y + diameter * .68f), new PointF(circle.X + diameter * .76f, circle.Y + diameter * .32f) });
             if (Focused && ShowFocusCues)
             {
-                circle.Inflate(2, 2);
+                circle.Inflate(2 * zoom, 2 * zoom);
                 using (var pen = new Pen(Theme.AccentForeground))
                     g.DrawEllipse(pen, circle);
             }
-            TextRenderer.DrawText(g, Text, Font, new Rectangle((int)diameter + 12, 0, Width - (int)diameter - 12, Height), Enabled ? ForeColor : Theme.Muted, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
+            if (!string.IsNullOrEmpty(Text))
+                TextRenderer.DrawText(g, Text, Font, new Rectangle((int)(diameter + 12 * zoom), 0, Math.Max(0, Width - (int)(diameter + 12 * zoom)), Height), Enabled ? ForeColor : Theme.Muted, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.NoPrefix);
         }
     }
 }

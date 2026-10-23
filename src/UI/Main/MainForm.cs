@@ -142,7 +142,7 @@ namespace AniimoAffinities
                 return (Keys[])bindings.Clone();
             }
         }
-        internal MainForm CreateTutorialPreview(bool showTeam = false)
+        internal MainForm CreateTutorialPreview(bool showTeam = false, bool compare = false)
         {
             var form = new MainForm();
             var selected = TutorialSelection;
@@ -162,6 +162,15 @@ namespace AniimoAffinities
                 form.teamBoard.RefreshCards();
                 form.ApplyTeamLayout();
                 form.FinishTeamTransition();
+                if (compare)
+                {
+                    form.teamPlan.Allies[1].Main = 0;
+                    form.teamPlan.Allies[1].Sub = 5;
+                    form.teamBoard.RefreshCards();
+                    form.ToggleInlineRadar();
+                    foreach (var card in form.teamBoard.Controls.OfType<TeamCard>().Take(2))
+                        card.CompareCheck.Checked = true;
+                }
             }
             return form;
         }
@@ -199,17 +208,37 @@ namespace AniimoAffinities
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            if (rememberSession && !TutorialPreferences.Hidden)
+            PrepareGlass();
+
+            if (rememberSession)
                 BeginInvoke(new Action(() =>
                 {
                     if (IsDisposed || !Visible)
                         return;
                     var progress = TutorialProgress.Load();
+                    try
+                    {
+                        if (TutorialNews.PrepareStartup())
+                        {
+                            progress.Sections = TutorialProgress.News;
+                            progress.Step = 0;
+                            progress.Pending = false;
+                            progress.Save();
+                            StartTutorial();
+                            return;
+                        }
+                        if (TutorialNews.ReturningUser || TutorialPreferences.Hidden)
+                            return;
+                    }
+                    catch (System.IO.IOException error) { DiagnosticReport.Record(error); return; }
+                    catch (UnauthorizedAccessException error) { DiagnosticReport.Record(error); return; }
                     if (!progress.Pending && progress.Completed == TutorialProgress.All)
                         return;
                     if (!progress.Pending)
                     {
-                        progress.Sections = TutorialProgress.All & ~progress.Completed;
+                        progress.Sections = (TutorialProgress.All & ~TutorialProgress.News) & ~progress.Completed;
+                        if (progress.Sections == 0)
+                            return;
                         progress.Step = 0;
                         try
                         {
@@ -294,7 +323,7 @@ namespace AniimoAffinities
                 if (currentView == "matrix")
                 {
                     diagramSize = new Size((int)(Width / AppliedWindowScale), (int)(Height / AppliedWindowScale));
-                    Height = Math.Max(Height, (int)(680 * AppliedWindowScale));
+                    Height = Math.Max(Height, (int)(614 * AppliedWindowScale) + affinityHeader.Height);
                 }
                 else if (previous == "matrix" && diagramSize.Width > 0)
                     Size = new Size((int)(diagramSize.Width * AppliedWindowScale), (int)(diagramSize.Height * AppliedWindowScale));
@@ -339,8 +368,11 @@ namespace AniimoAffinities
             teamHovered = -1;
             teamCounter = -1;
             teamOpponentMask = 0;
+            if (teamBoard != null)
+                teamBoard.SetOverlayLocked(OverlayLocked);
             if (teamToolbar != null)
-                teamToolbar.Visible = !OverlayLocked;
+                teamToolbar.Visible = !OverlayLocked && !childView;
+            RefreshOverlayHeader();
             canvas.Invalidate();
         }
         private void RefreshShortcuts()
@@ -435,7 +467,12 @@ namespace AniimoAffinities
             LayoutRow();
             canvas.AccessibleName = "Type affinities";
             canvas.AccessibleRole = AccessibleRole.Graphic;
-            canvas.AccessibleText = () => AccessibleMatchups.Describe(selection);
+            canvas.AccessibleText = () =>
+            {
+                var comparison = ComparisonSeries();
+                return comparison.Length == 0 ? AccessibleMatchups.Describe(selection)
+                    : string.Join("\n\n", comparison.Select(item => item.Member.Title(item.Slot) + ": " + AccessibleMatchups.Describe(new Selection { Main = item.Member.Main, Sub = item.Member.Sub })).ToArray());
+            };
             canvas.Invalidate();
             SaveSession();
         }

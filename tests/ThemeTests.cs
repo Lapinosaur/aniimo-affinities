@@ -17,6 +17,10 @@ namespace AniimoAffinities
             {
                 Theme.Appearance = mode;
                 Theme.ApplyAppearance();
+                if (Theme.Attack == Theme.Defense || Theme.Attack == Theme.TextColor || Theme.Defense == Theme.TextColor)
+                    throw new Exception("Attack and defense must retain distinct directional colors.");
+                if (Theme.MatchupInk(1.6, true) != Theme.ReducedDamage || Theme.MatchupInk(.625, true) != Theme.IncreasedDamage || Theme.MatchupInk(1.6, false) != Theme.IncreasedDamage)
+                    throw new Exception("Incoming weakness and outgoing advantage must use opposite result colors.");
                 using (var bitmap = new Bitmap(220, 220))
                 using (var graphics = Graphics.FromImage(bitmap))
                 {

@@ -38,6 +38,7 @@ namespace AniimoAffinities
         internal bool GlyphWithText;
         internal Color Brand = Color.Empty;
         internal Color Surround = Color.Empty;
+        internal Func<Color> SurroundColor;
         private bool hover, pressed;
         private readonly Timer busyTimer = new Timer { Interval = 40 };
         private string idleText, idleDescription;
@@ -148,9 +149,10 @@ namespace AniimoAffinities
             int Width = (int)Math.Round(base.Width / zoom), Height = (int)Math.Round(base.Height / zoom);
             var g = e.Graphics;
             g.ScaleTransform(zoom, zoom);
-            g.Clear(Surround.IsEmpty ? Theme.Background : Surround);
+            Color surround = SurroundColor == null ? (Surround.IsEmpty ? Theme.Background : Surround) : SurroundColor();
+            g.Clear(surround);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Color fill = Primary ? ((pressed || InteractionPressed) ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? (Surround.IsEmpty ? Theme.Background : Surround) : Theme.Surface;
+            Color fill = Primary ? ((pressed || InteractionPressed) ? Theme.AccentPressed : hover ? Theme.AccentLight : Theme.Accent) : hover ? Theme.HoverSurface : Quiet ? surround : Theme.Surface;
             if (!Brand.IsEmpty)
                 fill = Theme.BrandSurface(Brand, hover || pressed);
             Color border = Focused && ShowFocusCues ? Theme.Accent : Primary ? fill : Quiet ? fill : Theme.Border;

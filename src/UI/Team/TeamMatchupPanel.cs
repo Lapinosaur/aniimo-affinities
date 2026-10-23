@@ -64,8 +64,8 @@ namespace AniimoAffinities
                             }
                             Glyphs.Draw(g, "atk", new RectangleF(bounds.X + 6, bounds.Y + 4, 12, 12), Theme.Attack);
                             Glyphs.Draw(g, "def", new RectangleF(bounds.X + 6, bounds.Y + 24, 12, 12), Theme.Defense);
-                            Drawing.Text(g, Model.Factor(dealt), font, Theme.Attack, new RectangleF(bounds.X + 23, bounds.Y, bounds.Width - 26, 20), true);
-                            Drawing.Text(g, Model.Factor(received), font, Theme.Defense, new RectangleF(bounds.X + 23, bounds.Y + 20, bounds.Width - 26, 20), true);
+                            Drawing.Text(g, Model.Factor(dealt), font, Theme.MatchupInk(dealt, false), new RectangleF(bounds.X + 23, bounds.Y, bounds.Width - 26, 20), true);
+                            Drawing.Text(g, Model.Factor(received), font, Theme.MatchupInk(received, true), new RectangleF(bounds.X + 23, bounds.Y + 20, bounds.Width - 26, 20), true);
                         }
                     }
                 }

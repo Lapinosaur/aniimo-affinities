@@ -34,14 +34,18 @@ namespace AniimoAffinities
             new Suite("Zoom", "ui", ZoomTests.Run),
             new Suite("ViewSwitching", "ui", ViewSwitchingTests.Run),
             new Suite("Teams", "ui", TeamTests.Run),
+            new Suite("Suggestions", "ui", SuggestionTests.Run),
             new Suite("DisplayRollback", "ui", DisplayRollbackTests.Run),
             new Suite("WindowAttention", "ui", WindowAttentionTests.Run),
             new Suite("Radar", "ui", RadarTests.Run),
+            new Suite("Comparisons", "ui", ComparisonTests.Run),
             new Suite("Matrix", "ui", MatrixTests.Run),
             new Suite("Theme", "ui", ThemeTests.Run),
+            new Suite("LockedGlass", "ui", GlassTests.Run),
             new Suite("WindowBounds", "ui", WindowBoundsTests.Run),
             new Suite("Keyboard", "ui", KeyboardTests.Run),
             new Suite("Matchups", "model", MatchupsTests.Run),
+            new Suite("CalculationParity", "model", CalculationParityTests.Run),
             new Suite("MainRender", "ui", MatchupsTests.RenderMain),
         };
         internal static string[] Groups()

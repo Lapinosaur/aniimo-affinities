@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace AniimoAffinities
@@ -19,6 +20,11 @@ namespace AniimoAffinities
         private Size teamExtra;
         private float teamLayoutScale = 1;
         private readonly SettingsButton[] teamPositions = new SettingsButton[4];
+        private RadarRenderer.Series[] ComparisonSeries()
+        {
+            return !inlineRadar || teamBoard == null || !teamPlan.Visible ? new RadarRenderer.Series[0]
+                : teamBoard.ComparedSlots.Select(slot => new RadarRenderer.Series { Slot = slot, Member = teamPlan.Allies[slot] }).ToArray();
+        }
         protected override Action LockedPanelToggle
         {
             get
@@ -63,6 +69,19 @@ namespace AniimoAffinities
                 hovered = -1;
                 canvas.Invalidate();
             });
+            teamBoard.ComparisonChanged += () =>
+            {
+                teamPreview = -1;
+                hovered = -1;
+                canvas.Invalidate();
+                affinityHeader.Invalidate();
+            };
+            teamBoard.TeamChanged += () =>
+            {
+                canvas.Invalidate();
+                affinityHeader.Invalidate();
+                SaveTeam();
+            };
             Deactivate += (s, e) => { teamPreview = -1; teamHovered = -1; teamCounter = -1; teamOpponentMask = 0; canvas.Invalidate(); };
             teamBody.Controls.Add(teamBoard);
             teamTransition = new PanelTransition(this, teamBody, teamBoard, canvas);
@@ -113,7 +132,7 @@ namespace AniimoAffinities
             bar.Controls.Add(teamEdit);
             bar.Controls.Add(teamToggle);
             affinityHeader.Controls.Add(bar);
-            Action arrangeBar = () => bar.SetBounds(Math.Max(0, affinityHeader.Width - (int)(216 * AppliedWindowScale)), (int)(14 * AppliedWindowScale), (int)(204 * AppliedWindowScale), (int)(32 * AppliedWindowScale));
+            Action arrangeBar = () => bar.SetBounds(Math.Max(0, affinityHeader.Width - (int)(216 * AppliedWindowScale)), Math.Max(0, Math.Min((int)(14 * AppliedWindowScale), (affinityHeader.Height - (int)(32 * AppliedWindowScale)) / 2)), (int)(204 * AppliedWindowScale), (int)(32 * AppliedWindowScale));
             affinityHeader.Resize += (s, e) => arrangeBar();
             arrangeBar();
             bar.BringToFront();

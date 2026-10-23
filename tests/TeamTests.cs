@@ -115,7 +115,154 @@ namespace AniimoAffinities
         }
         internal static void Run()
         {
+            foreach (var candidatePlan in new[] { new TeamPlan(), Sample() })
+                foreach (bool enemy in new[] { false, true })
+                {
+                    var team = enemy ? candidatePlan.Opponents : candidatePlan.Allies;
+                    foreach (var member in team)
+                    {
+                        int mainBefore = member.Main, subBefore = member.Sub;
+                        var gains = TeamSuggestions.Gains(candidatePlan, member, enemy);
+                        for (int type = 0; type < Model.Names.Length; type++)
+                            if (gains[type] != TeamSuggestions.Gain(candidatePlan, member, type, enemy))
+                                throw new Exception("Batch suggestions must preserve every individual score on both sides.");
+                        if (member.Main != mainBefore || member.Sub != subBefore)
+                            throw new Exception("Suggestion evaluation must not mutate team selections.");
+                        var counts = candidatePlan.CountMatchups(member);
+                        var known = candidatePlan.Opponents.Where(target => target.Known).ToArray();
+                        if (counts.Total != known.Length || counts.Strong != known.Count(target => TeamPlan.Damage(member, target) > 1.0001) || counts.Weak != known.Count(target => TeamPlan.Damage(target, member) > 1.0001))
+                            throw new Exception("Shared card counts must retain exact matchup totals, including unknown members.");
+                    }
+                }
+            var advicePlan = new TeamPlan();
+            var threats = TeamThreats.Candidates();
+            if (threats.Length != 45 || threats.Count(threat => threat.Sub < 0) != 9 || threats.Any(threat => threat.Sub >= 0 && threat.Sub <= threat.Main))
+                throw new Exception("Threat report must enumerate unique singles and unordered dual types");
+            if (!TeamThreats.Describe(advicePlan).Contains("Choose at least one ally"))
+                throw new Exception("Unknown team must not receive a threat ranking");
+            advicePlan.Allies[0].Main = 0;
+            advicePlan.Allies[0].Name = "First ally";
+            string report = TeamThreats.Describe(advicePlan);
+            if (!report.Contains("First ally") || !report.Contains("MOST EXPOSED ALLIES") || !report.Contains("DUAL-TYPE THREATS") || report.Contains("Ally 2"))
+                throw new Exception("Threat report must identify known vulnerable allies and exclude unknown slots");
+            advicePlan.Allies[0].Main = -1;
+            if (Enumerable.Range(0, 9).Max(type => TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], type)) <= 0)
+                throw new Exception("The first empty ally must receive suggestions against the nine single types");
+            for (int type = 0; type < 9; type++)
+            {
+                var candidate = new TeamMember { Main = type };
+                int expected = Enumerable.Range(0, 9).Sum(targetType =>
+                {
+                    var target = new TeamMember { Main = targetType };
+                    return (TeamPlan.Damage(candidate, target) > 1.0001 ? 2 : 0) + (TeamPlan.Damage(target, candidate) < .9999 ? 1 : 0);
+                });
+                if (TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], type) != expected || TeamSuggestions.Gain(advicePlan, advicePlan.Allies[5], type) != expected)
+                    throw new Exception("Initial suggestions must use actual coverage regardless of slot order");
+            }
+            if (advicePlan.Allies.Any(ally => ally.Known))
+                throw new Exception("Initial suggestions must not select elements automatically");
+            advicePlan.Allies[5].Main = 0;
+            if (TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], 0) != 0)
+                throw new Exception("First ally suggestions must account for coverage already provided by later allies");
+            var laterCoverage = Enumerable.Range(0, 9).Select(type => TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], type)).ToArray();
+            advicePlan.Allies[5].Main = -1;
+            advicePlan.Allies[1].Main = 0;
+            if (!laterCoverage.SequenceEqual(Enumerable.Range(0, 9).Select(type => TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], type))))
+                throw new Exception("Suggestion ranking must not depend on ally order");
+            advicePlan.Allies[1].Main = -1;
+            advicePlan.Opponents[0].Main = 0;
+            var adviceGains = Enumerable.Range(0, 9).Select(type => TeamSuggestions.Gain(advicePlan, advicePlan.Allies[0], type)).ToArray();
+            if (adviceGains.Max() <= 0 || advicePlan.Allies[0].Known)
+                throw new Exception("Suggestions should evaluate known opponents without mutating the team");
+            for (int type = 0; type < 9; type++)
+            {
+                var candidate = new TeamMember { Main = type };
+                int expected = (TeamPlan.Damage(candidate, advicePlan.Opponents[0]) > 1.0001 ? 2 : 0) + (TeamPlan.Damage(advicePlan.Opponents[0], candidate) < .9999 ? 1 : 0);
+                if (adviceGains[type] != expected)
+                    throw new Exception("Suggestion score must explain offensive coverage and defensive answers");
+            }
             VerifyTransitions();
+            var mirrored = Sample();
+            using (var reportHost = new Form { ClientSize = new Size(618, 280) })
+            using (var reportView = new ThreatReportPanel { Dock = DockStyle.Fill })
+            {
+                reportHost.Controls.Add(reportView);
+                reportHost.Show();
+                Application.DoEvents();
+                reportView.UpdateReport(mirrored, false);
+                var legendButton = reportView.Controls.Cast<Control>().SelectMany(control => control.Controls.Cast<Control>()).OfType<SettingsButton>().Single(button => button.AccessibleName == "Show matchup legend");
+                reportHost.Activate();
+                Application.DoEvents();
+                legendButton.PerformClick();
+                var reportTips = (ApplicationTips)typeof(ThreatReportPanel).GetField("tips", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(reportView);
+                var legendBubble = (TipBubble)typeof(ApplicationTips).GetField("bubble", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(reportTips);
+                if (!legendBubble.Visible)
+                    throw new Exception("Clicking report information must immediately show the legend");
+                var grid = reportView.Controls.OfType<DataGridView>().Single();
+                if (grid.Rows.Count == 0 || grid.Columns.Count != 5)
+                    throw new Exception("Visual threat report must expose a structured table");
+                var slim = grid.Controls.OfType<SlimScrollBar>().Single();
+                if (grid.ScrollBars != ScrollBars.None || !slim.Visible)
+                    throw new Exception("Overflowing report must use the slim scrollbar instead of native chrome");
+                typeof(SlimDataGridView).GetMethod("OnMouseWheel", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(grid, new object[] { new MouseEventArgs(MouseButtons.None, 0, 10, 40, -120) });
+                if (grid.FirstDisplayedScrollingRowIndex <= 0)
+                    throw new Exception("Report mouse wheel must still scroll without native scrollbars");
+                var reportTabs = (SettingsButton[])typeof(ThreatReportPanel).GetField("tabs", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(reportView);
+                reportTabs[2].PerformClick();
+                if (grid.Rows.Count != 6 || grid.Columns[0].HeaderText != "Member")
+                    throw new Exception("Members report must list each known member");
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    var member = mirrored.Allies.Single(item => item.Name == Convert.ToString(row.Cells[0].Value));
+                    var damage = mirrored.Opponents.Where(item => item.Known).Select(item => TeamPlan.Damage(item, member)).ToArray();
+                    if (Convert.ToString(row.Cells[1].Value) != damage.Count(value => value > 1.0001) + "/" + damage.Length ||
+                        Convert.ToString(row.Cells[2].Value) != damage.Count(value => value < .9999) + "/" + damage.Length ||
+                        Convert.ToString(row.Cells[3].Value) != Model.Factor(damage.Max()))
+                        throw new Exception("Report aggregates must match the domain's exact incoming exchanges.");
+                }
+                reportView.UpdateReport(mirrored, true);
+                if (grid.Rows.Count != 2)
+                    throw new Exception("Visual report must refresh when switching teams and exclude unknown members");
+                if (slim.Visible)
+                    throw new Exception("Slim scrollbar must disappear when all rows fit");
+                var groupedPlan = new TeamPlan();
+                groupedPlan.Allies[0].Main = 0;
+                reportView.UpdateReport(groupedPlan, false);
+                reportTabs[1].PerformClick();
+                var expectedPairs = TeamThreats.Candidates().Where(pair => pair.Sub >= 0 && TeamPlan.Damage(pair, groupedPlan.Allies[0]) > 1.0001).ToArray();
+                var displayedPairs = grid.Rows.Cast<DataGridViewRow>().SelectMany(row => Convert.ToString(row.Cells[0].Value).Split(new[] { "; " }, StringSplitOptions.None)).ToArray();
+                if (grid.Rows.Count >= expectedPairs.Length || displayedPairs.Length != expectedPairs.Length || displayedPairs.Distinct().Count() != expectedPairs.Length)
+                    throw new Exception("Dual threats must be grouped without losing or duplicating combinations");
+                foreach (var pair in expectedPairs)
+                    if (!displayedPairs.Contains(Model.Names[pair.Main] + " + " + Model.Names[pair.Sub]))
+                        throw new Exception("Grouped report must retain every original dual threat");
+                foreach (DataGridViewRow row in grid.Rows)
+                {
+                    var pairNames = Convert.ToString(row.Cells[0].Value).Split(new[] { "; " }, StringSplitOptions.None);
+                    var pairs = expectedPairs.Where(pair => pairNames.Contains(Model.Names[pair.Main] + " + " + Model.Names[pair.Sub])).ToArray();
+                    if (pairs.Select(pair => TeamPlan.Damage(groupedPlan.Allies[0], pair)).Distinct().Count() != 1)
+                        throw new Exception("Groups must split when the team's outgoing damage differs");
+                    double reply = TeamPlan.Damage(groupedPlan.Allies[0], pairs[0]);
+                    string category = reply < .9999 ? "disadvantaged" : reply > 1.0001 ? "trade blows" : "pressured";
+                    if (!Convert.ToString(row.Cells[4].Value).Contains(category))
+                        throw new Exception("Matchup summary must distinguish reduced, neutral and strong replies");
+                    if (!row.Cells[1].ToolTipText.Contains("received") || !row.Cells[1].ToolTipText.Contains("dealt") || !row.Cells[2].ToolTipText.Contains("None"))
+                        throw new Exception("Counter tooltips must explain exact exchanges and empty resistance sets");
+                }
+            }
+            var reversed = new TeamPlan();
+            for (int slot = 0; slot < 6; slot++)
+            {
+                reversed.Allies[slot] = mirrored.Opponents[slot];
+                reversed.Opponents[slot] = mirrored.Allies[slot];
+            }
+            for (int slot = 0; slot < 6; slot++)
+                for (int type = 0; type < 9; type++)
+                    if (TeamSuggestions.Gain(mirrored, mirrored.Opponents[slot], type, true) != TeamSuggestions.Gain(reversed, reversed.Allies[slot], type))
+                        throw new Exception("Both teams must receive identical suggestions when their roles are reversed");
+            string enemyReport = TeamThreats.Describe(mirrored, true);
+            if (!enemyReport.Contains("MOST EXPOSED OPPONENTS") || !enemyReport.Contains("against your known allies") || !enemyReport.Contains("Opponent A"))
+                throw new Exception("Opponent report must describe the active side and assess it against your team");
             using (var main = new MainForm())
             {
                 var flags = BindingFlags.Instance | BindingFlags.NonPublic;

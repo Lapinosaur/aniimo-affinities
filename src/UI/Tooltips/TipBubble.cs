@@ -47,6 +47,7 @@ namespace AniimoAffinities
             Invalidate();
         }
         private Image illustration;
+        private Action<Graphics, RectangleF> graphicPainter;
         private const int QrSize = 111;
         private sealed class TipRow
         {
@@ -89,8 +90,9 @@ namespace AniimoAffinities
             }
         }
         // Inputs: hovered control, text. Output: clamped non-activating bubble with arrow pointing at anchor. Fallback: flip above when bottom lacks room. Raises: none.
-        internal void Present(Control anchor, string text, Rectangle? visualBounds = null, Image image = null)
+        internal void Present(Control anchor, string text, Rectangle? visualBounds = null, Image image = null, Action<Graphics, RectangleF> paint = null, Size? graphicSize = null)
         {
+            graphicPainter = paint;
             illustration = image;
             BackColor = Theme.Surface;
             label = text;
@@ -146,6 +148,8 @@ namespace AniimoAffinities
             }
             if (illustration != null)
                 Size = new Size(Math.Max(QrSize + 24, Width), Height + QrSize + 12);
+            if (graphicPainter != null && graphicSize.HasValue)
+                Size = new Size(graphicSize.Value.Width + 24, graphicSize.Value.Height + 24);
             Width += 6; // Reserve the side-arrow gutter without reducing the measured text area.
             below = bounds.Bottom + 7 + Height <= screen.Bottom - 7;
             int left = Math.Max(screen.Left + 7, Math.Min(bounds.Left + (bounds.Width - Width) / 2, screen.Right - Width - 7));
@@ -193,6 +197,11 @@ namespace AniimoAffinities
                 g.DrawLine(erase, points[0], points[2]);
             using (var border = new Pen(Theme.StrongBorder))
                 g.DrawLines(border, points);
+            if (graphicPainter != null)
+            {
+                graphicPainter(g, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12));
+                return;
+            }
             if (rows.Count == 0)
                 TextRenderer.DrawText(g, label, Font, Rectangle.Round(new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12 - (illustration == null ? 0 : QrSize + 12))), Theme.TextColor, TextFlags);
             else

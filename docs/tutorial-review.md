@@ -1,5 +1,11 @@
 # Tutorial review
 
+## Team feature update
+
+The team tour now distinguishes card selection from radar comparison, explains gray suggestions and Coverage/Counter sources, and describes projected teams, backup answers and lock-mode actions. A separate three-step "What's new" tour covers only these additions and is listed first in Help & Tutorial. Existing users see it once even if they previously hid the introductory tour; Skip/Esc dismisses it without automatic reopening. It remains available from Help. The feature-specific `team-features-tour.txt` marker avoids showing this tour again for unrelated application updates.
+
+Seven-section progress files remain readable; existing completion bits and section checkpoints are preserved when the eighth section is added. New installations retain the introductory tour. Suggestion explanations show applied-member counts separately from earlier unapplied proposals, with gray icons identifying the latter; applying one proposal never applies the others.
+
 Completion checks are status indicators, not replay selectors. A section is completed only after advancing past its final content step. Each section has Play, Resume or Replay; the page groups learning tasks separately from workspace configuration and technical support. Global resume retains the interrupted tour; individual resume retains each section checkpoint.
 
 | Tutorial | Decision | Purpose / changes |

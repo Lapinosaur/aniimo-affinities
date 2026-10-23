@@ -19,7 +19,13 @@ namespace AniimoAffinities
             g.ScaleTransform(box.Width / 24, box.Height / 24);
             using (var pen = new Pen(color, 1.7f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
             {
-                if (name == "info")
+                if (name == "suggest")
+                {
+                    g.DrawPolygon(pen, new[] { new PointF(10, 3), new PointF(12.5f, 9), new PointF(19, 11), new PointF(12.5f, 13), new PointF(10, 20), new PointF(7.5f, 13), new PointF(2, 11), new PointF(7.5f, 9) });
+                    g.DrawLine(pen, 19, 2, 19, 6);
+                    g.DrawLine(pen, 17, 4, 21, 4);
+                }
+                else if (name == "info")
                 {
                     g.DrawEllipse(pen, 3, 3, 18, 18);
                     g.DrawLine(pen, 12, 11, 12, 17);
