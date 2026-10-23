@@ -10,6 +10,41 @@ namespace AniimoAffinities
     {
         internal static void Save(string mode, string path)
         {
+            if (mode == "team-zoom-lock" || mode == "team-zoom-normal")
+            {
+                using (var main = new MainForm())
+                {
+                    main.StartPosition = FormStartPosition.Manual;
+                    main.Location = new Point(20, 20);
+                    main.Show();
+                    var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                    var team = (TeamPlan)typeof(MainForm).GetField("teamPlan", flags).GetValue(main);
+                    team.Visible = true;
+                    team.Position = "Bottom";
+                    team.Allies[0].Main = 0;
+                    typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(main, null);
+                    main.FinishTeamTransition();
+                    if (mode == "team-zoom-lock")
+                        typeof(PortableWindow).GetMethod("SetOverlayLocked", flags).Invoke(main, new object[] { true });
+                    foreach (float scale in new[] { .5f, 1f, 1.5f, 1.25f, 1.5f })
+                    {
+                        DisplaySettings.ApplyDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, scale);
+                        Application.DoEvents();
+                    }
+                    var clock = System.Diagnostics.Stopwatch.StartNew();
+                    while (clock.ElapsedMilliseconds < 300)
+                    {
+                        Application.DoEvents();
+                        System.Threading.Thread.Sleep(10);
+                    }
+                    using (var image = new Bitmap(main.Width, main.Height))
+                    {
+                        main.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
+                        image.Save(path);
+                    }
+                }
+                return;
+            }
             if (mode == "team-suggestion-help")
             {
                 using (var owner = new Form())

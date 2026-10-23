@@ -42,6 +42,9 @@ namespace AniimoAffinities
                 var g = e.Graphics;
                 g.ScaleTransform(zoom, zoom);
                 g.Clear(Theme.Background);
+                // The separate hoverable toolbar owns the live locked control.
+                if (pin && OverlayLocked && !TutorialSnapshot)
+                    return;
                 g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 if (text.Length == 0 && !pin)
                     return;
@@ -141,14 +144,9 @@ namespace AniimoAffinities
                 proposedPosition.Flags |= 0x0100; // SWP_NOCOPYBITS: do not reuse the old client surface.
                 Marshal.StructureToPtr(proposedPosition, message.LParam, false);
             }
+            // Preserve WinForms' NCCALCSIZE result and its matching rectangles.
+            // Replacing that result shifts native child HWNDs on anchored resizes.
             base.WndProc(ref message);
-            if (customCaption && message.Msg == 0x0083 && message.WParam != IntPtr.Zero)
-            {
-                // No retained client pixels during resize: their old positions are invalid
-                // when right-docked caption controls and the team panel change together.
-                message.Result = new IntPtr(0x0300); // WVR_REDRAW
-                return;
-            }
             if (customCaption && message.Msg == 0x216 && WindowState == FormWindowState.Normal)
             {
                 var proposed = (WindowRect)Marshal.PtrToStructure(message.LParam, typeof(WindowRect));

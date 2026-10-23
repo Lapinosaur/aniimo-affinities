@@ -12,6 +12,26 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            using (var toolbar = new UnlockWindow(() => { }, () => { }, false, () => Point.Empty, point => { }))
+            {
+                toolbar.Location = new Point(-2000, -2000);
+                toolbar.Show();
+                var padlock = toolbar.Controls.Cast<Control>().Single(control => control.AccessibleName == "Unlock overlay");
+                var grip = toolbar.Controls.Cast<Control>().Single(control => control.AccessibleName == "Move overlay");
+                var size = toolbar.Controls.OfType<HoldSizeButton>().First();
+                padlock.Focus();
+                grip.Capture = true;
+                using (var image = UnlockAppearance.Compose(toolbar))
+                {
+                    if (toolbar.ButtonOpacity(padlock) != 1 || toolbar.ButtonOpacity(grip) != 1 || toolbar.ButtonOpacity(size) != .18f)
+                        throw new Exception("Locked controls must reveal independently and never fade the padlock.");
+                    if (image.GetPixel(size.Left + 10, size.Top + 10).A > 50 || image.GetPixel(padlock.Left + 10, padlock.Top + 10).A != 255)
+                        throw new Exception("The toolbar must composite independent alpha values.");
+                }
+                grip.Capture = false;
+                if (toolbar.ButtonOpacity(grip) != .18f)
+                    throw new Exception("The grip must fade again after dragging ends.");
+            }
             float[][] expectedZoomTargets = { new[] { .75f, 1f }, new[] { .5f, 1f }, new[] { .5f, 1.5f }, new[] { 1f, 1.5f }, new[] { 1f, 1.25f } };
             for (int i = 0; i < 5; i++)
                 if (!WindowZoom.Neighbors(.5f + i * .25f).SequenceEqual(expectedZoomTargets[i]))

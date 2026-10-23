@@ -10,6 +10,8 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
+Latest: [v0.8.1](docs/releases/v0.8.1.md) fixes window scaling and refines locked overlay controls.
+
 See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive suggestion bubbles, radar previews and animated tutorials.
 
 - Select one or two types and explore their attack and defense affinities.

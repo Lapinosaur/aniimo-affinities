@@ -55,6 +55,29 @@ namespace AniimoAffinities
                         using (var bitmap = new Bitmap(main.Width, main.Height))
                             main.DrawToBitmap(bitmap, new Rectangle(Point.Empty, main.Size));
                     }
+                    var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                    var team = (TeamPlan)typeof(MainForm).GetField("teamPlan", flags).GetValue(main);
+                    var body = (Control)typeof(MainForm).GetField("teamBody", flags).GetValue(main);
+                    var canvas = (Control)typeof(MainForm).GetField("canvas", flags).GetValue(main);
+                    team.Visible = true;
+                    foreach (string position in new[] { "Bottom", "Left", "Top", "Right" })
+                    {
+                        team.Position = position;
+                        typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(main, null);
+                        main.FinishTeamTransition();
+                        foreach (float zoom in new[] { 1.5f, .5f, 1.25f, 1f })
+                        {
+                            DisplaySettings.ApplyDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, zoom);
+                            Application.DoEvents();
+                            if (body.Left < 0 || body.Right > main.ClientSize.Width + 2 || canvas.Left < 0 || canvas.Right > body.ClientSize.Width + 2)
+                                throw new Exception("Resizing must keep content within its parent: " + position + " " + zoom + " body=" + body.Bounds + " canvas=" + canvas.Bounds + " window=" + main.ClientSize);
+                        }
+                    }
+                    team.Visible = false;
+                    typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(main, null);
+                    main.FinishTeamTransition();
+                    right = main.Right;
+                    top = main.Top;
                     foreach (Keys key in new[] { Keys.Control | Keys.Up, Keys.Control | Keys.Up, Keys.Control | Keys.Down, Keys.Control | Keys.Down, Keys.Control | Keys.Down, Keys.Control | Keys.Down })
                     {
                         WindowZoom.HandleShortcut(key, IntPtr.Zero);
@@ -83,6 +106,55 @@ namespace AniimoAffinities
             }
             finally { DisplaySettings.WindowScale = savedZoom; }
 
+            CheckNativeScaling();
+
+        }
+        private static void CheckNativeScaling()
+        {
+            float saved = DisplaySettings.WindowScale;
+            DisplaySettings.WindowScale = 1;
+            try
+            {
+                using (var main = new MainForm())
+                {
+                    main.Show();
+                    var flags = System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic;
+                    var team = (TeamPlan)typeof(MainForm).GetField("teamPlan", flags).GetValue(main);
+                    team.Visible = true;
+                    for (int mode = 0; mode < 3; mode++)
+                    {
+                        if (mode == 1)
+                            main.SetPinned(true);
+                        if (mode == 2)
+                            typeof(PortableWindow).GetMethod("SetOverlayLocked", flags).Invoke(main, new object[] { true });
+                        foreach (string position in new[] { "Bottom", "Left", "Top", "Right" })
+                        {
+                            team.Position = position;
+                            typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(main, null);
+                            main.FinishTeamTransition();
+                            foreach (float zoom in new[] { .5f, 1f, 1.5f, .75f, 1.25f, 1f })
+                            {
+                                DisplaySettings.ApplyDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, zoom);
+                                Application.DoEvents();
+                                AssertNativeBounds(main);
+                            }
+                        }
+                    }
+                }
+            }
+            finally { DisplaySettings.WindowScale = saved; }
+        }
+        private static void AssertNativeBounds(Control parent)
+        {
+            foreach (Control child in parent.Controls)
+                if (child.Visible && child.IsHandleCreated)
+                {
+                    var expected = parent.RectangleToScreen(child.Bounds);
+                    var actual = GlassNative.WindowBounds(child.Handle);
+                    if (actual != expected)
+                        throw new Exception("Native resize drift: " + child.GetType().Name + " expected=" + expected + " actual=" + actual);
+                    AssertNativeBounds(child);
+                }
         }
     }
 }

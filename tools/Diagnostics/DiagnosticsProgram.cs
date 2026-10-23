@@ -23,6 +23,11 @@ namespace AniimoAffinities
             try
             {
                 ApplicationBootstrap.Initialize();
+                if (args.Length == 1 && args[0] == "--test-zoom")
+                {
+                    ZoomTests.Run();
+                    return 0;
+                }
                 if (args.Length == 1 && args[0] == "--test-bubble-clicks")
                 {
                     BubbleClickTests.Run();
@@ -166,9 +171,8 @@ namespace AniimoAffinities
                     {
                         form.Show();
                         Application.DoEvents();
-                        using (var image = new Bitmap(form.Width, form.Height))
+                        using (var image = UnlockAppearance.Compose(form))
                         {
-                            form.DrawToBitmap(image, new Rectangle(Point.Empty, form.Size));
                             image.Save(args[1]);
                         }
                     }

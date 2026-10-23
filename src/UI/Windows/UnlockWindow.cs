@@ -16,7 +16,31 @@ namespace AniimoAffinities
             }
             return base.ProcessCmdKey(ref message, input);
         }
+        private readonly Timer revealTimer = new Timer { Interval = 80 };
+        private Control keyboardReveal, lockButton;
+        private UnlockAppearance appearance;
+        private int revealMask = -1;
         private readonly Action closeApplication;
+        internal float ButtonOpacity(Control control)
+        {
+            return control == lockButton || control.Capture || control == keyboardReveal && control.Focused
+                || control.ClientRectangle.Contains(control.PointToClient(Cursor.Position)) ? 1 : .18f;
+        }
+        private void RefreshReveal()
+        {
+            int mask = 0, bit = 1;
+            foreach (Control control in Controls)
+            {
+                if (ButtonOpacity(control) == 1)
+                    mask |= bit;
+                bit <<= 1;
+            }
+            if (mask == revealMask)
+                return;
+            revealMask = mask;
+            if (appearance != null)
+                appearance.Queue();
+        }
         private readonly HoldSizeButton[] sizeButtons = new HoldSizeButton[2];
         internal void RefreshSizes()
         {
@@ -67,14 +91,8 @@ namespace AniimoAffinities
                 };
             }
             RefreshSizes();
-            var button = new Button { Location = new Point(140, 0), Size = new Size(32, 32), FlatStyle = FlatStyle.Flat, Text = "", AccessibleName = "Unlock overlay", Cursor = Cursors.Hand, BackColor = Theme.AccentSurface };
-            button.FlatAppearance.BorderSize = 0;
-            button.FlatAppearance.MouseOverBackColor = Theme.AccentHover;
-            button.Paint += (s, e) =>
-            {
-                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                Glyphs.Draw(e.Graphics, "lock", new RectangleF(8, 8, 16, 16), Theme.AccentForeground);
-            };
+            var button = new SettingsButton { Location = new Point(140, 0), Size = new Size(32, 32), Glyph = "lock", AccessibleName = "Unlock overlay", Cursor = Cursors.Hand, Primary = true };
+            lockButton = button;
             button.Click += (s, e) => unlock();
             Controls.Add(button);
             tips.SetToolTip(button, hotkeyAvailable ? "Unlock overlay · " + ShortcutText.Mark(KeyBindings.Label(KeyBindings.Load(KeyBindings.FilePath)[11])) : "Unlock overlay");
@@ -131,6 +149,17 @@ namespace AniimoAffinities
                 Controls.Add(panelToggle);
                 tips.SetToolTip(panelToggle, "Hold click or Space for 0.9 s to show or hide the team panel. Release early to cancel.");
             }
+
+            foreach (Control control in Controls)
+            {
+                control.MouseEnter += (s, e) => RefreshReveal();
+                control.MouseDown += (s, e) => { keyboardReveal = null; RefreshReveal(); };
+                control.GotFocus += (s, e) => { keyboardReveal = MouseButtons == MouseButtons.None ? control : null; RefreshReveal(); };
+                control.KeyDown += (s, e) => { keyboardReveal = control; RefreshReveal(); };
+            }
+            Shown += (s, e) => { if (Opacity != 0) appearance = new UnlockAppearance(this); };
+            revealTimer.Tick += (s, e) => RefreshReveal();
+            VisibleChanged += (s, e) => { revealTimer.Enabled = Visible; if (Visible) RefreshReveal(); };
         }
         protected override void OnDeactivate(EventArgs e)
         {
@@ -138,6 +167,8 @@ namespace AniimoAffinities
                 panelToggle.CancelHold();
             foreach (var button in sizeButtons)
                 button.CancelHold();
+            keyboardReveal = null;
+            RefreshReveal();
             base.OnDeactivate(e);
         }
         protected override bool ShowWithoutActivation
@@ -160,7 +191,12 @@ namespace AniimoAffinities
         protected override void Dispose(bool disposing)
         {
             if (disposing)
+            {
+                revealTimer.Dispose();
+                if (appearance != null)
+                    appearance.Dispose();
                 tips.Dispose();
+            }
             base.Dispose(disposing);
         }
     }
