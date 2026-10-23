@@ -1,17 +1,19 @@
 # Discord release announcements
 
-The GitHub Actions workflow `.github/workflows/discord-releases.yml` posts an English turquoise release card to the Discord webhook configured in the `DISCORD_RELEASES_WEBHOOK` repository secret. It runs on published releases, including previews. It has read-only repository permissions and uses Python standard-library HTTP clients, without third-party actions or an always-on bot process.
+The GitHub Actions workflow `.github/workflows/discord-releases.yml` posts a release card through the repository secret `DISCORD_RELEASES_WEBHOOK`. No always-on bot process or local Codex automation is required.
 
-Cards contain the release title, version, preview/stable status, notes, attached-file download links, file sizes and community links. Notes are bounded and mention notifications are disabled. Drafts and download URLs outside the repository are rejected. The webhook URL is never logged or committed.
+## Automatic delivery
 
-## Publishing
+Published stable releases trigger the announcement workflow. The Publish stable release workflow also explicitly dispatches it because releases created with GITHUB_TOKEN do not trigger further release events. Its `announce_discord` input defaults to true; leave it enabled for normal publications. Prereleases are skipped.
 
-Attach the executable and checksum to a draft release before publishing. The bot re-fetches release data at execution time. The workflow must exist in the commit tagged for future releases; merge the current main branch before tagging.
+Cards include release notes (bounded to 1,800 characters), download links and community links. Put a short Highlights section first so every major feature is visible before truncation. The full notes remain linked.
 
-For an existing release, run **Discord release announcements** manually with its tag. This posts a new message. To update a prior announcement instead, also provide the message ID printed in its successful workflow log. Do not rerun a completed post without the message ID: Discord webhooks do not provide a durable idempotency key. Ambiguous network failures are not blindly retried; inspect the channel before retrying.
+Only the matching opt-in major/minor/patch role is notified on a new post. Edits do not ping roles; everyone/here are disabled. The webhook credential is never logged or committed.
 
-## Server
+## Existing releases and recovery
 
-The releases, feedback and support channels each have an English pinned welcome message. Releases is read-only for members. The Member role grants access to feedback and support and is currently assigned manually. Template channels are preserved but hidden from ordinary roles.
+Run Discord release announcements with the release tag to announce an existing stable release. A hidden message-ID marker on the release makes subsequent dispatches update that message instead of duplicating it. The workflow needs contents:write to persist this marker.
 
-The initial v0.1.0 release announcement was successfully delivered by workflow run 39711025664. This does not mean the locally prepared v0.2.0 application release has been published.
+Delivery intent is recorded before posting. An ambiguous failure with only a pending marker stops automatic posting: inspect the Discord channel, then supply the existing message_id to recover. Do not remove the marker or blindly retry a post. A completed post can be updated with its recorded ID without another notification.
+
+For v0.7.0 the publication workflow explicitly disabled announcement delivery; it is announced separately on request. Future releases keep the existing automatic default enabled.
