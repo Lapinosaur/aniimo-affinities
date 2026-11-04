@@ -795,5 +795,7 @@
   "name": "ime",
   "not set": "ni nastavljen",
   "update.lock": "ažuriranje.lock",
-  "× Damage multiplier": "× multiplikator škode"
+  "× Damage multiplier": "× multiplikator škode",
+  "Skip this tutorial": "Preskoči to vadnico",
+  "Skip all tutorials": "Preskoči vse"
 }

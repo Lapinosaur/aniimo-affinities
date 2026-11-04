@@ -10,8 +10,49 @@ namespace AniimoAffinities
 {
     internal static class TutorialTests
     {
+        [DllImport("user32.dll")]
+        private static extern bool PostMessage(IntPtr handle, int message, IntPtr wParam, IntPtr lParam);
+        private static void VerifyThemes()
+        {
+            var previewOwner = new object();
+            int appearance = Theme.Appearance;
+            try
+            {
+                using (var source = new MainForm())
+                using (var tour = new TutorialOverlay(source))
+                {
+                    tour.Show();
+                    foreach (int section in new[] { 2, 3, 5, 8 })
+                    {
+                        tour.JumpToTutorial(section);
+                        int step = tour.StepIndex;
+                        foreach (int mode in new[] { 2, 0 })
+                        {
+                            Theme.PreviewAppearance(previewOwner, mode);
+                            Application.DoEvents();
+                            var flags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance;
+                            int revision = (int)typeof(TutorialOverlay).GetField("frameThemeRevision", flags).GetValue(tour);
+                            if (revision != Theme.Revision || tour.BackColor != Theme.Background || tour.StepIndex != step)
+                                throw new Exception("Theme changes must refresh tutorial frames without changing the active step.");
+                        }
+                    }
+                }
+                using (var snapshot = new SettingsDialog(KeyBindings.Defaults(), null) { TutorialSnapshot = true, Opacity = 0 })
+                {
+                    snapshot.Show();
+                    snapshot.TutorialSection("Display");
+                    int revision = Theme.Revision;
+                    foreach (var choice in Descendants(snapshot).OfType<ThemePreview>())
+                        typeof(Control).GetMethod("OnMouseEnter", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(choice, new object[] { EventArgs.Empty });
+                    if (Theme.Revision != revision || Theme.Appearance != appearance)
+                        throw new Exception("Hovering a tutorial theme preview must not change the real theme.");
+                }
+            }
+            finally { Theme.EndAppearancePreview(previewOwner); }
+        }
         internal static void Run()
         {
+            VerifyThemes();
             string tutorialTestPath = Path.Combine(Path.GetTempPath(), "aniimo-tutorial-" + Guid.NewGuid().ToString("N") + ".txt");
             try
             {
@@ -69,20 +110,24 @@ namespace AniimoAffinities
                 throw new Exception("The 0.9 news tour must reset only its own completion and preserve other checkpoints.");
             if (!TutorialNews.PrepareStartup() || !TutorialNews.ReturningUser || TutorialNews.PrepareStartup())
                 throw new Exception("Returning users must be offered news once, even with old tutorials hidden.");
-            using (var newsSource = new MainForm())
-            {
-                new TutorialProgress { Sections = TutorialProgress.News, Completed = 127 }.Save();
-                using (var news = new TutorialOverlay(newsSource, true))
+            foreach (bool escape in new[] { false, true })
+                using (var newsSource = new MainForm())
                 {
-                    news.Show();
-                    if (news.StepCount != 4)
-                        throw new Exception("The news-only tour must contain three new-feature steps and its finish page.");
-                    news.Controls.OfType<DrawingPanel>().SelectMany(panel => panel.Controls.OfType<SettingsButton>()).Single(button => button.Text == "Skip · Esc").PerformClick();
-                    var skipped = TutorialProgress.Load();
-                    if (skipped.Pending || skipped.Completed != 127 || TutorialNews.PrepareStartup())
-                        throw new Exception("Skipping news must preserve old completion and prevent automatic reopening.");
+                    new TutorialProgress { Sections = TutorialProgress.News, Completed = 127 }.Save();
+                    using (var news = new TutorialOverlay(newsSource, true))
+                    {
+                        news.Show();
+                        if (news.StepCount != 4)
+                            throw new Exception("The news-only tour must contain three new-feature steps and its finish page.");
+                        if (escape)
+                            typeof(TutorialOverlay).GetMethod("ProcessCmdKey", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(news, new object[] { Message.Create(news.Handle, 0x100, IntPtr.Zero, IntPtr.Zero), Keys.Escape });
+                        else
+                            news.Controls.OfType<DrawingPanel>().SelectMany(panel => panel.Controls.OfType<SettingsButton>()).Single(button => button.Text == "Skip · Esc").PerformClick();
+                        var skipped = TutorialProgress.Load();
+                        if (skipped.Pending || skipped.Completed != 127 || TutorialNews.PrepareStartup())
+                            throw new Exception("Skipping news must preserve old completion and prevent automatic reopening.");
+                    }
                 }
-            }
             TutorialPreferences.Save(false);
             using (var updateSource = new MainForm())
             {
@@ -147,6 +192,46 @@ namespace AniimoAffinities
                     jumpTour.JumpToTutorial(0);
                     if (jumpTour.StepIndex != 0 || TutorialProgress.Load().Completed != 4)
                         throw new Exception("Jumping back must retain independent completion.");
+                    var keyHandler = typeof(TutorialOverlay).GetMethod("ProcessCmdKey", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+                    int interceptedPreviewInputs = 0;
+                    using (var spam = new Timer { Interval = 1 })
+                    {
+                        spam.Tick += (s, e) =>
+                        {
+                            var preview = Application.OpenForms.OfType<SettingsDialog>().FirstOrDefault(form => form.Opacity == 0);
+                            if (preview == null)
+                                return;
+                            var queuedEnter = Message.Create(preview.Handle, 0x100, new IntPtr((int)Keys.Enter), IntPtr.Zero);
+                            if (!Application.FilterMessage(ref queuedEnter))
+                                throw new Exception("Invisible settings previews must reject Enter while the tutorial is loading.");
+                            interceptedPreviewInputs++;
+                            PostMessage(preview.Handle, 0x100, new IntPtr((int)Keys.Enter), IntPtr.Zero);
+                            PostMessage(preview.Handle, 0x101, new IntPtr((int)Keys.Enter), IntPtr.Zero);
+                        };
+                        spam.Start();
+                        for (int step = 1; step < jumpTour.StepCount; step++)
+                        {
+                            var back = jumpTour.Controls.OfType<DrawingPanel>().SelectMany(panel => panel.Controls.OfType<SettingsButton>()).Single(button => button.Text == "Previous");
+                            if (back.Visible)
+                                back.Focus();
+                            keyHandler.Invoke(jumpTour, new object[] { Message.Create(jumpTour.Handle, 0x100, IntPtr.Zero, IntPtr.Zero), Keys.Enter });
+                            if (jumpTour.StepIndex != step)
+                                throw new Exception("Repeated Enter must always advance, even when Previous has focus: " + step);
+                        }
+                        spam.Stop();
+                    }
+                    if (interceptedPreviewInputs == 0)
+                        throw new Exception("The rapid Enter regression must exercise real settings preview initialization.");
+                    jumpTour.JumpToTutorial(0);
+                    int completedBeforeSkip = TutorialProgress.Load().Completed;
+                    jumpTour.SkipTutorial();
+                    if (jumpTour.StepIndex != 5 || TutorialProgress.Load().Completed != completedBeforeSkip)
+                        throw new Exception("Skipping must advance to the next tutorial without completing the skipped section.");
+                    bool hidden = TutorialPreferences.Hidden;
+                    jumpTour.SkipAllTutorials();
+                    if (TutorialProgress.Load().Pending || TutorialProgress.Load().Completed != completedBeforeSkip || jumpTour.Visible)
+                        throw new Exception("Skipping all must close the tour without completing unvisited sections.");
+                    TutorialPreferences.Save(hidden);
                 }
             }
             float displayFont = DisplaySettings.FontScale, displayZoom = DisplaySettings.WindowScale;

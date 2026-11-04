@@ -795,5 +795,7 @@
   "name": "nosaukums",
   "not set": "nav iestatīts",
   "update.lock": "atjaunināt.lock",
-  "× Damage multiplier": "× Bojājumu reizinātājs"
+  "× Damage multiplier": "× Bojājumu reizinātājs",
+  "Skip this tutorial": "Izlaist šo pamācību",
+  "Skip all tutorials": "Izlaist visas"
 }

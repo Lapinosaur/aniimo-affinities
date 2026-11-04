@@ -796,5 +796,7 @@
   "name": "nazwa",
   "not set": "nie ustawiony",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Mnożnik szkód"
+  "× Damage multiplier": "× Mnożnik szkód",
+  "Skip this tutorial": "Pomiń ten samouczek",
+  "Skip all tutorials": "Pomiń wszystkie"
 }

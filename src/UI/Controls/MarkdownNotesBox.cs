@@ -6,11 +6,41 @@ namespace AniimoAffinities
 {
     internal sealed class MarkdownNotesBox : RichTextBox
     {
+        private readonly ApplicationTips linkTips = ApplicationTips.Create();
+        private string hoveredUrl;
+        private int linkStart, linkEnd;
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            int position = GetCharIndexFromPosition(e.Location);
+            if (hoveredUrl != null && (position < linkStart || position >= linkEnd))
+            {
+                hoveredUrl = null;
+                linkTips.SetToolTip(this, "");
+            }
+            base.OnMouseMove(e);
+        }
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            hoveredUrl = null;
+            linkTips.SetToolTip(this, "");
+            base.OnMouseLeave(e);
+        }
+        [StructLayout(LayoutKind.Sequential)]
+        private struct LinkNotification
+        {
+            internal IntPtr Window, Id;
+            internal int Code, Message;
+            internal IntPtr WParam, LParam;
+            internal int Start, End;
+        }
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
             if (disposing)
+            {
+                linkTips.Dispose();
                 Events.Dispose();
+            }
         }
         [StructLayout(LayoutKind.Sequential)]
         private struct Rect
@@ -28,6 +58,24 @@ namespace AniimoAffinities
         // Use its own formatter for previews and the glass foreground capture.
         protected override void WndProc(ref Message message)
         {
+            if (message.Msg == 0x204E && message.LParam != IntPtr.Zero
+                && Marshal.ReadInt32(message.LParam, IntPtr.Size * 2) == 0x70B)
+            {
+                var notification = (LinkNotification)Marshal.PtrToStructure(message.LParam, typeof(LinkNotification));
+                if (notification.Code == 0x70B && notification.Message == 0x200
+                    && notification.Start >= 0 && notification.End <= TextLength && notification.End > notification.Start)
+                {
+                    string url = Text.Substring(notification.Start, notification.End - notification.Start);
+                    if (url != hoveredUrl)
+                    {
+                        hoveredUrl = url;
+                        linkStart = notification.Start;
+                        linkEnd = notification.End;
+                        linkTips.SetToolTip(this, ExternalLinkTips.Describe(url));
+                        linkTips.QueueTip(this);
+                    }
+                }
+            }
             if ((message.Msg == 0x317 || message.Msg == 0x318) && message.WParam != IntPtr.Zero)
             {
                 using (var graphics = Graphics.FromHdc(message.WParam))

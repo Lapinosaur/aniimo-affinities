@@ -20,7 +20,7 @@ namespace AniimoAffinities
                     DiagnosticReport.Record(error);
             });
             panel.Controls.Add(discord);
-            tips.SetToolTip(discord, Language.T("Permanent invite · Member role included"));
+            tips.SetToolTip(discord, ExternalLinkTips.Describe("https://discord.gg/B6n83stRcf"));
             var copy = new SettingsButton { Text = Language.T("Copy diagnostics"), Glyph = "copy", GlyphWithText = true, Location = new Point(0, 302), Size = new Size(202, 34) };
             copy.Click += (s, e) =>
             {
@@ -50,7 +50,7 @@ namespace AniimoAffinities
                 if (error != null)
                     DiagnosticReport.Record(error);
             });
-            tips.SetToolTip(star, Language.T("Open the repository, sign in to GitHub and click Star."));
+            tips.SetToolTip(star, ExternalLinkTips.Describe("https://github.com/Lapinosaur/aniimo-affinities") + "\n" + Language.T("Open the repository, sign in to GitHub and click Star."));
             panel.Controls.Add(star);
             foreach (Control control in panel.Controls)
                 control.Top -= 174;

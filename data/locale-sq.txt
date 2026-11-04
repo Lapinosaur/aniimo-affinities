@@ -795,5 +795,7 @@
   "name": "Emri",
   "not set": "nuk është i caktuar",
   "update.lock": "Përditëso",
-  "× Damage multiplier": "Shumëfishuesi i dëmit"
+  "× Damage multiplier": "Shumëfishuesi i dëmit",
+  "Skip this tutorial": "Kalo këtë udhëzues",
+  "Skip all tutorials": "Kalo të gjithë"
 }

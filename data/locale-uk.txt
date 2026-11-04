@@ -795,5 +795,7 @@
   "name": "Ім'я",
   "not set": "не встановлено",
   "update.lock": "верстка.блок",
-  "× Damage multiplier": "× Пошкодження мультиплеря"
+  "× Damage multiplier": "× Пошкодження мультиплеря",
+  "Skip this tutorial": "Пропустити цей урок",
+  "Skip all tutorials": "Пропустити всі"
 }

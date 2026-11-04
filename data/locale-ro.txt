@@ -795,5 +795,7 @@
   "name": "Nume",
   "not set": "nesetat",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Multiplicatorul de daune"
+  "× Damage multiplier": "× Multiplicatorul de daune",
+  "Skip this tutorial": "Omite acest tutorial",
+  "Skip all tutorials": "Omite toate"
 }

@@ -55,6 +55,8 @@ namespace AniimoAffinities
                 foreach (string destination in new[] { "Top", "Right", "Bottom", "Left" })
                 {
                     var origin = transition.Capture();
+                    var body = (Control)typeof(MainForm).GetField("teamBody", flags).GetValue(main);
+                    var bodySize = body.Size;
                     team.Position = destination;
                     int nativeResizes = 0;
                     EventHandler countResize = (sender, args) => nativeResizes++;
@@ -77,6 +79,13 @@ namespace AniimoAffinities
                     var surface = (TransitionSurface)typeof(PanelTransition).GetField("surface", flags).GetValue(transition);
                     if (SystemInformation.IsMenuAnimationEnabled && (!surface.Visible || surface.Before == null || surface.After == null || surface.Parent.Controls.GetChildIndex(surface) != 0))
                         throw new Exception("Moving layouts must be presented as complete snapshots above live cards");
+                    if (SystemInformation.IsMenuAnimationEnabled)
+                    {
+                        var destinationFrame = (PanelTransition.Frame)typeof(PanelTransition).GetField("destination", flags).GetValue(transition);
+                        var expected = new Size(bodySize.Width + destinationFrame.Window.Width - origin.Window.Width, bodySize.Height + destinationFrame.Window.Height - origin.Window.Height);
+                        if (surface.After.Size != expected)
+                            throw new Exception("Transition capture must use the full destination body, not the undocked default size.");
+                    }
                     var frame = transition.Capture();
                     foreach (var cardBounds in frame.Cards)
                         if (cardBounds.X < 0 || cardBounds.Y < 0 || cardBounds.Right > frame.Board.Width + 1 || cardBounds.Bottom > frame.Board.Height + 1)

@@ -795,5 +795,7 @@
   "name": "Namnnamn",
   "not set": "Inte set",
   "update.lock": "update.lock",
-  "× Damage multiplier": "Damage multiplikator"
+  "× Damage multiplier": "Damage multiplikator",
+  "Skip this tutorial": "Hoppa över guiden",
+  "Skip all tutorials": "Hoppa över alla"
 }

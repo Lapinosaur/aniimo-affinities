@@ -297,6 +297,7 @@ namespace AniimoAffinities
         private void AddSocial(string text, string glyph, string url, int x, int y)
         {
             var button = new SettingsButton { Text = text, Glyph = glyph, GlyphWithText = true, Bounds = new Rectangle(x, y, 258, 42) };
+            ExternalLinkTips.Attach(button, url);
             button.Click += (s, e) => BusyOperation.OpenLink(this, button, url, error => { if (error != null) status.Text = Language.T("Unable to open the link. Please try again."); });
             pages[3].Controls.Add(button);
         }

@@ -795,5 +795,7 @@
   "name": "nimi",
   "not set": "ei asetettu",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Vauriokerroin"
+  "× Damage multiplier": "× Vauriokerroin",
+  "Skip this tutorial": "Ohita tämä opastus",
+  "Skip all tutorials": "Ohita kaikki"
 }

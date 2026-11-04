@@ -796,5 +796,7 @@
   "name": "naam",
   "not set": "niet ingesteld",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Schadevermenigvuldiger"
+  "× Damage multiplier": "× Schadevermenigvuldiger",
+  "Skip this tutorial": "Deze uitleg overslaan",
+  "Skip all tutorials": "Alles overslaan"
 }

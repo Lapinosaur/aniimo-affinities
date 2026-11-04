@@ -34,8 +34,19 @@ namespace AniimoAffinities
         private readonly Label counter = new Label(), heading = new Label(), body = new ShortcutLabel(), error = new Label();
         private readonly CheckBox dontShow = new RoundCheckBox();
         private readonly SettingsButton previous = new SettingsButton(), next = new SettingsButton(), skip = new SettingsButton();
+        private readonly SettingsButton skipTutorial = new SettingsButton(), skipAll = new SettingsButton();
         private int index;
         private bool loading;
+        // Invisible preview windows pump messages while laying out their real controls.
+        // Never let queued input activate their Apply/shortcut controls.
+        private sealed class PreviewInputFilter : IMessageFilter
+        {
+            public bool PreFilterMessage(ref Message message)
+            {
+                return (message.Msg >= 0x100 && message.Msg <= 0x109)
+                    || (message.Msg >= 0x201 && message.Msg <= 0x20E);
+            }
+        }
         private int frameThemeRevision = -1;
         private Rectangle imageBounds, spotlight;
         internal int StepCount
@@ -120,6 +131,12 @@ namespace AniimoAffinities
             bubble.Controls.Add(previous);
             bubble.Controls.Add(skip);
             bubble.Controls.Add(next);
+            skipTutorial.Text = Language.T("Skip this tutorial");
+            skipTutorial.Click += (s, e) => SkipTutorial();
+            skipAll.Text = Language.T("Skip all tutorials");
+            skipAll.Click += (s, e) => SkipAllTutorials();
+            bubble.Controls.Add(skipTutorial);
+            bubble.Controls.Add(skipAll);
             AcceptButton = next;
             CancelButton = skip;
             bubble.Paint += (s, e) => { e.Graphics.SmoothingMode = SmoothingMode.AntiAlias; using (var outline = Drawing.Round(new RectangleF(1, 1, bubble.Width - 3, bubble.Height - 3), Theme.PanelRadius)) using (var pen = new Pen(Theme.Border)) e.Graphics.DrawPath(pen, outline); };
@@ -170,13 +187,50 @@ namespace AniimoAffinities
             index = Array.IndexOf(sectionIds, progressSections[point]);
             ShowStep();
         }
+        internal void SkipTutorial()
+        {
+            if (loading)
+                return;
+            int section = sectionIds[index];
+            int target = index + 1;
+            while (target < steps.Length && sectionIds[target] == section)
+                target++;
+            if (target >= steps.Length)
+                SkipAllTutorials();
+            else
+            {
+                index = target;
+                ShowStep();
+            }
+        }
+        internal void SkipAllTutorials()
+        {
+            if (loading)
+                return;
+            try
+            {
+                progress.Pending = false;
+                if (persist)
+                {
+                    progress.Save();
+                    TutorialPreferences.Save(true);
+                }
+                Close();
+            }
+            catch (IOException) { error.Text = Language.T("Unable to save. Try Skip again."); }
+            catch (UnauthorizedAccessException) { error.Text = Language.T("Unable to save. Try Skip again."); }
+        }
         private void ShowStep()
         {
             if (loading)
                 return;
             loading = true;
+            var inputFilter = new PreviewInputFilter();
+            Application.AddMessageFilter(inputFilter);
             try
             {
+                StopPinAnimation();
+                StopSuggestionAnimation();
                 if (frameThemeRevision != Theme.Revision)
                 {
                     foreach (var cached in frames.Values)
@@ -184,8 +238,6 @@ namespace AniimoAffinities
                     frames.Clear();
                     frameThemeRevision = Theme.Revision;
                 }
-                StopPinAnimation();
-                StopSuggestionAnimation();
                 var step = steps[index];
                 if (!frames.ContainsKey(step.View))
                 {
@@ -237,6 +289,7 @@ namespace AniimoAffinities
             }
             finally
             {
+                Application.RemoveMessageFilter(inputFilter);
                 loading = false;
                 if (frameThemeRevision != Theme.Revision)
                     RefreshTheme();
@@ -286,6 +339,9 @@ namespace AniimoAffinities
                 host = new SettingsDialog(keys, () => selected.Main);
             using (host)
             {
+                var snapshot = host as PortableWindow;
+                if (snapshot != null)
+                    snapshot.TutorialSnapshot = true;
                 host.Opacity = 0;
                 host.ShowInTaskbar = false;
                 host.StartPosition = FormStartPosition.Manual;
@@ -348,6 +404,9 @@ namespace AniimoAffinities
             previous.SetBounds(Z(16), y, Z(100), Z(32));
             skip.SetBounds(width - Z(232), y, Z(104), Z(32));
             next.SetBounds(width - Z(120), y, Z(104), Z(32));
+            y += Z(40);
+            skipTutorial.SetBounds(Z(16), y, (inner - Z(8)) / 2, Z(32));
+            skipAll.SetBounds(skipTutorial.Right + Z(8), y, (inner - Z(8)) / 2, Z(32));
             var available = new Size(ClientSize.Width, Math.Max(1, ClientSize.Height - Z(66)));
             var relativeTarget = spotlight;
             relativeTarget.Offset(0, -Z(66));
@@ -397,9 +456,14 @@ namespace AniimoAffinities
         }
         protected override bool ProcessCmdKey(ref Message message, Keys key)
         {
+            if (key == Keys.Enter)
+            {
+                NavigateStep(1);
+                return true;
+            }
             if (key == Keys.Escape)
             {
-                Close();
+                skip.PerformClick();
                 return true;
             }
             if (key == Keys.Right && !dontShow.Focused)

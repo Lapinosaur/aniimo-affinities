@@ -35,6 +35,14 @@ namespace AniimoAffinities
                 string json = "{\"tag_name\":\"" + future + "\",\"draft\":false,\"prerelease\":false,\"assets\":[" + (reverse ? legacy + "," + newer : newer + "," + legacy) + "," + checksums + "]}";
                 if (ReleaseUpdates.ParseRelease(json).AssetName != "Affinisaur.exe")
                     throw new Exception("The new executable must be preferred regardless of asset order.");
+                string language = Language.Code;
+                try
+                {
+                    Language.Set("fr");
+                    if (ReleaseUpdates.ParseRelease(json).AssetName != "Affinisaur.exe")
+                        throw new Exception("Release asset keys must remain language independent.");
+                }
+                finally { Language.Set(language); }
                 json = "{\"tag_name\":\"" + future + "\",\"draft\":false,\"prerelease\":false,\"assets\":[" + legacy + "," + checksums + "]}";
                 if (ReleaseUpdates.ParseRelease(json).AssetName != "AniimoAffinities.exe")
                     throw new Exception("Existing releases must remain downloadable.");
@@ -84,14 +92,23 @@ namespace AniimoAffinities
                     throw new Exception("Recovery must restore the previous executable.");
                 using (var held = new FileStream(Path.Combine(folder, "updates", "update.lock"), FileMode.Open, FileAccess.ReadWrite, FileShare.None))
                 {
-                    bool locked = false;
+                    string initialLanguage = Language.Code;
                     try
                     {
-                        ReleaseUpdates.Stage(payload, hash, future, target);
+                        foreach (var language in Language.Choices)
+                        {
+                            Language.Set(language.Code);
+                            bool locked = false;
+                            try
+                            {
+                                ReleaseUpdates.Stage(payload, hash, future, target);
+                            }
+                            catch (IOException) { locked = true; }
+                            if (!locked)
+                                throw new Exception("Concurrent update mutation was not blocked in " + language.Code);
+                        }
                     }
-                    catch (IOException) { locked = true; }
-                    if (!locked)
-                        throw new Exception("Concurrent update mutation was not blocked.");
+                    finally { Language.Set(initialLanguage); }
                 }
                 File.WriteAllText(Path.Combine(folder, "updates", "installer-old.exe"), "cache");
                 File.WriteAllText(Path.Combine(folder, "last-error.txt"), "diagnostic");

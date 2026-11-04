@@ -96,9 +96,16 @@ namespace AniimoAffinities
         }
         private Action openAction;
         private bool supportAction;
+        private bool supportLinkTips;
         private readonly SettingsButton openButton = new BubbleButton { Glyph = "open", Text = "", Quiet = true, AccessibleName = Language.T("Open all suggestions"), Visible = false, SurroundColor = () => Theme.Surface };
         internal void SetOpenAction(Action action, bool support = false)
         {
+            if (support && !supportLinkTips)
+            {
+                supportLinkTips = true;
+                ExternalLinkTips.Attach(openButton, "https://github.com/Lapinosaur/aniimo-affinities");
+                ExternalLinkTips.Attach(qrButton, "https://buymeacoffee.com/lapinosaur");
+            }
             supportAction = support;
             openButton.Glyph = support ? "star" : "open";
             openButton.Text = support ? Language.T("Star on GitHub") : "";

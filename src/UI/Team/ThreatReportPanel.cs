@@ -46,7 +46,7 @@ namespace AniimoAffinities
                 Location = new Point(index * 150, 0),
                 Size = new Size(150, 30),
                 TabIndex = index,
-                Surround = Theme.Surface
+                SurroundColor = () => Theme.Surface
             }).ToArray();
             SettingsButton.Group(tabs);
             for (int i = 0; i < tabs.Length; i++)
@@ -55,7 +55,7 @@ namespace AniimoAffinities
                 tabs[i].Click += (s, e) => { mode = selected; Rebuild(); };
                 bar.Controls.Add(tabs[i]);
             }
-            var info = new SettingsButton { Glyph = "info", Quiet = true, AccessibleName = Language.T("Show matchup legend"), Size = new Size(30, 30), Location = new Point(bar.Width - 30, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Surround = Theme.Surface };
+            var info = new SettingsButton { Glyph = "info", Quiet = true, AccessibleName = Language.T("Show matchup legend"), Size = new Size(30, 30), Location = new Point(bar.Width - 30, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, SurroundColor = () => Theme.Surface };
             info.Click += (s, e) => tips.ShowTip(info);
             tips.SetGraphicTip(info, Language.T("Matchup legend. Shield: received. Swords: dealt. Red: unfavorable. Green: favorable. Disadvantaged: take more, deal less. Pressured: take more, deal normal damage. Trade blows: both deal more."), new Size(280, 250), DrawLegend);
             bar.Controls.Add(info);

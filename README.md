@@ -4,7 +4,7 @@ Unofficial Aniimo companion by Lapinosaur. Formerly Aniimo Affinities.
 
 Finding Affinisaur useful? [⭐ Star on GitHub](https://github.com/Lapinosaur/aniimo-affinities) — it's a free way to support the project. Sign in and click **Star** at the top of the repository.
 
-The executable is named `Affinisaur.exe`. The repository URL and local preference folder keep their existing names. Releases from v0.6.0 also provide an identical `AniimoAffinities.exe` compatibility asset for older update clients; existing installations keep their chosen file path when updating.
+The executable is named `Affinisaur.exe`. The repository URL and local preference folder keep their existing names. Existing installations keep their chosen file path when updating. Historical releases may retain the former executable name for compatibility.
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
 
@@ -12,7 +12,11 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
-Prepared release: [v0.9.0](docs/releases/v0.9.0.md) adds a keyboard-friendly welcome flow, 30 offline interface languages (beta), independent content windows and more reliable support, updates and resource cleanup.
+Next release prepared locally: [v0.9.1](docs/releases/v0.9.1.md) fixes rapid tutorial navigation, theme previews, team-panel transitions and language-independent updates. It is not published yet.
+
+![Tutorial navigation with independent skip actions](docs/images/tutorial-navigation.png)
+
+[v0.9.0](https://github.com/Lapinosaur/aniimo-affinities/releases/tag/v0.9.0) introduced a keyboard-friendly welcome flow, 30 offline interface languages (beta), independent content windows and more reliable support, updates and resource cleanup.
 
 See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive suggestion bubbles, radar previews and animated tutorials.
 
@@ -107,9 +111,9 @@ First launch offers a searchable language picker, theme previews, optional comfo
 ## Run
 
 Windows x64 with .NET Framework 4.x (included in current Windows 10/11).
-Download [Affinisaur.exe](https://github.com/Lapinosaur/aniimo-affinities/releases/latest/download/Affinisaur.exe) and run it. The `AniimoAffinities.exe` asset is an identical compatibility copy for older updaters. No installer, server or WebView is required. The executable is not code-signed.
+Download [Affinisaur.exe](https://github.com/Lapinosaur/aniimo-affinities/releases/latest/download/Affinisaur.exe) and run it. No installer, server or WebView is required. The executable is not code-signed.
 
-The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits offers a manual update check; Tutorial & Help groups Discord support, diagnostics and local storage. The tutorial opt-out is stored outside the executable and survives updates. New stable releases must include `Affinisaur.exe`, the identical compatibility asset `AniimoAffinities.exe`, and `SHA256SUMS.txt` covering both names.
+The app does not perform screen capture or recognition. Preferences are stored in `%LOCALAPPDATA%/AniimoAffinities`. External links open a browser only when clicked. The app checks GitHub for a newer stable release after startup; downloads require confirmation. Verified updates install on the next launch of the same executable, with the previous executable saved as `.previous`. About & Credits offers a manual update check; Tutorial & Help groups Discord support, diagnostics and local storage. The tutorial opt-out is stored outside the executable and survives updates. New stable releases include `Affinisaur.exe` and its `SHA256SUMS.txt` checksum.
 
 ## Community
 

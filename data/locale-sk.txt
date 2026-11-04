@@ -795,5 +795,7 @@
   "name": "Názov",
   "not set": "nie je nastavená",
   "update.lock": "aktualizácia.lock",
-  "× Damage multiplier": "× Multiplikačný koeficient poškodenia"
+  "× Damage multiplier": "× Multiplikačný koeficient poškodenia",
+  "Skip this tutorial": "Preskočiť tento návod",
+  "Skip all tutorials": "Preskočiť všetky"
 }

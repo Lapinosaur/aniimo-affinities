@@ -41,6 +41,8 @@ namespace AniimoAffinities
                         paragraph.Links.Add(match.Index, match.Length, match.Value);
                         paragraph.TabStop = true;
                     }
+                    if (paragraph.Links.Count > 0)
+                        ExternalLinkTips.Attach(paragraph, string.Join("\n", System.Linq.Enumerable.Select(System.Linq.Enumerable.Cast<LinkLabel.Link>(paragraph.Links), link => (string)link.LinkData)));
                     paragraph.LinkClicked += (s, e) => OpenLink((string)e.Link.LinkData);
                     document.Controls.Add(paragraph);
                 }

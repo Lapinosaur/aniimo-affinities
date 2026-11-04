@@ -23,7 +23,7 @@ namespace AniimoAffinities
             Size = new Size(Math.Min(work.Width, Z(918)), Math.Min(work.Height, Z(570)));
             Location = WindowZoom.FitLocation(Location, Size, work);
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9 * tutorialZoom));
-            foreach (var control in new Control[] { bubble, counter, body, error, previous, next, skip, dontShow, progressStrip })
+            foreach (var control in new Control[] { bubble, counter, body, error, previous, next, skip, skipTutorial, skipAll, dontShow, progressStrip })
                 UiFonts.Assign(control, UiFonts.Create("Segoe UI", 9 * tutorialZoom));
             foreach (Control control in progressStrip.Controls)
                 UiFonts.Assign(control, UiFonts.Create("Segoe UI", 9 * tutorialZoom));

@@ -108,9 +108,22 @@ namespace AniimoAffinities
                 var enterTheme = typeof(Control).GetMethod("OnMouseEnter", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 var leaveTheme = typeof(Control).GetMethod("OnMouseLeave", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
                 enterTheme.Invoke(hoverTheme, new object[] { EventArgs.Empty });
+                if (Theme.Background != appliedBackground)
+                    throw new Exception("Theme hover must wait before changing the palette.");
+                leaveTheme.Invoke(hoverTheme, new object[] { EventArgs.Empty });
+                var hoverTimer = (Timer)typeof(DisplayDialog).GetField("themeHoverTimer", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(embedded);
+                var tick = typeof(Timer).GetMethod("OnTick", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+                tick.Invoke(hoverTimer, new object[] { EventArgs.Empty });
+                if (Theme.Background != appliedBackground)
+                    throw new Exception("A short hover must not activate a theme preview.");
+                enterTheme.Invoke(hoverTheme, new object[] { EventArgs.Empty });
+                tick.Invoke(hoverTimer, new object[] { EventArgs.Empty });
                 if (Theme.Background == appliedBackground || settings.BackColor != Theme.Background || Theme.Appearance != originalTheme)
                     throw new Exception("Theme hover must render on the window without committing the preference.");
                 leaveTheme.Invoke(hoverTheme, new object[] { EventArgs.Empty });
+                if (Theme.Background == appliedBackground)
+                    throw new Exception("The preview must remain active until its exit cooldown finishes.");
+                tick.Invoke(hoverTimer, new object[] { EventArgs.Empty });
                 if (!stagedTheme.Checked || Theme.Background != appliedBackground || (System.IO.File.Exists(appearancePath) ? System.IO.File.ReadAllText(appearancePath) : null) != savedAppearance)
                     throw new Exception("Leaving a theme preview must restore the applied palette without writing preferences.");
                 hoverTheme.Checked = true;

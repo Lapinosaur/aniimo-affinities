@@ -47,6 +47,8 @@ def payload(release, repo, editing=False, previous=None):
         raise ValueError('Only published releases from this repository may be announced')
     links = []
     for asset in release.get('assets', []):
+        if asset.get('name') == 'AniimoAffinities.exe':
+            continue
         url = asset.get('browser_download_url', '')
         if asset.get('state') != 'uploaded' or not url.startswith(base + '/releases/download/'):
             continue

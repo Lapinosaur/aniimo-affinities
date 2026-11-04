@@ -102,6 +102,11 @@ namespace AniimoAffinities
             Enter(control, EventArgs.Empty);
             PresentTip(false);
         }
+        internal void QueueTip(Control control)
+        {
+            if (!disposed && !control.IsDisposed && control.Visible)
+                Enter(control, EventArgs.Empty);
+        }
         private ApplicationTips()
         {
             timer.Interval = 450;
