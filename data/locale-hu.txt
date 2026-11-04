@@ -795,5 +795,7 @@
   "name": "név",
   "not set": "nincs beállítva",
   "update.lock": "updat.lock",
-  "× Damage multiplier": "× Kárszorzó"
+  "× Damage multiplier": "× Kárszorzó",
+  "Skip this tutorial": "Útmutató kihagyása",
+  "Skip all tutorials": "Összes kihagyása"
 }

@@ -19,7 +19,7 @@ namespace AniimoAffinities
             var source = new SettingsButton { Text = Language.T("Type icons · ManuelGraf / AniimoWeaknessCalculator"), Location = new Point(0, 324), Size = new Size(412, 32), AccessibleName = Language.T("Open type icon source on GitHub") };
             source.Click += (s, e) => OpenLink(source, "https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg");
             Controls.Add(source);
-            tips.SetToolTip(source, Language.T("Community traces of game artwork. Redistribution rights are not established; no third-party asset license is implied."));
+            tips.SetToolTip(source, ExternalLinkTips.Describe("https://github.com/ManuelGraf/AniimoWeaknessCalculator/blob/main/src/aniimo-icons.svg") + "\n" + Language.T("Community traces of game artwork. Redistribution rights are not established; no third-party asset license is implied."));
             AddText(Language.T("Unofficial fan tool. Not affiliated with or endorsed by\nAniimo or its rights holders."), 366, 44, 8, false, Theme.Muted);
             var updates = new SettingsButton { Text = Language.T("Check for updates"), Location = new Point(212, 416), Size = new Size(200, 32) };
             UpdatePrompt.Track(updates);
@@ -41,7 +41,7 @@ namespace AniimoAffinities
             Height += 42;
             var discord = new SettingsButton { Text = Language.T("Join the Discord community"), Glyph = "community", GlyphWithText = true, Brand = Color.FromArgb(88, 101, 242), Location = new Point(0, 238), Size = new Size(412, 34), AccessibleName = Language.T("Join the Discord community") };
             discord.Click += (s, e) => OpenLink(discord, "https://discord.gg/B6n83stRcf");
-            tips.SetToolTip(discord, Language.T("News, feedback & support · Permanent invite with the Member role"));
+            tips.SetToolTip(discord, ExternalLinkTips.Describe("https://discord.gg/B6n83stRcf"));
             Controls.Add(discord);
             Redesign(discord, source, updates, diagnostics, storage);
         }
@@ -104,17 +104,19 @@ namespace AniimoAffinities
             discord.Text = Language.T("Join Discord");
             discord.Brand = Color.FromArgb(88, 101, 242);
             discord.Glyph = "discord";
-            discord.Surround = Theme.AccentSurface;
+            discord.SurroundColor = () => Theme.AccentSurface;
             discord.Primary = false;
             discord.SetBounds(14, 62, 382, 31);
             var support = Card(179, 147, false);
             CardText(support, Language.T("Made with care"), 16, 13, 250, 25, 12, true);
             CardText(support, Language.T("By Lapinosaur, for the community.\nYour support helps me keep creating."), 16, 43, 260, 38, 8.5f, false);
-            var carrot = new SupportButton { Location = new Point(13, 84), Size = new Size(166, 40), Surround = Theme.Surface };
+            var carrot = new SupportButton { Location = new Point(13, 84), Size = new Size(166, 40), SurroundColor = () => Theme.Surface };
+            tips.SetToolTip(carrot, ExternalLinkTips.Describe("https://buymeacoffee.com/lapinosaur"));
             carrot.Click += (s, e) => OpenLink(carrot, "https://buymeacoffee.com/lapinosaur");
             support.Controls.Add(carrot);
             CardText(support, Language.T("Always optional. Thank you!"), 17, 121, 260, 20, 8, false);
             var qr = new SupportQrButton { Location = new Point(281, 7), Size = new Size(117, 117), Code = carrot.QrCode };
+            tips.SetToolTip(qr, ExternalLinkTips.Describe("https://buymeacoffee.com/lapinosaur"));
             qr.Click += (s, e) => OpenLink(carrot, "https://buymeacoffee.com/lapinosaur");
             support.Controls.Add(qr);
             CardText(support, Language.T("Scan or click to support"), 270, 124, 138, 18, 7.5f, false);
@@ -126,7 +128,7 @@ namespace AniimoAffinities
                 var link = new SettingsButton { Text = names[i], Glyph = names[i].ToLowerInvariant(), GlyphWithText = true, Location = new Point(i * 140, 338), Size = new Size(132, 34) };
                 link.Brand = i == 1 ? Color.FromArgb(145, 70, 255) : i == 2 ? Color.FromArgb(255, 0, 51) : Color.FromArgb(110, 118, 129);
                 link.Click += (s, e) => OpenLink(link, url);
-                tips.SetToolTip(link, url);
+                tips.SetToolTip(link, ExternalLinkTips.Describe(url));
                 Controls.Add(link);
             }
         }

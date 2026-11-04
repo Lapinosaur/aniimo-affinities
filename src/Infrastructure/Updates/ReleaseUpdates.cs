@@ -66,7 +66,7 @@ namespace AniimoAffinities
             foreach (var item in (System.Collections.IEnumerable)data["assets"])
             {
                 var asset = (Dictionary<string, object>)item;
-                string name = (string)asset[Language.T("name")], url = (string)asset["browser_download_url"];
+                string name = (string)asset["name"], url = (string)asset["browser_download_url"];
                 if (!url.StartsWith(Repository + Uri.EscapeDataString(tag) + "/", StringComparison.Ordinal))
                     continue;
                 if (name == "Affinisaur.exe" || (name == "AniimoAffinities.exe" && result.Download == null))

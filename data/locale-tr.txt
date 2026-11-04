@@ -795,5 +795,7 @@
   "name": "İsim adı adı",
   "not set": "set not set not set",
   "update.lock": "Güncelleme.lock.",
-  "× Damage multiplier": "× Hasar Çokplier"
+  "× Damage multiplier": "× Hasar Çokplier",
+  "Skip this tutorial": "Bu öğreticiyi atla",
+  "Skip all tutorials": "Tümünü atla"
 }

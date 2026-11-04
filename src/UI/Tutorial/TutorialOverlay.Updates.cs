@@ -15,7 +15,7 @@ namespace AniimoAffinities
                 HistoryComplete = true,
                 Changes = new[] { new ReleaseChange { Version = Language.T("Demo"), Notes = Language.T("## Example release notes\n- **New features** and interface improvements.\n- Fixes and performance improvements.\n\n| Step | What happens |\n| --- | --- |\n| Download | Prepares the update |\n| Restart app | Installs and relaunches |\n\nThese notes are a tutorial example, not an available release.") } }
             };
-            using (var host = new UpdateWindow(update))
+            using (var host = new UpdateWindow(update) { TutorialSnapshot = true })
             {
                 host.Opacity = 0;
                 host.ShowInTaskbar = false;

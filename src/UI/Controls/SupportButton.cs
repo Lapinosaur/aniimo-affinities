@@ -11,7 +11,7 @@ namespace AniimoAffinities
         internal readonly Image QrCode;
         internal void ConfigureStarBubble(ApplicationTips tips, Form owner)
         {
-            tips.SetToolTip(this, Language.T("Support Lapinosaur\nScan with your phone"));
+            tips.SetToolTip(this, Language.T("Support Lapinosaur\nScan with your phone") + "\n" + ExternalLinkTips.Describe("https://buymeacoffee.com/lapinosaur"));
             tips.SetHoverBubble(this, true);
             tips.SetOpenAction(this, () => BusyOperation.OpenLink(owner, this, "https://github.com/Lapinosaur/aniimo-affinities", error =>
             {
@@ -81,7 +81,7 @@ namespace AniimoAffinities
             var g = e.Graphics;
             float scale = WindowZoom.Factor(this), w = Width / scale, h = Height / scale;
             g.ScaleTransform(scale, scale);
-            g.Clear(Surround.IsEmpty ? Theme.Background : Surround);
+            g.Clear(SurroundColor != null ? SurroundColor() : Surround.IsEmpty ? Theme.Background : Surround);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             bool light = Theme.Background.GetBrightness() > .5f;
             Color start = light ? Color.FromArgb(45, 87, 198) : Color.FromArgb(62, 88, 194);

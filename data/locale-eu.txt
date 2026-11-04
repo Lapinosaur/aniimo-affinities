@@ -795,5 +795,7 @@
   "name": "izena",
   "not set": "ezarri gabe",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Damage multipliera"
+  "× Damage multiplier": "× Damage multipliera",
+  "Skip this tutorial": "Saltatu tutorial hau",
+  "Skip all tutorials": "Saltatu guztiak"
 }

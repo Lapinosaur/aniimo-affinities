@@ -336,6 +336,9 @@ namespace AniimoAffinities
                     stored.Position = "Bottom";
                     typeof(MainForm).GetMethod("ApplyTeamLayout", flags).Invoke(main, null);
                     var transition = (PanelTransition)typeof(MainForm).GetField("teamTransition", flags).GetValue(main);
+                    var surface = (TransitionSurface)typeof(PanelTransition).GetField("surface", flags).GetValue(transition);
+                    if (surface.After != null)
+                        surface.After.Save(System.IO.Path.ChangeExtension(path, null) + "-after.png");
                     foreach (double progress in new[] { 0, .2, .65, 1 })
                     {
                         transition.Advance(progress);

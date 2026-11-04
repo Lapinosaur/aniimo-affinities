@@ -795,5 +795,7 @@
   "name": "όνομα",
   "not set": "δεν έχει οριστεί",
   "update.lock": "ενημέρωση.lock",
-  "× Damage multiplier": "× Πολλαπλασιαστής ζημιών"
+  "× Damage multiplier": "× Πολλαπλασιαστής ζημιών",
+  "Skip this tutorial": "Παράλειψη οδηγού",
+  "Skip all tutorials": "Παράλειψη όλων"
 }

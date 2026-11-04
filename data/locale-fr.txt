@@ -797,5 +797,7 @@
   "not set": "non défini",
   "update.lock": "update.lock",
   "× Damage multiplier": "× multiplicateur de dommages",
-  "Skip": "Passer"
+  "Skip": "Passer",
+  "Skip this tutorial": "Passer ce tutoriel",
+  "Skip all tutorials": "Tout passer"
 }

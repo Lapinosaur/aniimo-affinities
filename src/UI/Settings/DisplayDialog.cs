@@ -15,8 +15,24 @@ namespace AniimoAffinities
         }
         private float scale = DisplaySettings.FontScale, windowScale = DisplaySettings.WindowScale;
         private int appearance = Theme.Appearance, appliedAppearance = Theme.Appearance;
+        private readonly Timer themeHoverTimer = new Timer { Interval = 450 };
+        private int pendingTheme = -1;
+        private void BeginThemePreview(int mode)
+        {
+            themeHoverTimer.Stop();
+            pendingTheme = mode;
+            themeHoverTimer.Start();
+        }
+        private void LeaveThemePreview(object sender, EventArgs e)
+        {
+            themeHoverTimer.Stop();
+            pendingTheme = -1;
+            themeHoverTimer.Start();
+        }
         private void EndThemePreview(object sender, EventArgs e)
         {
+            themeHoverTimer.Stop();
+            pendingTheme = -1;
             Theme.EndAppearancePreview(this);
         }
         private PortableWindow activeGlassPreview;
@@ -76,7 +92,8 @@ namespace AniimoAffinities
                 if (settingsHost != null)
                     settingsHost.Deactivate -= EndGlassPreview;
                 EndGlassPreview(null, EventArgs.Empty);
-                Theme.EndAppearancePreview(this);
+                EndThemePreview(null, EventArgs.Empty);
+                themeHoverTimer.Dispose();
                 foreach (var preview in transparencyPreviews)
                     preview.Dispose();
             }
@@ -100,7 +117,15 @@ namespace AniimoAffinities
         internal DisplayDialog(Form host = null, Func<int> mainType = null, Func<Keys[]> previewBindings = null, Action lockTutorial = null)
         {
             settingsHost = host;
-            VisibleChanged += (s, e) => { if (!Visible) Theme.EndAppearancePreview(this); };
+            themeHoverTimer.Tick += (s, e) =>
+            {
+                themeHoverTimer.Stop();
+                if (pendingTheme >= 0 && Visible)
+                    Theme.PreviewAppearance(this, pendingTheme);
+                else
+                    Theme.EndAppearancePreview(this);
+            };
+            VisibleChanged += (s, e) => { if (!Visible) EndThemePreview(null, EventArgs.Empty); };
             VisibleChanged += (s, e) => { if (!Visible) EndGlassPreview(null, EventArgs.Empty); };
             Deactivate += EndGlassPreview;
             if (settingsHost != null)
@@ -213,8 +238,17 @@ namespace AniimoAffinities
                 var choice = new ThemePreview { Mode = mode, Text = new[] { Language.T("Dark theme"), Language.T("System theme"), Language.T("Light theme") }[i], Bounds = new Rectangle(i * 132, 0, 128, 44), TabIndex = i, Checked = appearance == mode };
                 choice.AccessibleName = Language.T("Theme: ") + choice.Text;
                 choice.AccessibleDescription = Language.T("Hover to preview on the window. Select then Apply to save.");
-                choice.MouseEnter += (s, e) => Theme.PreviewAppearance(this, mode);
-                choice.MouseLeave += EndThemePreview;
+                choice.MouseEnter += (s, e) =>
+                {
+                    for (Control ancestor = this; ancestor != null; ancestor = ancestor.Parent)
+                    {
+                        var previewWindow = ancestor as PortableWindow;
+                        if (previewWindow != null && previewWindow.TutorialSnapshot)
+                            return;
+                    }
+                    BeginThemePreview(mode);
+                };
+                choice.MouseLeave += LeaveThemePreview;
                 choice.CheckedChanged += (s, e) => { if (choice.Checked) appearance = mode; };
                 themeChoices.Controls.Add(choice);
             }
@@ -250,7 +284,7 @@ namespace AniimoAffinities
             Action saveTransparency = () =>
             {
                 EndGlassPreview(null, EventArgs.Empty);
-                Theme.EndAppearancePreview(this);
+                EndThemePreview(null, EventArgs.Empty);
                 if (appearance != Theme.Appearance)
                     Theme.SaveAppearance(appearance);
                 if (lockGlass.Checked != TransparencyPreferences.Locked || childGlass.Checked != TransparencyPreferences.Children || mainGlass.Checked != TransparencyPreferences.Main)

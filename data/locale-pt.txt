@@ -796,5 +796,7 @@
   "name": "nome",
   "not set": "não definido",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Multiplicador de danos"
+  "× Damage multiplier": "× Multiplicador de danos",
+  "Skip this tutorial": "Saltar este tutorial",
+  "Skip all tutorials": "Saltar todos"
 }

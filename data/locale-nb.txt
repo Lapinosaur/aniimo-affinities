@@ -795,5 +795,7 @@
   "name": "navn",
   "not set": "ikke satt",
   "update.lock": "Oppdater.lock",
-  "× Damage multiplier": "× Skadeplikator"
+  "× Damage multiplier": "× Skadeplikator",
+  "Skip this tutorial": "Hopp over veiledningen",
+  "Skip all tutorials": "Hopp over alle"
 }

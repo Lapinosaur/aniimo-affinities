@@ -795,5 +795,7 @@
   "name": "ainm ainm",
   "not set": "a leagtar",
   "update.lock": "thabhairt cothrom le dáta. glas",
-  "× Damage multiplier": "× iolraitheoir Damáiste"
+  "× Damage multiplier": "× iolraitheoir Damáiste",
+  "Skip this tutorial": "Scipeáil an rang seo",
+  "Skip all tutorials": "Scipeáil gach rang"
 }

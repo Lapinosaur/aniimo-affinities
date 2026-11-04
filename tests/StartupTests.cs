@@ -12,6 +12,20 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            var themePreview = new object();
+            try
+            {
+                using (var support = new SupportButton { Size = new Size(166, 40), SurroundColor = () => Theme.Surface })
+                using (var image = new Bitmap(166, 40))
+                    foreach (int mode in new[] { 2, 0, 2 })
+                    {
+                        Theme.PreviewAppearance(themePreview, mode);
+                        support.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
+                        if (image.GetPixel(0, 0).ToArgb() != Theme.Surface.ToArgb())
+                            throw new Exception("Support button corners must follow the current card theme.");
+                    }
+            }
+            finally { Theme.EndAppearancePreview(themePreview); }
             foreach (int closeMessage in new[] { 0x10, 0x112 })
                 using (var host = new Form())
                 using (var surface = new LockedGlass.GlassWindow())

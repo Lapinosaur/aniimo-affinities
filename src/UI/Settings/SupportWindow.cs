@@ -65,6 +65,7 @@ namespace AniimoAffinities
             {
                 string url = urls[i], name = names[i];
                 var button = new SettingsButton { Text = name, Glyph = glyphs[i], GlyphWithText = true, Primary = i == 0, Bounds = new Rectangle(24, 164 + i * 44, 412, 36) };
+                ExternalLinkTips.Attach(button, url);
                 button.Click += (s, e) => BusyOperation.OpenLink(this, button, url, error =>
                 {
                     status.Text = error == null ? name + Language.T(" opened in your browser.") : Language.T("Unable to open the link. Please try again.");

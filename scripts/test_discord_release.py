@@ -2,6 +2,15 @@ import unittest
 from discord_release import payload, notification_role, existing_message, previous_stable, ROLE_IDS
 
 class Announcements(unittest.TestCase):
+    def test_downloads_hide_legacy_executable(self):
+        names = ['AniimoAffinities.exe', 'Affinisaur.exe', 'SHA256SUMS.txt']
+        assets = [dict(name=name, state='uploaded', size=100,
+                       browser_download_url='https://github.com/Lapinosaur/aniimo-affinities/releases/download/v0.5.0/'+name) for name in names]
+        result = str(payload(self.release(assets=assets), 'Lapinosaur/aniimo-affinities'))
+        self.assertNotIn('AniimoAffinities.exe', result)
+        self.assertIn('Affinisaur.exe', result)
+        self.assertIn('SHA256SUMS.txt', result)
+
     def release(self, tag='v0.5.0', **extra):
         return dict(tag_name=tag, html_url='https://github.com/Lapinosaur/aniimo-affinities/releases/tag/'+tag,
                     body='Rename @everyone <@&123> to Affinisaur', **extra)

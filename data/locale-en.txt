@@ -786,5 +786,7 @@
   "name": "name",
   "not set": "not set",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× Damage multiplier"
+  "× Damage multiplier": "× Damage multiplier",
+  "Skip this tutorial": "Skip this tutorial",
+  "Skip all tutorials": "Skip all tutorials"
 }

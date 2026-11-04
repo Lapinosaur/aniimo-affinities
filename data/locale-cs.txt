@@ -796,5 +796,7 @@
   "name": "název",
   "not set": "není nastaveno",
   "update.lock": "update.lock",
-  "× Damage multiplier": "× násobitel škod"
+  "× Damage multiplier": "× násobitel škod",
+  "Skip this tutorial": "Přeskočit tento návod",
+  "Skip all tutorials": "Přeskočit všechny"
 }

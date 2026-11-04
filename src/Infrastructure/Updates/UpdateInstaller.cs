@@ -17,7 +17,7 @@ namespace AniimoAffinities
         private static FileStream Lock()
         {
             Directory.CreateDirectory(Folder);
-            return new FileStream(Path.Combine(Folder, Language.T("update.lock")), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            return new FileStream(Path.Combine(Folder, "update.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         }
         internal static bool BeginInstall(string target)
         {

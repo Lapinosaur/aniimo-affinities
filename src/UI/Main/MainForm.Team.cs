@@ -228,8 +228,9 @@ namespace AniimoAffinities
                 var targetWindow = new Rectangle(anchoredRight - nextSize.Width, anchoredTop, nextSize.Width, nextSize.Height);
                 // Measure only the body at its future size. Do not resize the native window
                 // to the destination and then rewind it before the first animation frame.
+                var bodyBounds = teamBody.Bounds;
                 teamBody.Dock = DockStyle.None;
-                teamBody.Size = new Size(teamBody.Width + nextSize.Width - Width, teamBody.Height + nextSize.Height - Height);
+                teamBody.Bounds = new Rectangle(bodyBounds.Location, new Size(bodyBounds.Width + nextSize.Width - Width, bodyBounds.Height + nextSize.Height - Height));
                 teamExtra = new Size(nextSize.Width - baseSize.Width, nextSize.Height - baseSize.Height);
                 teamLayoutScale = scale;
                 teamToggle.AccessibleName = teamPlan.Visible ? Language.T("Hide team panel") : Language.T("Show team panel");
