@@ -12,7 +12,7 @@ Only interface strings are translated. `Model.Names` and `KeyBindings.Actions` r
 
 ## Maintenance
 
-* `data/locale-en.txt` is the English source catalog; `data/locale-<code>.txt` contains UTF-8 JSON maps embedded as resources.
+* `data/locale-en.txt` is the English source catalog; `data/locale-<code>.txt` contains readable UTF-8 JSON maps. Both build paths compress them into embedded `.txt.gz` resources. The runtime decodes only the selected catalog in memory, without extracting files or contacting a service.
 * Use `Language.T("Source text")` at presentation boundaries. Do not translate user data, resource filenames, reflection names or identifiers used for calculations.
 * `npm run check` verifies catalog coverage, source literals, keyboard/type-token preservation and localized UI behavior. Test language changes with isolated diagnostic profiles.
 * For previews, set `AFFINISAUR_PREVIEW_LANGUAGE=fr` (or another supported code) before invoking the diagnostic executable. This setting exists only in the diagnostic build.

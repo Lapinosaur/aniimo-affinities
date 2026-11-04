@@ -38,6 +38,6 @@ export async function build(diagnostics = false) {
 export async function test(serial = false, groups = []) {
   await build();
   const executable = await build(true);
-  run(process.execPath, ['--test', 'scripts/test-runner.test.mjs', 'scripts/text-encoding.test.mjs']);
+  run(process.execPath, ['--test', 'scripts/test-runner.test.mjs', 'scripts/text-encoding.test.mjs', 'scripts/pack-locales.test.mjs']);
   await runTests(executable, root, output, serial, groups);
 }

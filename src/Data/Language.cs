@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Reflection;
 using System.Web.Script.Serialization;
 
@@ -48,20 +49,22 @@ namespace AniimoAffinities
         {
             if (code == "en")
                 return true;
-            return Array.Exists(Assembly.GetExecutingAssembly().GetManifestResourceNames(), name => name == "locale-" + code + ".txt");
+            return Array.Exists(Assembly.GetExecutingAssembly().GetManifestResourceNames(), name => name == "locale-" + code + ".txt.gz");
+        }
+        internal static Dictionary<string, string> ReadCatalog(string code)
+        {
+            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("locale-" + code + ".txt.gz"))
+            {
+                if (stream == null)
+                    throw new ArgumentException("Unknown language.");
+                using (var compressed = new GZipStream(stream, CompressionMode.Decompress))
+                using (var reader = new StreamReader(compressed))
+                    return new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(reader.ReadToEnd());
+            }
         }
         internal static void Set(string code)
         {
-            var loaded = new Dictionary<string, string>();
-            if (code != "en")
-                using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("locale-" + code + ".txt"))
-                {
-                    if (stream == null)
-                        throw new ArgumentException("Unknown language.");
-                    using (var reader = new StreamReader(stream))
-                        loaded = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(reader.ReadToEnd());
-                }
-            translations = loaded;
+            translations = code == "en" ? new Dictionary<string, string>() : ReadCatalog(code);
             Code = code;
         }
         internal static string Original(string translated)

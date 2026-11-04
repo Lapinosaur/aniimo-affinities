@@ -24,8 +24,17 @@
   <ItemGroup>
     <Compile Include="src/**/*.cs" />
     <Reference Include="System.Web.Extensions" />
-    <EmbeddedResource Include="data/*.txt;assets/types/*.svg;assets/branding/app.ico;assets/branding/buy-me-a-coffee.png;assets/branding/support-qr.png;docs/legal.md">
+    <EmbeddedResource Include="data/*.txt;assets/types/*.svg;assets/branding/app.ico;assets/branding/buy-me-a-coffee.png;assets/branding/support-qr.png;docs/legal.md" Exclude="data/locale-*.txt">
       <LogicalName>%(Filename)%(Extension)</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <Target Name="PackLanguageResources" BeforeTargets="AssignTargetPaths">
+    <Exec Command="node &quot;$(MSBuildProjectDirectory)/scripts/pack-locales.mjs&quot; &quot;$(MSBuildProjectDirectory)/$(IntermediateOutputPath)locales&quot;" />
+    <ItemGroup>
+      <PackedLocale Include="$(IntermediateOutputPath)locales/locale-*.txt.gz" />
+      <EmbeddedResource Include="@(PackedLocale)">
+        <LogicalName>%(PackedLocale.Filename)%(PackedLocale.Extension)</LogicalName>
+      </EmbeddedResource>
+    </ItemGroup>
+  </Target>
 </Project>

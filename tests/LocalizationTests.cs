@@ -68,16 +68,13 @@ namespace AniimoAffinities
         }
         private static Dictionary<string, string> Catalog(string code)
         {
-            using (var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("locale-" + code + ".txt"))
-            {
-                if (stream == null)
-                    throw new Exception("Missing language catalog: " + code);
-                using (var reader = new StreamReader(stream))
-                    return new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(reader.ReadToEnd());
-            }
+            return Language.ReadCatalog(code);
         }
         internal static void Run()
         {
+            var catalogs = Assembly.GetExecutingAssembly().GetManifestResourceNames().Where(name => name.StartsWith("locale-", StringComparison.Ordinal)).ToArray();
+            if (catalogs.Length != Language.Choices.Length || catalogs.Any(name => !name.EndsWith(".txt.gz", StringComparison.Ordinal)))
+                throw new Exception("Only compressed language catalogs must be embedded.");
             var source = Catalog("en");
             string[] modelNames = (string[])Model.Names.Clone();
             string[] actions = (string[])KeyBindings.Actions.Clone();
