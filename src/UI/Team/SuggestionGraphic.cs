@@ -7,7 +7,7 @@ namespace AniimoAffinities
     {
         internal static string Title(TeamSuggestions.Recommendation value)
         {
-            return value.Counter ? "Suggested counter" : "Suggested coverage";
+            return value.Counter ? Language.T("Suggested counter") : Language.T("Suggested coverage");
         }
         internal static Size Size(TeamSuggestions.Recommendation value)
         {
@@ -30,12 +30,12 @@ namespace AniimoAffinities
                 if (value.Types.Sub >= 0)
                     VectorIcon.Draw(g, value.Types.Sub, new RectangleF(x + 28, y, 24, 24));
                 Drawing.Text(g, Title(value), bold, Theme.TextColor, new RectangleF(x + 62, y, 270, 24), false);
-                Drawing.Text(g, "Projected answers before → after this addition", font, Theme.Muted, new RectangleF(x, y + 29, 345, 22), false);
+                Drawing.Text(g, Language.T("Projected answers before → after this addition"), font, Theme.Muted, new RectangleF(x, y + 29, 345, 22), false);
                 Glyphs.Draw(g, "atk", new RectangleF(x + 92, y + 56, 17, 17), Theme.Attack);
-                Drawing.Text(g, value.Counter ? "Opponents" : "All types", font, Theme.Muted, new RectangleF(x, y + 53, 86, 22), false);
-                Drawing.Text(g, "Attack", bold, Theme.Attack, new RectangleF(x + 115, y + 53, 90, 22), false);
+                Drawing.Text(g, value.Counter ? Language.T("Opponents") : Language.T("All types"), font, Theme.Muted, new RectangleF(x, y + 53, 86, 22), false);
+                Drawing.Text(g, Language.T("Attack"), bold, Theme.Attack, new RectangleF(x + 115, y + 53, 90, 22), false);
                 Glyphs.Draw(g, "def", new RectangleF(x + 221, y + 56, 17, 17), Theme.Defense);
-                Drawing.Text(g, "Defense", bold, Theme.Defense, new RectangleF(x + 244, y + 53, 95, 22), false);
+                Drawing.Text(g, Language.T("Defense"), bold, Theme.Defense, new RectangleF(x + 244, y + 53, 95, 22), false);
                 y += 80;
                 foreach (var answer in value.Answers)
                 {
@@ -46,9 +46,9 @@ namespace AniimoAffinities
                     Cell(g, new RectangleF(x + 217, y, 122, 25), font, answer.Defenders, answer.Received < .9999, answer.Received, true);
                     y += 29;
                 }
-                Drawing.Text(g, "0 → 1  New coverage    ·    1 → 2  Backup", font, Theme.Muted, new RectangleF(x, y + 3, 345, 20), false);
+                Drawing.Text(g, Language.T("0 → 1  New coverage    ·    1 → 2  Backup"), font, Theme.Muted, new RectangleF(x, y + 3, 345, 20), false);
                 ShortcutText.Layout(g, action, font, Theme.TextColor, new RectangleF(x, y + 24, 345, 20), true);
-                Drawing.Text(g, "Before: " + value.AppliedAllies + " applied + " + value.EarlierProposals.Length + " earlier proposals", font, Theme.Muted, new RectangleF(x, y + 44, 345, 20), false);
+                Drawing.Text(g, Language.T("Before: ") + value.AppliedAllies + Language.T(" applied + ") + value.EarlierProposals.Length + Language.T(" earlier proposals"), font, Theme.Muted, new RectangleF(x, y + 44, 345, 20), false);
                 float proposalX = x;
                 foreach (var proposal in value.EarlierProposals)
                 {

@@ -14,6 +14,7 @@ namespace AniimoAffinities
         private readonly Timer timer = new Timer { Interval = 1 };
         private int created;
         private bool disposed;
+        private readonly Form owner;
         internal int ReadyCount
         {
             get
@@ -21,8 +22,9 @@ namespace AniimoAffinities
                 return available.Count;
             }
         }
-        internal GlassPool()
+        internal GlassPool(Form owner = null)
         {
+            this.owner = owner;
             timer.Tick += Warm;
             timer.Start();
         }
@@ -36,7 +38,7 @@ namespace AniimoAffinities
                     timer.Stop();
                     return;
                 }
-                var window = new LockedGlass.GlassWindow();
+                var window = new LockedGlass.GlassWindow { CloseOwner = owner };
                 created++;
                 if (GlassNative.Enable(window.Handle, Theme.Surface))
                     window.MaterialRevision = Theme.Revision;
@@ -49,7 +51,7 @@ namespace AniimoAffinities
             if (available.Count > 0)
                 return available.Pop();
             created++;
-            return new LockedGlass.GlassWindow();
+            return new LockedGlass.GlassWindow { CloseOwner = owner };
         }
         internal void Return(LockedGlass.GlassWindow window)
         {

@@ -5,7 +5,7 @@ namespace AniimoAffinities
     internal static class TutorialNews
     {
         // Feature-specific marker: future tours use their own marker, not the app version.
-        internal static readonly string FilePath = PreferenceFiles.FilePath("interactive-features-tour-v08.txt");
+        internal static readonly string FilePath = PreferenceFiles.FilePath("welcome-languages-tour-v09.txt");
         internal static bool PrepareStartup()
         {
             bool existing = File.Exists(SessionState.FilePath) || File.Exists(TutorialProgress.FilePath) || File.Exists(TutorialPreferences.FilePath);

@@ -26,7 +26,7 @@ namespace AniimoAffinities
         private readonly Panel tabArea = new Panel();
         private readonly Panel scroll = new SlimScrollPanel();
         private readonly DrawingPanel detail = new DrawingPanel();
-        private readonly SettingsButton applyButton = new SettingsButton { Text = "Apply suggestion", Primary = true };
+        private readonly SettingsButton applyButton = new SettingsButton { Text = Language.T("Apply suggestion"), Primary = true };
         private TeamSuggestions.Recommendation[] suggestions;
         internal int ActiveSlot
         {
@@ -37,7 +37,7 @@ namespace AniimoAffinities
             plan = value;
             apply = onApply;
             ActiveSlot = active;
-            Text = "Team suggestions";
+            Text = Language.T("Team suggestions");
             ClientSize = new Size(470, Math.Min(740, Screen.PrimaryScreen.WorkingArea.Height - 60));
             MinimumSize = new Size(420, 460);
             StartPosition = FormStartPosition.CenterParent;
@@ -55,7 +55,7 @@ namespace AniimoAffinities
                 e.Graphics.Clear(Theme.Surface);
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                 if (ActiveSlot >= 0 && suggestions[ActiveSlot] != null)
-                    SuggestionGraphic.Draw(e.Graphics, new RectangleF(12, 8, 350, detail.Height - 16), suggestions[ActiveSlot], "Apply only this slot; remaining proposals refresh");
+                    SuggestionGraphic.Draw(e.Graphics, new RectangleF(12, 8, 350, detail.Height - 16), suggestions[ActiveSlot], Language.T("Apply only this slot; remaining proposals refresh"));
             };
             scroll.Controls.Add(detail);
             Controls.AddRange(new Control[] { tabArea, scroll, applyButton });
@@ -65,6 +65,7 @@ namespace AniimoAffinities
                     RefreshSuggestions();
             };
             Resize += (s, e) => ArrangeContent();
+            Activated += (s, e) => RefreshSuggestions();
             Theme.Changed += RefreshTheme;
             Disposed += (s, e) => Theme.Changed -= RefreshTheme;
             RefreshTheme();
@@ -83,7 +84,7 @@ namespace AniimoAffinities
             ActiveSlot = slot;
             for (int i = 0; i < tabs.Length; i++)
                 tabs[i].Selected = i == slot;
-            detail.Height = SuggestionGraphic.Size(suggestions[slot]).Height + 16;
+            detail.Height = (int)((SuggestionGraphic.Size(suggestions[slot]).Height + 16) * AppliedWindowScale);
             detail.AccessibleText = () => TeamTypeSelector.RecommendationTip(suggestions[ActiveSlot]);
             scroll.AutoScrollPosition = Point.Empty;
             detail.Invalidate();
@@ -100,7 +101,7 @@ namespace AniimoAffinities
                 tabs[i].Invalidate();
             }
             applyButton.Enabled = ActiveSlot >= 0;
-            applyButton.Text = ActiveSlot < 0 ? "No empty slots" : "Apply suggestion";
+            applyButton.Text = ActiveSlot < 0 ? Language.T("No empty slots") : Language.T("Apply suggestion");
             detail.Visible = ActiveSlot >= 0;
             if (ActiveSlot >= 0)
                 SelectSlot(ActiveSlot);
@@ -110,20 +111,23 @@ namespace AniimoAffinities
         {
             if (suggestions == null)
                 return;
-            int count = 0, width = (ClientSize.Width - 32) / 3;
-            tabArea.SetBounds(12, 42, ClientSize.Width - 24, 190);
+            float scale = AppliedWindowScale;
+            int logicalWidth = (int)(ClientSize.Width / scale), logicalHeight = (int)(ClientSize.Height / scale);
+            Func<int, int> scaled = value => (int)Math.Round(value * scale);
+            int count = 0, width = (logicalWidth - 32) / 3;
+            tabArea.SetBounds(scaled(12), scaled(42), scaled(logicalWidth - 24), scaled(190));
             for (int i = 0; i < tabs.Length; i++)
                 if (suggestions[i] != null)
                 {
-                    tabs[i].SetBounds(count % 3 * (width + 4), count / 3 * 91, width, 87);
+                    tabs[i].SetBounds(scaled(count % 3 * (width + 4)), scaled(count / 3 * 91), scaled(width), scaled(87));
                     count++;
                 }
             int top = 48 + ((count + 2) / 3) * 91;
-            tabArea.Height = ((count + 2) / 3) * 91;
-            scroll.SetBounds(12, top, ClientSize.Width - 24, Math.Max(60, ClientSize.Height - top - 52));
-            detail.Width = 376;
-            detail.Left = Math.Max(0, (scroll.ClientSize.Width - 394) / 2);
-            applyButton.SetBounds(ClientSize.Width - 184, ClientSize.Height - 42, 170, 32);
+            tabArea.Height = scaled(((count + 2) / 3) * 91);
+            scroll.SetBounds(scaled(12), scaled(top), scaled(logicalWidth - 24), scaled(Math.Max(60, logicalHeight - top - 52)));
+            detail.Width = scaled(376);
+            detail.Left = Math.Max(0, (scroll.ClientSize.Width - scaled(394)) / 2);
+            applyButton.SetBounds(scaled(logicalWidth - 184), scaled(logicalHeight - 42), scaled(170), scaled(32));
         }
     }
 }

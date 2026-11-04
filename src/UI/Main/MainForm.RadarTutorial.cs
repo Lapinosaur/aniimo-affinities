@@ -8,7 +8,7 @@ namespace AniimoAffinities
         internal void PrepareRadarTutorial()
         {
             if (!TutorialSnapshot)
-                throw new InvalidOperationException("Tutorial snapshot required.");
+                throw new InvalidOperationException(Language.T("Tutorial snapshot required."));
             int[] main = { 7, 2, 0 }, sub = { 4, 8, 5 };
             for (int i = 0; i < 3; i++)
             {

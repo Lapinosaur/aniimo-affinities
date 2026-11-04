@@ -14,26 +14,30 @@ namespace AniimoAffinities
         internal static float WindowScale = 1;
         internal static bool ShowBadges = true;
         private static readonly string DisplayPath = PreferenceFiles.FilePath("display.txt");
-        internal static void SaveDisplay(float scale, bool badges, float windowScale = 1)
+        internal static void SaveDisplay(float scale, bool badges, float windowScale = 1, bool includeContent = true)
         {
             PreferenceFiles.WriteLines(DisplayPath, new[] { scale.ToString(System.Globalization.CultureInfo.InvariantCulture), badges.ToString(), windowScale.ToString(System.Globalization.CultureInfo.InvariantCulture) });
-            ApplyDisplay(scale, badges, windowScale);
+            ApplyDisplay(scale, badges, windowScale, includeContent);
         }
-        internal static void ApplyDisplay(float scale, bool badges, float windowScale = 1)
+        internal static void ApplyDisplay(float scale, bool badges, float windowScale = 1, bool includeContent = true)
         {
             float nextZoom = Math.Max(.5f, Math.Min(1.5f, windowScale));
             bool zoomChanged = Math.Abs(nextZoom - WindowScale) > .0001f;
             bool fontChanged = Math.Abs(scale - FontScale) > .0001f;
             bool badgesChanged = badges != ShowBadges;
-            if (!zoomChanged && !fontChanged && !badgesChanged)
+            if (!includeContent && !zoomChanged && !fontChanged && !badgesChanged)
                 return;
             WindowScale = nextZoom;
-            if (zoomChanged)
+            if (zoomChanged || includeContent)
                 foreach (Form form in Application.OpenForms)
                 {
                     var window = form as PortableWindow;
-                    if (window != null)
+                    if (window != null && (includeContent || !window.IsContentWindow))
+                    {
+                        if (includeContent)
+                            window.LocalWindowScale = null;
                         window.ApplyWindowScale();
+                    }
                 }
             float ratio = scale / FontScale;
             FontScale = scale;

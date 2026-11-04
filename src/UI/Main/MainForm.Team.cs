@@ -86,14 +86,22 @@ namespace AniimoAffinities
             {
                 var suggestion = TeamSuggestions.ComplementaryAdditions(teamPlan)[slot];
                 if (suggestion != null)
-                    using (var dialog = new SuggestionRadarDialog(teamPlan, slot, suggestion, teamBoard.ComparedSlots))
-                        if (dialog.ShowDialog(this) == DialogResult.OK)
-                            teamBoard.ApplySuggestion(slot, dialog.Series.Last().Member);
+                    OpenContent("suggestion-radar-" + slot, () =>
+                    {
+                        var dialog = new SuggestionRadarDialog(teamPlan, slot, suggestion, teamBoard.ComparedSlots);
+                        dialog.FormClosed += (s, e) =>
+                        {
+                            if (!IsDisposed && !Disposing && dialog.DialogResult == DialogResult.OK)
+                                teamBoard.ApplySuggestion(slot, dialog.Series.Last().Member);
+                        };
+                        dialog.Activated += (s, e) => dialog.ApplyButton.Enabled = !teamPlan.Allies[slot].Known;
+                        return dialog;
+                    });
             };
             teamBoard.SuggestionsRequested += slot =>
             {
-                using (var dialog = new SuggestionsDialog(teamPlan, slot, teamBoard.ApplySuggestion))
-                    dialog.ShowDialog(this);
+                var dialog = (SuggestionsDialog)OpenContent("suggestions", () => new SuggestionsDialog(teamPlan, slot, teamBoard.ApplySuggestion));
+                dialog.SelectSlot(slot);
             };
             Deactivate += (s, e) => { teamPreview = -1; teamHovered = -1; teamCounter = -1; teamOpponentMask = 0; canvas.Invalidate(); };
             teamBody.Controls.Add(teamBoard);
@@ -121,18 +129,18 @@ namespace AniimoAffinities
             teamBody.SendToBack();
             var bar = new Panel { Size = new Size(204, 32), Anchor = AnchorStyles.Top | AnchorStyles.Right };
             teamToolbar = bar;
-            teamEdit = new SettingsButton { Glyph = "team", TabIndex = 5, Location = new Point(170, 0), Size = new Size(34, 30), AccessibleName = "Edit your team and known opponents" };
+            teamEdit = new SettingsButton { Glyph = "team", TabIndex = 5, Location = new Point(170, 0), Size = new Size(34, 30), AccessibleName = Language.T("Edit your team and known opponents") };
             teamEdit.Click += (s, e) => EditTeam();
-            tips.SetToolTip(teamEdit, "Open team editor");
-            teamToggle = new SettingsButton { Glyph = "separate", TabIndex = 4, AccessibleName = "Show team panel", Location = new Point(136, 0), Size = new Size(34, 30) };
+            tips.SetToolTip(teamEdit, Language.T("Open team editor"));
+            teamToggle = new SettingsButton { Glyph = "separate", TabIndex = 4, AccessibleName = Language.T("Show team panel"), Location = new Point(136, 0), Size = new Size(34, 30) };
             teamToggle.Click += (s, e) => { teamPlan.Visible = !teamPlan.Visible; ApplyTeamLayout(); SaveTeam(); };
             string[] positions = { "Top", "Bottom", "Left", "Right" }, symbols = { "↑", "↓", "←", "→" };
             for (int i = 0; i < positions.Length; i++)
             {
                 string destination = positions[i];
-                var button = new SettingsButton { Text = symbols[i], TabIndex = 3 - i, Tag = destination, AccessibleName = "Team panel: " + destination, Location = new Point((3 - i) * 34, 0), Size = new Size(34, 30) };
+                var button = new SettingsButton { Text = symbols[i], TabIndex = 3 - i, Tag = destination, AccessibleName = Language.T("Team panel: ") + Language.T(destination), Location = new Point((3 - i) * 34, 0), Size = new Size(34, 30) };
                 button.Click += (s, e) => { teamPlan.Position = destination; ApplyTeamLayout(); SaveTeam(); };
-                tips.SetToolTip(button, "Place team panel: " + destination);
+                tips.SetToolTip(button, Language.T("Place team panel: ") + Language.T(destination));
                 teamPositions[i] = button;
                 bar.Controls.Add(button);
             }
@@ -173,8 +181,8 @@ namespace AniimoAffinities
             {
                 TeamPreferences.Save(TeamPreferences.FilePath, teamPlan);
             }
-            catch (System.IO.IOException) { MessageBox.Show(this, "Unable to save team settings. Your edits remain in this session.", "Team settings"); }
-            catch (UnauthorizedAccessException) { MessageBox.Show(this, "Unable to save team settings. Check access to local settings.", "Team settings"); }
+            catch (System.IO.IOException) { MessageBox.Show(this, Language.T("Unable to save team settings. Your edits remain in this session."), Language.T("Team settings")); }
+            catch (UnauthorizedAccessException) { MessageBox.Show(this, Language.T("Unable to save team settings. Check access to local settings."), Language.T("Team settings")); }
         }
         internal void FinishTeamTransition()
         {
@@ -224,7 +232,7 @@ namespace AniimoAffinities
                 teamBody.Size = new Size(teamBody.Width + nextSize.Width - Width, teamBody.Height + nextSize.Height - Height);
                 teamExtra = new Size(nextSize.Width - baseSize.Width, nextSize.Height - baseSize.Height);
                 teamLayoutScale = scale;
-                teamToggle.AccessibleName = teamPlan.Visible ? "Hide team panel" : "Show team panel";
+                teamToggle.AccessibleName = teamPlan.Visible ? Language.T("Hide team panel") : Language.T("Show team panel");
                 teamToggle.Glyph = "team-" + teamPlan.Position;
                 tips.SetToolTip(teamToggle, teamToggle.AccessibleName);
                 teamEdit.GroupShape = new RectangleF(teamPlan.Visible ? -170 : -34, 0, teamPlan.Visible ? 203 : 67, 29);

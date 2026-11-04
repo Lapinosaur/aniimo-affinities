@@ -32,28 +32,33 @@ namespace AniimoAffinities
             }
         }
         internal bool ScrollGraphic;
-        private sealed class QrButton : BubbleButton
+        private readonly SupportQrButton qrButton = new SupportQrButton { NonActivating = true, TabStop = false, Visible = false };
+        internal Action SupportQrAction;
+        protected override void Dispose(bool disposing)
         {
-            internal Image Code;
-            protected override void OnPaint(PaintEventArgs e)
+            base.Dispose(disposing);
+            if (disposing)
             {
-                e.Graphics.Clear(Theme.Surface);
-                if (Code != null)
-                    SupportQr.Draw(e.Graphics, Code, new Rectangle(3, 3, 111, 111));
-                if (ClientRectangle.Contains(PointToClient(Cursor.Position)))
-                    using (var path = Drawing.Round(new RectangleF(1, 1, Width - 3, Height - 3), 10))
-                    using (var pen = new Pen(Theme.Accent, 2))
-                        e.Graphics.DrawPath(pen, path);
+                ReleaseContent();
+                Events.Dispose();
             }
         }
-        private readonly QrButton qrButton = new QrButton { AccessibleName = "Buy me a carrot", Visible = false };
-        internal Action SupportQrAction;
+        internal void ReleaseContent()
+        {
+            SupportQrAction = null;
+            previewAction = applyAction = dismissAction = openAction = null;
+            graphicPainter = null;
+            illustration = null; // Borrowed from the content owner, not owned here.
+            qrButton.Code = null;
+            label = "";
+            rows.Clear();
+        }
         private readonly SlimScrollPanel graphicScroll = new SlimScrollPanel { Visible = false };
         private readonly DrawingPanel graphicContent = new DrawingPanel();
         internal float Remaining;
         private string label; private bool below; private float arrowX;
         private Action previewAction;
-        private readonly SettingsButton previewButton = new BubbleButton { Text = "Radar preview", AccessibleName = "Preview suggestion on radars", Visible = false };
+        private readonly SettingsButton previewButton = new BubbleButton { Text = Language.T("Radar preview"), AccessibleName = Language.T("Preview suggestion on radars"), Visible = false };
         private int FooterHeight
         {
             get
@@ -70,7 +75,7 @@ namespace AniimoAffinities
                 RecreateHandle();
         }
         private Action applyAction;
-        private readonly SettingsButton applyButton = new BubbleButton { Text = "Apply suggestion", Primary = true, AccessibleName = "Apply suggestion", Visible = false };
+        private readonly SettingsButton applyButton = new BubbleButton { Text = Language.T("Apply suggestion"), Primary = true, AccessibleName = Language.T("Apply suggestion"), Visible = false };
         internal void SetApplyAction(Action action)
         {
             bool changed = (applyAction == null) != (action == null);
@@ -80,7 +85,7 @@ namespace AniimoAffinities
                 RecreateHandle();
         }
         private Action dismissAction;
-        private readonly SettingsButton closeButton = new BubbleButton { Glyph = "close", Quiet = true, AccessibleName = "Close bubble", Visible = false, SurroundColor = () => Theme.Surface };
+        private readonly SettingsButton closeButton = new BubbleButton { Glyph = "close", Quiet = true, AccessibleName = Language.T("Close bubble"), Visible = false, SurroundColor = () => Theme.Surface };
         internal void SetDismissAction(Action action)
         {
             bool changed = (dismissAction == null) != (action == null);
@@ -91,16 +96,16 @@ namespace AniimoAffinities
         }
         private Action openAction;
         private bool supportAction;
-        private readonly SettingsButton openButton = new BubbleButton { Glyph = "open", Text = "", Quiet = true, AccessibleName = "Open all suggestions", Visible = false, SurroundColor = () => Theme.Surface };
+        private readonly SettingsButton openButton = new BubbleButton { Glyph = "open", Text = "", Quiet = true, AccessibleName = Language.T("Open all suggestions"), Visible = false, SurroundColor = () => Theme.Surface };
         internal void SetOpenAction(Action action, bool support = false)
         {
             supportAction = support;
             openButton.Glyph = support ? "star" : "open";
-            openButton.Text = support ? "Star on GitHub" : "";
+            openButton.Text = support ? Language.T("Star on GitHub") : "";
             openButton.GlyphWithText = support;
             openButton.CenterGlyphWithText = support;
             openButton.Quiet = !support;
-            openButton.AccessibleName = support ? "Star Affinisaur on GitHub" : "Open all suggestions";
+            openButton.AccessibleName = support ? Language.T("Star Affinisaur on GitHub") : Language.T("Open all suggestions");
             bool changed = (openAction == null) != (action == null);
             openAction = action;
             openButton.Visible = action != null;

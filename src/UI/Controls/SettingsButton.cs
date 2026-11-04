@@ -35,6 +35,7 @@ namespace AniimoAffinities
             }
         }
         internal string Glyph = "";
+        internal string ShortcutBadge = "";
         internal bool GlyphWithText;
         internal Color Brand = Color.Empty;
         internal Color Surround = Color.Empty;
@@ -99,6 +100,11 @@ namespace AniimoAffinities
         }
         protected override void Dispose(bool disposing)
         {
+            if (disposing)
+            {
+                SurroundColor = null;
+                PaintSurround = null;
+            }
             if (disposing)
                 busyTimer.Dispose();
             base.Dispose(disposing);
@@ -210,6 +216,8 @@ namespace AniimoAffinities
                     ShortcutText.Layout(g, Text, Font, Theme.TextColor, new RectangleF(8, Math.Max(0, (Height - Font.GetHeight(g) - 6) / 2), Width - 16, Height), true);
                 else
                     Drawing.Text(g, Text, Font, !Enabled ? Theme.Muted : Primary ? (Segment ? Theme.AccentForeground : Theme.AccentInk) : Theme.TextColor, new RectangleF(4, 0, Width - 8, Height), true);
+            if (ShortcutBadge.Length > 0)
+                ShortcutText.DrawBadge(g, ShortcutBadge == "Backspace" ? "⌫" : ShortcutBadge, Width);
             FinishPaint(g, Width, Height, false);
         }
     }

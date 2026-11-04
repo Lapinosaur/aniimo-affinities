@@ -106,6 +106,14 @@ namespace AniimoAffinities
         {
             return new ButtonAccess(this);
         }
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            // Accessibility clients may retain a disposed control. Do not let its
+            // event subscribers keep the former window and its model alive.
+            if (disposing)
+                Events.Dispose();
+        }
         private sealed class ButtonAccess : ControlAccessibleObject
         {
             private readonly InteractiveButton button;
@@ -114,12 +122,12 @@ namespace AniimoAffinities
             {
                 get
                 {
-                    return button is HoldSizeButton ? "Hold Space" : "Press";
+                    return button is HoldSizeButton ? Language.T("Hold Space") : Language.T("Press");
                 }
             }
             public override void DoDefaultAction()
             {
-                if (button.Enabled && button.Visible)
+                if (!button.IsDisposed && !button.Disposing && button.Enabled && button.Visible)
                     button.PerformClick();
             }
             public override AccessibleStates State

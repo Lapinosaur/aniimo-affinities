@@ -14,13 +14,13 @@ namespace AniimoAffinities
         }
         private static string Types(TeamMember member)
         {
-            return Model.Names[member.Main] + (member.Sub < 0 ? "" : " + " + Model.Names[member.Sub]);
+            return Language.T(Model.Names[member.Main]) + (member.Sub < 0 ? "" : " + " + Language.T(Model.Names[member.Sub]));
         }
         internal static string Describe(TeamPlan plan, bool enemy = false)
         {
             var allies = (enemy ? plan.Opponents : plan.Allies).Select((member, index) => new { Member = member, Name = member.Title(index, enemy) }).Where(item => item.Member.Known).ToArray();
             if (allies.Length == 0)
-                return enemy ? "Choose at least one opponent's elements to see threats and vulnerable members." : "Choose at least one ally's elements to see threats and vulnerable allies.";
+                return enemy ? Language.T("Choose at least one opponent's elements to see threats and vulnerable members.") : Language.T("Choose at least one ally's elements to see threats and vulnerable allies.");
             var candidates = Candidates();
             var threats = candidates.Select(target => new
             {
@@ -30,26 +30,26 @@ namespace AniimoAffinities
                 Maximum = allies.Max(ally => TeamPlan.Damage(target, ally.Member))
             }).Where(threat => threat.Weak.Length > 0).OrderBy(threat => threat.Resistant > 0).ThenByDescending(threat => threat.Weak.Length).ThenByDescending(threat => threat.Maximum).ThenBy(threat => Types(threat.Target)).ToArray();
             var text = new StringBuilder();
-            text.AppendLine("TYPE THREATS — " + (enemy ? "Known opponents" : "Your team") + " · " + allies.Length + " known members");
-            text.AppendLine("9 single types + 36 dual types. Dual threats use their best attacking element, not multiplied damage. Unknown members are excluded.");
+            text.AppendLine(Language.T("TYPE THREATS — ") + (enemy ? Language.T("Known opponents") : Language.T("Your team")) + " · " + allies.Length + Language.T(" known members"));
+            text.AppendLine(Language.T("9 single types + 36 dual types. Dual threats use their best attacking element, not multiplied damage. Unknown members are excluded."));
             text.AppendLine();
             foreach (bool dual in new[] { false, true })
             {
-                text.AppendLine(dual ? "DUAL-TYPE THREATS" : "SINGLE-TYPE THREATS");
+                text.AppendLine(dual ? Language.T("DUAL-TYPE THREATS") : Language.T("SINGLE-TYPE THREATS"));
                 var group = threats.Where(threat => (threat.Target.Sub >= 0) == dual).ToArray();
                 if (group.Length == 0)
-                    text.AppendLine("No super-effective threat.");
+                    text.AppendLine(Language.T("No super-effective threat."));
                 foreach (var threat in group)
                 {
-                    text.AppendLine(Types(threat.Target) + " · " + threat.Weak.Length + "/" + allies.Length + " vulnerable · " + threat.Resistant + " resistant · max " + Model.Factor(threat.Maximum));
-                    text.AppendLine("  Exposed: " + TeamMember.JoinNames(threat.Weak.Select(ally => ally.Name).ToArray(), threat.Weak.Select(ally => ally.Member).ToArray()) + (threat.Resistant == 0 ? " · No resistant member" : ""));
+                    text.AppendLine(Types(threat.Target) + " · " + threat.Weak.Length + "/" + allies.Length + Language.T(" vulnerable · ") + threat.Resistant + Language.T(" resistant · max ") + Model.Factor(threat.Maximum));
+                    text.AppendLine("  Exposed: " + TeamMember.JoinNames(threat.Weak.Select(ally => ally.Name).ToArray(), threat.Weak.Select(ally => ally.Member).ToArray()) + (threat.Resistant == 0 ? Language.T(" · No resistant member") : ""));
                 }
                 text.AppendLine();
             }
             var opponents = (enemy ? plan.Allies : plan.Opponents).Where(member => member.Known).ToArray();
             var assessed = opponents.Length > 0 ? opponents : candidates;
-            text.AppendLine((enemy ? "MOST EXPOSED OPPONENTS — " : "MOST EXPOSED ALLIES — ") + (opponents.Length > 0 ? (enemy ? "against your known allies" : "against known opponents") : "against the 45 type combinations"));
-            text.AppendLine("Types only: this is not an overall ranking of team members. Ties are equally exposed.");
+            text.AppendLine((enemy ? Language.T("MOST EXPOSED OPPONENTS — ") : Language.T("MOST EXPOSED ALLIES — ")) + (opponents.Length > 0 ? (enemy ? Language.T("against your known allies") : Language.T("against known opponents")) : Language.T("against the 45 type combinations")));
+            text.AppendLine(Language.T("Types only: this is not an overall ranking of team members. Ties are equally exposed."));
             foreach (var ally in allies.Select(ally => new
             {
                 ally.Name,
@@ -57,7 +57,7 @@ namespace AniimoAffinities
                 Maximum = assessed.Max(target => TeamPlan.Damage(target, ally.Member))
             }).OrderByDescending(ally => ally.Weak.Length).ThenByDescending(ally => ally.Maximum))
             {
-                text.AppendLine(ally.Name + " · vulnerable to " + ally.Weak.Length + "/" + assessed.Length + " · max " + Model.Factor(ally.Maximum));
+                text.AppendLine(ally.Name + Language.T(" · vulnerable to ") + ally.Weak.Length + "/" + assessed.Length + " · max " + Model.Factor(ally.Maximum));
                 if (ally.Weak.Length > 0)
                     text.AppendLine("  " + string.Join(", ", ally.Weak.Select(Types)));
             }

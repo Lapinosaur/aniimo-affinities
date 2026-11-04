@@ -8,16 +8,6 @@ namespace AniimoAffinities
     internal partial class PortableWindow : Form
     {
         internal float AppliedWindowScale = 1;
-        internal void ApplyWindowScale()
-        {
-            if (!customCaption || !(this is MainForm || this is RadarDialog || this is MatrixDialog))
-                return;
-            WindowZoom.Apply(this, DisplaySettings.WindowScale);
-            RefreshWindowFrame();
-            PositionUnlockWindow();
-            if (unlockWindow != null)
-                unlockWindow.RefreshSizes();
-        }
 
         private bool customCaption;
         private readonly DrawingPanel windowFrame = new DrawingPanel { TabStop = false };
@@ -126,7 +116,7 @@ namespace AniimoAffinities
                     if (unlockRegistered)
                         NativeMethods.UnregisterHotKey(Handle, 0x414E);
                     unlockRegistered = false;
-                    MessageBox.Show(this, "Windows could not lock the overlay. Please try again.", "Overlay");
+                    MessageBox.Show(this, Language.T("Windows could not lock the overlay. Please try again."), Language.T("Overlay"));
                     return;
                 }
                 OverlayLocked = true;
@@ -135,7 +125,7 @@ namespace AniimoAffinities
             {
                 if (!TutorialSnapshot && !NativeMethods.TrySetWindowStyle(Handle, unlockedStyle))
                 {
-                    MessageBox.Show(this, "Windows could not unlock the overlay. Please try again.", "Overlay");
+                    MessageBox.Show(this, Language.T("Windows could not unlock the overlay. Please try again."), Language.T("Overlay"));
                     return;
                 }
                 OverlayLocked = false;
@@ -148,7 +138,7 @@ namespace AniimoAffinities
                     control.Visible = !locked || control == pinControl;
             if (pinControl != null)
             {
-                pinControl.AccessibleName = locked ? "Locked overlay · Ctrl+Alt+L to unlock" : "Always on top";
+                pinControl.AccessibleName = locked ? Language.T("Locked overlay · Ctrl+Alt+L to unlock") : Language.T("Always on top");
                 pinControl.Invalidate();
             }
             if (locked && pinControl != null)
@@ -252,11 +242,11 @@ namespace AniimoAffinities
         }
         private static string ViewName(string view)
         {
-            return view == "matrix" ? "Effectiveness matrix" : view == "radar" ? "Affinity radar" : "Affinity diagrams";
+            return view == "matrix" ? Language.T("Effectiveness matrix") : view == "radar" ? Language.T("Affinity radar") : Language.T("Affinity diagrams");
         }
         private static string ViewTip(string view, string key)
         {
-            return ViewName(view) + "\nClick: swap this view with the main view. The button takes the previous view's icon.\nHold click or Space for 0.9 s: open in a separate window" + (key.Length > 0 ? " (or " + ShortcutText.Mark(key) + ")" : "") + ".";
+            return ViewName(view) + Language.T("\nClick: swap with the main view.\nHold mouse or Space (0.9 s): open a separate window.") + (key.Length > 0 ? Language.T("\nShortcut: ") + ShortcutText.Mark(key) : "");
         }
         private KeyboardHold matrixKeyboard, radarKeyboard, pinKeyboard;
         private Button viewHoldTarget;
@@ -291,7 +281,7 @@ namespace AniimoAffinities
             string key = KeyBindings.Label(RadarShortcut);
             captionTips.SetToolTip(radarControl, ViewTip(RadarViewGlyph, key));
             radarControl.AccessibleName = ViewName(RadarViewGlyph);
-            radarControl.AccessibleDescription = key.Length > 0 ? "Shortcut: " + key : "No shortcut";
+            radarControl.AccessibleDescription = key.Length > 0 ? Language.T("Shortcut: ") + key : Language.T("No shortcut");
             radarControl.Invalidate();
         }
         protected virtual Keys MatrixShortcut
@@ -309,7 +299,7 @@ namespace AniimoAffinities
             string key = KeyBindings.Label(MatrixShortcut);
             captionTips.SetToolTip(matrixControl, ViewTip(MatrixViewGlyph, key));
             matrixControl.AccessibleName = ViewName(MatrixViewGlyph);
-            matrixControl.AccessibleDescription = key.Length > 0 ? "Shortcut: " + key : "No shortcut";
+            matrixControl.AccessibleDescription = key.Length > 0 ? Language.T("Shortcut: ") + key : Language.T("No shortcut");
             matrixControl.Invalidate();
         }
         protected virtual string CaptionGlyph
@@ -328,7 +318,7 @@ namespace AniimoAffinities
         }
         protected override bool ProcessCmdKey(ref Message message, Keys input)
         {
-            if (!(this is DisplayConfirmationDialog) && WindowZoom.HandleShortcut(input, message.LParam))
+            if (!(this is DisplayConfirmationDialog) && WindowZoom.HandleShortcut(input, message.LParam, this))
                 return true;
             if (input == Keys.Escape && CompactCaption)
             {
@@ -477,7 +467,7 @@ namespace AniimoAffinities
                 if (IsDisposed || Disposing)
                     return;
                 var caption = new Panel { Dock = DockStyle.Top, Height = CompactCaption ? 36 : 54, BackColor = Theme.Background };
-                var commands = new Panel { Width = !CompactCaption && !ContentOnly ? 406 : 42, Height = caption.Height, Dock = DockStyle.Right, BackColor = Theme.Background };
+                var commands = new Panel { Width = !CompactCaption && !ContentOnly ? 406 : IsContentWindow ? 126 : 42, Height = caption.Height, Dock = DockStyle.Right, BackColor = Theme.Background };
                 captionPanel = commands;
                 caption.Controls.Add(commands);
                 var title = new Label { Text = CaptionContent == null ? Text : "", Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Padding = new Padding(40, 0, 0, 0), ForeColor = Theme.Muted };
@@ -492,10 +482,10 @@ namespace AniimoAffinities
                 if (CompactCaption)
                 {
                     close.TabStop = false;
-                    captionTips.SetToolTip(close, "Close · Esc");
+                    captionTips.SetToolTip(close, Language.T("Close · Esc"));
                 }
-                var settings = CaptionButton("⚙", "Settings");
-                var matrix = CaptionButton("matrix", "Effectiveness matrix");
+                var settings = CaptionButton("⚙", Language.T("Settings"));
+                var matrix = CaptionButton("matrix", Language.T("Effectiveness matrix"));
                 matrixControl = matrix;
                 matrix.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } ToggleInlineMatrix(); };
                 matrixKeyboard = new KeyboardHold(matrix, () => { viewHoldTarget = matrix; holdingMatrix = true; suppressRadarClick = false; radarHoldWatch.Restart(); radarHoldTimer.Start(); }, CancelRadarHold);
@@ -504,7 +494,7 @@ namespace AniimoAffinities
                 matrix.MouseLeave += (s, a) => { if (!matrixKeyboard.Active) CancelRadarHold(); };
                 matrix.MouseCaptureChanged += (s, a) => { if (!matrix.Capture && !matrixKeyboard.Active) CancelRadarHold(); };
                 RefreshMatrixShortcut();
-                var radar = CaptionButton("radar", "Affinity radar");
+                var radar = CaptionButton("radar", Language.T("Affinity radar"));
                 radarControl = radar;
                 radar.Click += (s, a) => { if (suppressRadarClick || radarHoldWatch.ElapsedMilliseconds >= 225) { return; } ToggleInlineRadar(); };
                 RefreshRadarShortcut();
@@ -514,7 +504,7 @@ namespace AniimoAffinities
                 radar.MouseLeave += (s, a) => { if (!radarKeyboard.Active) CancelRadarHold(); };
                 radar.MouseCaptureChanged += (s, a) => { if (!radar.Capture && !radarKeyboard.Active) CancelRadarHold(); };
                 UiFonts.Assign(settings, UiFonts.Create("Segoe UI Symbol", 13));
-                captionTips.SetToolTip(settings, "Settings · Keyboard shortcuts");
+                captionTips.SetToolTip(settings, Language.T("Settings · Keyboard shortcuts"));
                 settings.Click += (s, a) => OpenSettings();
                 EnableWindowDrag(title);
                 EnableWindowDrag(caption);
@@ -532,21 +522,21 @@ namespace AniimoAffinities
                     if (error != null)
                     {
                         DiagnosticReport.Record(error);
-                        MessageBox.Show(this, "Unable to open your browser. Please try again.", "Open in your browser", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(this, Language.T("Unable to open your browser. Please try again."), Language.T("Open in your browser"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
                 });
-                var pin = CaptionButton("", "Always on top", false, true);
+                var pin = CaptionButton("", Language.T("Always on top"), false, true);
                 pinControl = pin;
                 pinKeyboard = new KeyboardHold(pin, () => { suppressPinClick = false; holdWatch.Restart(); holdTimer.Start(); }, CancelHold);
                 pin.MouseDown += (s, a) => { if (a.Button == MouseButtons.Left) { suppressPinClick = false; holdWatch.Restart(); holdTimer.Start(); } };
                 pin.MouseUp += (s, a) => CancelHold();
                 pin.MouseLeave += (s, a) => { if (!pinKeyboard.Active) CancelHold(); };
                 pin.MouseCaptureChanged += (s, a) => { if (!pin.Capture && !pinKeyboard.Active) CancelHold(); };
-                pin.Click += (s, a) => { if (suppressPinClick || holdWatch.ElapsedMilliseconds >= 300 || OverlayLocked) return; SetPinned(!TopMost); pin.AccessibleName = TopMost ? "Disable always on top" : "Always on top"; pin.Invalidate(); };
-                captionTips.SetToolTip(pin, "Click to pin · Hold to lock overlay");
-                var minimize = CaptionButton("−", "Minimize");
-                captionTips.SetToolTip(close, CompactCaption ? "Close · Esc / Alt+F4" : "Close · Alt+F4");
-                captionTips.SetToolTip(minimize, "Minimize");
+                pin.Click += (s, a) => { if (suppressPinClick || holdWatch.ElapsedMilliseconds >= 300 || OverlayLocked) return; SetPinned(!TopMost); pin.AccessibleName = TopMost ? Language.T("Disable always on top") : Language.T("Always on top"); pin.Invalidate(); };
+                captionTips.SetToolTip(pin, Language.T("Click to pin · Hold to lock overlay"));
+                var minimize = CaptionButton("−", Language.T("Minimize"));
+                captionTips.SetToolTip(close, CompactCaption ? Language.T("Close · Esc / Alt+F4") : Language.T("Close · Alt+F4"));
+                captionTips.SetToolTip(minimize, Language.T("Minimize"));
                 close.Click += (s, a) => Close();
                 minimize.Click += (s, a) => WindowState = FormWindowState.Minimized;
                 title.DoubleClick += (s, a) => { if (!CompactCaption) WindowState = WindowState == FormWindowState.Maximized ? FormWindowState.Normal : FormWindowState.Maximized; };
@@ -571,8 +561,16 @@ namespace AniimoAffinities
                     radar.Dispose();
                     settings.Dispose();
                     coffee.Dispose();
-                    pin.Dispose();
-                    minimize.Dispose();
+                    if (IsContentWindow)
+                    {
+                        commands.Controls.Add(pin);
+                        commands.Controls.Add(minimize);
+                    }
+                    else
+                    {
+                        pin.Dispose();
+                        minimize.Dispose();
+                    }
                 }
                 commands.Controls.Add(close);
                 commands.SendToBack();

@@ -35,15 +35,15 @@ namespace AniimoAffinities
             saveTimer.Tick += (s, e) => FlushSave();
             FormClosing += (s, e) => { if (saveTimer.Enabled) FlushSave(); };
             Disposed += (s, e) => { saveTimer.Dispose(); tips.Dispose(); };
-            Text = "Team planner";
+            Text = Language.T("Team planner");
             ClientSize = new Size(670, 462);
             StartPosition = FormStartPosition.CenterParent;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
-            mine = new SettingsButton { Text = "Your team", Primary = true, Location = new Point(18, 44), Size = new Size(211, 32) };
-            opponents = new SettingsButton { Text = "Known opponents", Location = new Point(229, 44), Size = new Size(211, 32) };
-            matchups = new SettingsButton { Text = "Matchups", Location = new Point(440, 44), Size = new Size(211, 32) };
+            mine = new SettingsButton { Text = Language.T("Your team"), Primary = true, Location = new Point(18, 44), Size = new Size(211, 32) };
+            opponents = new SettingsButton { Text = Language.T("Known opponents"), Location = new Point(229, 44), Size = new Size(211, 32) };
+            matchups = new SettingsButton { Text = Language.T("Matchups"), Location = new Point(440, 44), Size = new Size(211, 32) };
             SettingsButton.Group(mine, opponents, matchups);
             mine.Click += (s, e) => { enemy = false; BuildRows(); };
             opponents.Click += (s, e) => { enemy = true; BuildRows(); };
@@ -53,8 +53,8 @@ namespace AniimoAffinities
             Controls.Add(matchups);
             heading = new Label { Location = new Point(32, 82), Size = new Size(480, 20) };
             Controls.Add(heading);
-            suggest = new SettingsButton { Text = "Suggest", Primary = true, AccessibleName = "Show team type suggestions", Location = new Point(540, 80), Size = new Size(110, 24) };
-            tips.SetGraphicTip(suggest, "Complementary suggestions. Coverage: all types. Counter: known opponents. Earlier proposals count as projected allies. Apply a row with + or Ctrl+Enter. Red: weakness; green: resistance. Elements only, no stats or moves.", SuggestionHelpGraphic.Size, SuggestionHelpGraphic.Draw);
+            suggest = new SettingsButton { Text = Language.T("Suggest"), Primary = true, AccessibleName = Language.T("Show team type suggestions"), Location = new Point(540, 80), Size = new Size(110, 24) };
+            tips.SetGraphicTip(suggest, Language.T("Complementary suggestions. Coverage: all types. Counter: known opponents. Earlier proposals count as projected allies. Apply a row with + or Ctrl+Enter. Red: weakness; green: resistance. Elements only, no stats or moves."), SuggestionHelpGraphic.Size, SuggestionHelpGraphic.Draw);
             suggest.Click += (s, e) => { suggestions = !suggestions; suggest.Primary = suggestions; suggest.Invalidate(); RefreshSuggestions(); };
             Controls.Add(suggest);
             suggest.BringToFront();
@@ -62,12 +62,12 @@ namespace AniimoAffinities
             Controls.Add(rows);
             elementLegend.SetBounds(32, 382, 620, 24);
             elementLegend.AccessibleRole = AccessibleRole.StaticText;
-            elementLegend.AccessibleName = "Element legend: red ring means weakness; green ring means resistance; plus means suggested coverage improvement.";
+            elementLegend.AccessibleName = Language.T("Element legend: red ring means weakness; green ring means resistance; plus means suggested coverage improvement.");
             elementLegend.Paint += (s, e) =>
             {
                 var graphics = e.Graphics;
                 graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                string[] labels = { "Weakness", "Resistance", "Suggested" };
+                string[] labels = { Language.T("Weakness"), Language.T("Resistance"), Language.T("Suggested") };
                 for (int i = 0; i < labels.Length; i++)
                 {
                     int x = i * 160;
@@ -85,26 +85,26 @@ namespace AniimoAffinities
                     Drawing.Text(graphics, labels[i], Font, Theme.TextColor, new RectangleF(x + 24, 0, 132, 24), false);
                 }
             };
-            tips.SetToolTip(elementLegend, "Weakness / resistance: damage received by this member. Suggested: on empty rows, complementary mono or dual combinations evaluated from top to bottom. Apply it with the row's + or Ctrl+Enter; ordinary element clicks remain individual choices.");
+            tips.SetToolTip(elementLegend, Language.T("Weakness / resistance: damage received by this member. Suggested: on empty rows, complementary mono or dual combinations evaluated from top to bottom. Apply it with the row's + or Ctrl+Enter; ordinary element clicks remain individual choices."));
             Controls.Add(elementLegend);
             elementLegend.BringToFront();
-            const string guidance = "Leave unknown slots empty. Results use only known elements.\nType matchups only: no stats, moves or team synergy are assumed.";
-            var info = new SettingsButton { Glyph = "info", AccessibleName = "Team planning information", AccessibleDescription = guidance, Location = new Point(22, 414), Size = new Size(30, 30) };
+            string guidance = Language.T("Leave unknown slots empty. Results use only known elements.\nType matchups only: no stats, moves or team synergy are assumed.");
+            var info = new SettingsButton { Glyph = "info", AccessibleName = Language.T("Team planning information"), AccessibleDescription = guidance, Location = new Point(22, 414), Size = new Size(30, 30) };
             tips.SetToolTip(info, guidance);
             Controls.Add(info);
             status.SetBounds(62, 414, 350, 30);
             status.TextAlign = ContentAlignment.MiddleLeft;
-            status.Text = "Saved automatically";
+            status.Text = Language.T("Saved automatically");
             status.ForeColor = Theme.Muted;
             Controls.Add(status);
-            clear = new SettingsButton { Text = "Clear all", Location = new Point(420, 414), Size = new Size(110, 32) };
-            tips.SetToolTip(clear, "Clear all six names and elements in this tab. Click again to confirm.");
+            clear = new SettingsButton { Text = Language.T("Clear all"), Location = new Point(420, 414), Size = new Size(110, 32) };
+            tips.SetToolTip(clear, Language.T("Clear all six names and elements in this tab. Click again to confirm."));
             clear.Click += (s, e) =>
             {
                 if (!confirmClear)
                 {
                     confirmClear = true;
-                    clear.Text = "Confirm clear";
+                    clear.Text = Language.T("Confirm clear");
                     clear.Invalidate();
                     return;
                 }
@@ -117,7 +117,7 @@ namespace AniimoAffinities
                 Save();
             };
             Controls.Add(clear);
-            var done = new SettingsButton { Text = "Done", Primary = true, Location = new Point(540, 414), Size = new Size(110, 32) };
+            var done = new SettingsButton { Text = Language.T("Done"), Primary = true, Location = new Point(540, 414), Size = new Size(110, 32) };
             done.Click += (s, e) => Close();
             Controls.Add(done);
             InitializeThreatReport();
@@ -130,14 +130,14 @@ namespace AniimoAffinities
             rows.Height = 276;
             heading.Width = 480;
             confirmClear = false;
-            clear.Text = "Clear all";
+            clear.Text = Language.T("Clear all");
             clear.Visible = true;
             foreach (Control old in rows.Controls.Cast<Control>().ToArray())
                 old.Dispose();
             mine.Primary = !enemy;
             opponents.Primary = enemy;
             matchups.Primary = false;
-            heading.Text = "Name (optional)                    Elements · select up to two";
+            heading.Text = Language.T("Name (optional)                    Elements · select up to two");
             mine.Invalidate();
             opponents.Invalidate();
             matchups.Invalidate();
@@ -147,12 +147,12 @@ namespace AniimoAffinities
                 var member = members[i];
                 int top = i * 46;
                 rows.Controls.Add(new Label { Text = (i + 1).ToString(), Location = new Point(0, top + 9), Size = new Size(20, 24), ForeColor = Theme.Muted });
-                var name = new NameInput(member.Name, (enemy ? "Opponent " : "Ally ") + (i + 1), "Slot " + (i + 1) + " name") { Location = new Point(24, top + 2), TabIndex = i * 2 };
-                var elements = new TeamTypeSelector(member, Save) { Location = new Point(170, top), AccessibleName = "Slot " + (i + 1) + " elements", TabIndex = i * 2 + 1 };
+                var name = new NameInput(member.Name, (enemy ? Language.T("Opponent ") : Language.T("Ally ")) + (i + 1), Language.T("Slot ") + (i + 1) + Language.T(" name")) { Location = new Point(24, top + 2), TabIndex = i * 2 };
+                var elements = new TeamTypeSelector(member, Save) { Location = new Point(170, top), AccessibleName = Language.T("Slot ") + (i + 1) + Language.T(" elements"), TabIndex = i * 2 + 1 };
                 int slot = i;
                 elements.FilterFocusChanged += active => ShowRowShortcuts(slot, active, false);
                 name.Editor.GotFocus += (s, e) => ShowRowShortcuts(slot, true, true);
-                name.Editor.AccessibleDescription = "Optional name. Tab moves to the next name. F6 enters this row's elements; use arrows and Space there. Ctrl+1 through Ctrl+9 selects an element; Ctrl+0 clears.";
+                name.Editor.AccessibleDescription = Language.T("Optional name. Tab moves to the next name. F6 enters this row's elements; use arrows and Space there. Ctrl+1 through Ctrl+9 selects an element; Ctrl+0 clears.");
                 name.Editor.LostFocus += (s, e) => ShowRowShortcuts(slot, false, true);
                 name.Editor.TextChanged += (s, e) => { member.Name = name.Editor.Text; Save(); };
                 rows.Controls.Add(name);
@@ -210,7 +210,7 @@ namespace AniimoAffinities
             mine.Invalidate();
             opponents.Invalidate();
             matchups.Invalidate();
-            heading.Text = "Teal: advantage · Purple: weakness · Top: dealt / Bottom: received";
+            heading.Text = Language.T("Teal: advantage · Purple: weakness · Top: dealt / Bottom: received");
             var table = new TeamMatchupPanel(plan) { Dock = DockStyle.Fill };
             table.Configure();
             rows.Controls.Add(table);
@@ -221,7 +221,7 @@ namespace AniimoAffinities
             RefreshThreatReport();
             saveTimer.Stop();
             saveTimer.Start();
-            status.Text = "Saving…";
+            status.Text = Language.T("Saving…");
         }
         private void FlushSave()
         {
@@ -229,11 +229,11 @@ namespace AniimoAffinities
             try
             {
                 changed();
-                status.Text = "Saved automatically";
+                status.Text = Language.T("Saved automatically");
                 status.ForeColor = Theme.Muted;
             }
-            catch (System.IO.IOException) { status.Text = "Could not save. Your edits remain in this session."; status.ForeColor = Theme.Error; }
-            catch (UnauthorizedAccessException) { status.Text = "Could not save. Check access to local settings."; status.ForeColor = Theme.Error; }
+            catch (System.IO.IOException) { status.Text = Language.T("Could not save. Your edits remain in this session."); status.ForeColor = Theme.Error; }
+            catch (UnauthorizedAccessException) { status.Text = Language.T("Could not save. Check access to local settings."); status.ForeColor = Theme.Error; }
         }
     }
 }

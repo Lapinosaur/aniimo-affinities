@@ -95,10 +95,7 @@ namespace AniimoAffinities
             if (DisplaySettings.ShowBadges && Shortcut.Length > 0 && Form.ActiveForm == FindForm())
             {
                 g.ResetClip();
-                int badgeWidth = Math.Max(11, Shortcut.Length * 6 + 3);
-                Drawing.Box(g, new RectangleF(Width - badgeWidth - 2, 1, badgeWidth, 11), Theme.Border, Theme.Border, 3);
-                using (var keyFont = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold))
-                    Drawing.Text(g, Shortcut, keyFont, Theme.TextColor, new RectangleF(Width - badgeWidth - 2, 1, badgeWidth, 11), true);
+                ShortcutText.DrawBadge(g, Shortcut, Width);
             }
             FinishPaint(g, Width, Height);
         }

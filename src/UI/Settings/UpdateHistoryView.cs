@@ -11,30 +11,46 @@ namespace AniimoAffinities
         internal static string Describe(ReleaseUpdate update)
         {
             var text = new StringBuilder();
-            text.AppendLine("Installed: v" + ReleaseUpdates.CurrentVersion);
-            text.AppendLine("Updating directly to " + update.Version + " includes the intermediate versions.");
+            text.AppendLine(Language.T("Installed: v") + ReleaseUpdates.CurrentVersion);
+            text.AppendLine(Language.T("Updating directly to ") + update.Version + Language.T(" includes the intermediate versions."));
             text.AppendLine();
-            text.AppendLine(update.HistoryComplete ? update.Changes.Length + " newer versions:" : "Release history is incomplete or unavailable. You can still install the latest version.");
+            text.AppendLine(update.HistoryComplete ? update.Changes.Length + Language.T(" newer versions:") : Language.T("Release history is incomplete or unavailable. You can still install the latest version."));
             foreach (var change in update.Changes)
             {
                 text.AppendLine();
-                text.AppendLine(change.Version + (change.Version == update.Version ? " — Latest" : " — Intermediate version"));
+                text.AppendLine("# " + change.Version + (change.Version == update.Version ? Language.T(" — Latest") : Language.T(" — Intermediate version")));
                 string notes = Regex.Replace(change.Notes ?? "", @"<!--[\s\S]*?-->", "").Trim();
-                notes = Regex.Replace(notes, @"(?m)^#{1,6}\s+", "");
-                notes = Regex.Replace(notes, @"\[([^\]]+)\]\((https://[^\s)]+)\)", "$1 ($2)");
-                text.AppendLine(notes.Length == 0 ? "No release notes were provided for this version." : notes);
+                text.AppendLine(notes.Length == 0 ? Language.T("No release notes were provided for this version.") : notes);
             }
             return text.ToString();
         }
         internal static Control Create(ReleaseUpdate update)
         {
             var panel = new ReleaseNotesPanel { Bounds = new Rectangle(24, 136, 512, 342), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
-            foreach (string block in Describe(update).Split(new[] { "\r\n\r\n", "\n\n" }, StringSplitOptions.RemoveEmptyEntries))
+            var notes = new MarkdownNotesBox { ReadOnly = true, BorderStyle = BorderStyle.None, ScrollBars = RichTextBoxScrollBars.None, WordWrap = true, DetectUrls = true, BackColor = Theme.Surface, ForeColor = Theme.TextColor, Width = 468, Height = 100, Margin = Padding.Empty, AccessibleName = Language.T("Formatted release notes") };
+            notes.ContentsResized += (s, e) => notes.Height = Math.Max(40, e.NewRectangle.Height + 12);
+            notes.LinkClicked += (s, e) =>
             {
-                var label = new Label { Text = block.Trim(), AutoSize = true, MaximumSize = new Size(468, 0), ForeColor = Theme.TextColor, Margin = new Padding(0, 0, 0, 18), UseMnemonic = false, AccessibleRole = AccessibleRole.StaticText };
-                panel.Controls.Add(label);
-            }
-            panel.Resize += (s, e) => { foreach (Control label in panel.Controls) label.MaximumSize = new Size(Math.Max(80, panel.ClientSize.Width - 40), 0); };
+                Uri uri;
+                if (!Uri.TryCreate(e.LinkText, UriKind.Absolute, out uri) || (uri.Scheme != "https" && uri.Scheme != "http"))
+                    return;
+                try
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true });
+                }
+                catch (System.ComponentModel.Win32Exception error) { DiagnosticReport.Record(error); }
+            };
+            panel.Controls.Add(notes);
+            Action layout = () =>
+            {
+                int width = Math.Max(80, panel.ClientSize.Width - 40);
+                if (notes.Width == width && notes.TextLength > 0)
+                    return;
+                notes.Width = width;
+                notes.Rtf = MarkdownRtf.Render(Describe(update), width);
+            };
+            panel.Resize += (s, e) => layout();
+            layout();
             return panel;
         }
         private sealed class ReleaseNotesPanel : SlimFlowPanel
@@ -48,8 +64,8 @@ namespace AniimoAffinities
                 WrapContents = false;
                 Padding = new Padding(12);
                 BackColor = Theme.Surface;
-                AccessibleName = "Versions not yet installed and release notes";
-                AccessibleDescription = "Use Up, Down, Page Up, Page Down, Home or End to scroll.";
+                AccessibleName = Language.T("Versions not yet installed and release notes");
+                AccessibleDescription = Language.T("Use Up, Down, Page Up, Page Down, Home or End to scroll.");
             }
             protected override bool IsInputKey(Keys keyData)
             {

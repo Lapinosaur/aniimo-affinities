@@ -50,7 +50,7 @@ namespace AniimoAffinities
         protected void PrepareGlass()
         {
             if (glassPool == null)
-                glassPool = new GlassPool();
+                glassPool = new GlassPool(this);
         }
         private void UpdateGlass(bool locked)
         {

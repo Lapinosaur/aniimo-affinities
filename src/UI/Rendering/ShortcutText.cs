@@ -6,8 +6,18 @@ namespace AniimoAffinities
 {
     internal static class ShortcutText
     {
-        private static readonly Regex tokens = new Regex(@"\[key:[^\]]+\]|\b(?:Ctrl|Alt|Shift|Esc|Escape|Delete|Del|Space|Tab|F\d{1,2}|Enter(?! only| names))\b|\r?\n|[^\s+]+|\+", RegexOptions.Compiled);
-        private static readonly Regex key = new Regex(@"^(Ctrl|Alt|Shift|Esc|Escape|Delete|Del|Space|Tab|Enter|F\d{1,2})$", RegexOptions.Compiled);
+        internal static void DrawBadge(Graphics graphics, string text, float width)
+        {
+            if (string.IsNullOrEmpty(text))
+                return;
+            float badgeWidth = Math.Max(11, text.Length * 6 + 3);
+            var bounds = new RectangleF(width - badgeWidth - 2, 1, badgeWidth, 11);
+            Drawing.Box(graphics, bounds, Theme.Border, Theme.Border, 3);
+            using (var font = UiFonts.Create("Segoe UI", 6.5f, FontStyle.Bold))
+                Drawing.Text(graphics, text, font, Theme.TextColor, bounds, true);
+        }
+        private static readonly Regex tokens = new Regex(@"\[key:[^\]]+\]|\b(?:Page Up|Page Down|Backspace|Ctrl|Alt|Shift|Esc|Escape|Delete|Del|Space|Tab|F\d{1,2}|Enter(?! only| names))\b|\r?\n|[^\s+]+|\+", RegexOptions.Compiled);
+        private static readonly Regex key = new Regex(@"^(Page Up|Page Down|Backspace|Ctrl|Alt|Shift|Esc|Escape|Delete|Del|Space|Tab|Enter|F\d{1,2})$", RegexOptions.Compiled);
         internal static string Mark(string value)
         {
             return "[key:" + value + "]";

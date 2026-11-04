@@ -70,7 +70,7 @@ namespace AniimoAffinities
         }
         private void UpdateDescription()
         {
-            AccessibleDescription = PreviewEnabled ? "Preview: frosted background, opaque text and element icons. Not applied until Apply." : "Preview: opaque window. Not applied until Apply.";
+            AccessibleDescription = PreviewEnabled ? Language.T("Preview: frosted background, opaque text and element icons. Not applied until Apply.") : Language.T("Preview: opaque window. Not applied until Apply.");
         }
         protected override void Dispose(bool disposing)
         {

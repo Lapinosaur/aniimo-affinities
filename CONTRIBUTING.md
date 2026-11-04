@@ -54,17 +54,18 @@ The SDK project enables the explicit CA rules in `.editorconfig`; compiler warni
 
 The SVG loader prohibits DTDs and external resolution and caps XML size. Current SVGs are embedded assets, not remote inputs. Updates still trust the GitHub release and its SHA256 manifest; the client does not independently enforce an Authenticode publisher. These checks are defense in depth, not a claim of complete security coverage.
 
-## Parallel regression groups
+## Regression batteries
 
-After building both executables, `npm test` / `npm run check` run up to three isolated diagnostic processes concurrently. The C# suite registry owns group membership:
+`npm run check` still runs **every** suite. The registry splits them into 11 isolated batteries. Up to four processes run concurrently, each with its own temporary preferences and static state.
 
-- `storage`: updates, packaging, atomic preference writes and session persistence; no visible windows.
-- `model`: matchup calculations and offscreen SVG rendering; no visible windows.
-- `ui`: all window, focus, keyboard, timer and interactive rendering suites, strictly sequential on one STA thread.
+- Independent: `storage`, `model`, `rendering`, `controls` (offscreen controls only).
+- Desktop: `uilifecycle`, `uitutorial`, `uisettings`, `uiinput`, `uiwindows`, `uiteams`, `uiglass`.
 
-Each process has its own temporary preference directory and static state. Do not move a suite that opens a window into a background group, even if it passes alone. New suites must be registered in `RegressionTests`; the runner discovers groups from the executable. Builds finish before tests start, so packaging always reads the completed runtime executable.
+The runner grants only one desktop battery access at a time: focus, mouse capture, foreground ownership and glass surfaces share the Windows desktop. Waiting desktop jobs do not block independent jobs. A failed job releases its lease and the remaining batteries still run. Keep every test that shows a window in a `ui`-prefixed battery; do not classify it as independent just because it has its own preference directory.
 
-Use `npm run test:serial` for comparison or debugging; it uses the same groups and process isolation, one at a time. Reports include timings per suite and group in `dist/tests.txt`, structured results in `dist/tests.json`, and separate reports/logs in `dist/test-results/`. All groups are awaited even when one fails. A group timeout (240 seconds for the sequential UI group, 120 seconds for other groups) or nonzero exit fails the run; failures are never silently retried. CI uploads these reports even on failure. Parallelism does not imply UI tests can share a desktop safely; larger UI shards would need separate Windows runners.
+During focused iteration, run for example `node scripts/cli.mjs test --groups=uisettings` or `node scripts/cli.mjs test --groups=uiwindows,uiglass`. Reports explicitly mark this as a selected run, not a complete validation. Unknown battery names fail. Use `npm test -- --serial` to diagnose isolation issues, and the full `npm run check` before delivery. `dist/tests.json` records scope, concurrency and each battery's timings; `dist/test-results/` retains separate logs.
+
+Splitting desktop tests improves isolation and targeted feedback, but does not make their elapsed time parallel on a shared desktop. Truly concurrent end-to-end UI runs require separate desktop sessions or CI machines. Previews must still run after UI tests finish.
 
 ## Toolchain dependency maintenance
 

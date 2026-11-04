@@ -96,7 +96,7 @@ namespace AniimoAffinities
                 {
                     bubble.Hide();
                     bubble.Present(card, SuggestionGraphic.Title(proposal), null, null,
-                        (g, bounds) => SuggestionGraphic.Draw(g, bounds, proposal, Plan.Allies[3].Known ? "Remaining proposals recalculated" : "Preview only: not applied"), SuggestionGraphic.Size(proposal));
+                        (g, bounds) => SuggestionGraphic.Draw(g, bounds, proposal, Plan.Allies[3].Known ? Language.T("Remaining proposals recalculated") : Language.T("Preview only: not applied")), SuggestionGraphic.Size(proposal));
                     using (var image = new Bitmap(bubble.Width, bubble.Height))
                     using (var graphics = Graphics.FromImage(frame.Image))
                     {

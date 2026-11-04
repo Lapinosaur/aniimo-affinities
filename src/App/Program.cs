@@ -5,11 +5,18 @@ namespace AniimoAffinities
 {
     internal static class Program
     {
+        private static bool restartRequested;
+        internal static void Restart()
+        {
+            restartRequested = true;
+            Application.Exit();
+        }
         [STAThread]
         private static int Main(string[] args)
         {
             try
             {
+                FactoryReset.ApplyPending();
                 if (args.Length == 2 && (args[0] == "--apply-update" || args[0] == "--recover-update"))
                 {
                     PackageIdentity.RequirePortableUpdates();
@@ -29,11 +36,18 @@ namespace AniimoAffinities
                 }
                 catch (Exception)
                 {
-                    MessageBox.Show("The prepared update could not be installed. Your current app will open.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(Language.T("The prepared update could not be installed. Your current app will open."), Language.T("Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 ApplicationBootstrap.Initialize();
-                Application.ThreadException += (s, e) => { DiagnosticReport.Record(e.Exception); MessageBox.Show("An error occurred. You can copy diagnostics from Tutorial & Help.", "Affinisaur", MessageBoxButtons.OK, MessageBoxIcon.Error); };
+                Application.ThreadException += (s, e) => { DiagnosticReport.Record(e.Exception); MessageBox.Show(Language.T("An error occurred. You can copy diagnostics from Tutorial & Help."), "Affinisaur", MessageBoxButtons.OK, MessageBoxIcon.Error); };
                 AppDomain.CurrentDomain.UnhandledException += (s, e) => { var error = e.ExceptionObject as Exception; if (error != null) DiagnosticReport.Record(error); };
+                if (OnboardingPreferences.ShouldShow())
+                {
+                    OnboardingPreferences.Begin();
+                    using (var welcome = new OnboardingWindow())
+                        if (welcome.ShowDialog() != DialogResult.OK)
+                            return 0;
+                }
                 var main = new MainForm(true);
                 main.Shown += (s, e) =>
                 {
@@ -49,6 +63,10 @@ namespace AniimoAffinities
                 if (!PackageIdentity.IsPackaged)
                     ReleaseUpdates.Cleanup();
                 Application.Run(main);
+                if (restartRequested || System.IO.File.Exists(FactoryReset.RequestPath))
+                    using (System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Application.ExecutablePath) { UseShellExecute = true }))
+                    {
+                    }
                 return 0;
             }
             catch (Exception error)

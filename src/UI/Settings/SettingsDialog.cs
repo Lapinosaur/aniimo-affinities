@@ -21,7 +21,7 @@ namespace AniimoAffinities
         {
             heightTransition.Tick += (s, e) => AdvanceHeight();
             VisibleChanged += (s, e) => { if (!Visible && heightTransition.Enabled) { heightTransition.Stop(); ClientSize = new Size(ClientSize.Width, heightTarget); } };
-            Text = "Affinisaur · Unofficial · Settings";
+            Text = Language.T("Affinisaur · Unofficial · Settings");
             ClientSize = new Size(460, 632);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -32,14 +32,14 @@ namespace AniimoAffinities
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
             AutoScaleMode = AutoScaleMode.Dpi;
-            Controls.Add(UiFonts.Own(new Label { Text = "Keyboard shortcuts", Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(282, 32), Location = new Point(24, 14) }));
+            Controls.Add(UiFonts.Own(new Label { Text = Language.T("Keyboard shortcuts"), Font = UiFonts.Create("Segoe UI", 16, FontStyle.Bold), Size = new Size(282, 32), Location = new Point(24, 14) }));
             var appearance = new SettingsButton { Quiet = true, Location = new Point(396, 14), Size = new Size(36, 32), TabIndex = 0 };
             Action updateAppearance = () =>
             {
-                string mode = Theme.Appearance == 0 ? "Dark" : Theme.Appearance == 1 ? "System" : "Light";
-                appearance.AccessibleName = "Appearance: " + mode;
+                string mode = Theme.Appearance == 0 ? Language.T("Dark theme") : Theme.Appearance == 1 ? Language.T("System theme") : Language.T("Light theme");
+                appearance.AccessibleName = Language.T("Appearance: ") + mode;
                 appearance.Glyph = Theme.Appearance == 0 ? "moon" : Theme.Appearance == 1 ? "system" : "sun";
-                tips.SetToolTip(appearance, "Appearance: " + mode + " · Click to switch");
+                tips.SetToolTip(appearance, Language.T("Appearance: ") + mode + Language.T(" · Click to switch"));
                 appearance.Invalidate();
             };
             appearance.Click += (s, e) => { Theme.CycleAppearance(); updateAppearance(); };
@@ -47,9 +47,9 @@ namespace AniimoAffinities
             Disposed += (s, e) => Theme.Changed -= updateAppearance;
             Controls.Add(appearance);
             updateAppearance();
-            Controls.Add(new Label { Text = "Click a shortcut and press a key to change it.", ForeColor = Theme.Muted, Size = new Size(412, 22), Location = new Point(24, 52) });
-            Controls.Add(UiFonts.Own(new Label { Text = "ACTION", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(180, 20), Location = new Point(28, 88) }));
-            Controls.Add(UiFonts.Own(new Label { Text = "SHORTCUT", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(160, 20), Location = new Point(224, 88) }));
+            Controls.Add(new Label { Text = Language.T("Click a shortcut and press a key to change it."), ForeColor = Theme.Muted, Size = new Size(412, 22), Location = new Point(24, 52) });
+            Controls.Add(UiFonts.Own(new Label { Text = Language.T("ACTION"), ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(180, 20), Location = new Point(28, 88) }));
+            Controls.Add(UiFonts.Own(new Label { Text = Language.T("SHORTCUT"), ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold), Size = new Size(160, 20), Location = new Point(224, 88) }));
             Paint += (s, e) =>
             {
                 e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
@@ -61,7 +61,7 @@ namespace AniimoAffinities
                         e.Graphics.DrawLine(line, 24, 616 - (windowSection ? (20 - KeyBindings.Actions.Length) * 38 : 28), 436, 616 - (windowSection ? (20 - KeyBindings.Actions.Length) * 38 : 28));
                 }
             };
-            var status = new Label { Location = new Point(24, 510), Size = new Size(412, 32), ForeColor = Theme.Muted };
+            var status = new ShortcutLabel { Location = new Point(24, 510), Size = new Size(412, 32), ForeColor = Theme.Muted };
             Controls.Add(status);
             for (int i = 0; i < fields.Length; i++)
             {
@@ -69,7 +69,7 @@ namespace AniimoAffinities
                 int actionIndex = i;
                 int rowIndex = i < 10 ? i : i - 10;
                 int type = Array.IndexOf(Model.Names, KeyBindings.Actions[i]);
-                var icon = new DrawingPanel { Location = new Point(32, 115 + rowIndex * 38), Size = new Size(30, 30), AccessibleName = KeyBindings.Actions[i], AccessibleRole = AccessibleRole.Graphic, TabStop = false };
+                var icon = new DrawingPanel { Location = new Point(32, 115 + rowIndex * 38), Size = new Size(30, 30), AccessibleName = Language.T(KeyBindings.Actions[i]), AccessibleRole = AccessibleRole.Graphic, TabStop = false };
                 icon.Paint += (s, e) =>
                 {
                     e.Graphics.Clear(icon.BackColor);
@@ -83,15 +83,15 @@ namespace AniimoAffinities
                     else
                         Glyphs.Draw(e.Graphics, "reset", new RectangleF(3, 3, 24, 24), Theme.Muted);
                 };
-                tips.SetToolTip(icon, KeyBindings.Actions[i]);
+                tips.SetToolTip(icon, Language.T(KeyBindings.Actions[i]));
                 Controls.Add(icon);
-                var actionLabel = new Label { Text = i == 0 ? "Clear selection" : KeyBindings.Actions[i], Location = new Point(72, 115 + rowIndex * 38), Size = new Size(146, 30), TextAlign = ContentAlignment.MiddleLeft };
+                var actionLabel = new Label { Text = i == 0 ? Language.T("Clear selection") : Language.T(KeyBindings.Actions[i]), Location = new Point(72, 115 + rowIndex * 38), Size = new Size(146, 30), TextAlign = ContentAlignment.MiddleLeft };
                 Controls.Add(actionLabel);
-                var field = new KeyCapture { Location = new Point(222, 116 + rowIndex * 38), Width = 174, AccessibleName = KeyBindings.Actions[i], TabIndex = i * 2, AllowModifiers = i >= 10, Binding = current[i] };
+                var field = new KeyCapture { Location = new Point(222, 116 + rowIndex * 38), Width = 174, AccessibleName = Language.T(KeyBindings.Actions[i]), TabIndex = i * 2, AllowModifiers = i >= 10, Binding = current[i] };
                 field.Feedback = message => { status.ForeColor = field.Invalid ? Theme.Error : Theme.Muted; status.Text = message; };
                 fields[i] = field;
                 Controls.Add(field);
-                tips.SetToolTip(field, "Rebind");
+                tips.SetToolTip(field, Language.T("Rebind"));
                 field.CaptureEnded += (s, e) => ClearValidation();
                 field.ValidateBinding = key =>
                 {
@@ -100,12 +100,12 @@ namespace AniimoAffinities
                     if (duplicate == null)
                         return true;
                     duplicate.ShowValidation(true, false);
-                    status.Text = KeyBindings.Label(key) + " is used by " + duplicate.AccessibleName + ". Clear it there or try another key.";
+                    status.Text = KeyBindings.Label(key) + Language.T(" is used by ") + duplicate.AccessibleName + Language.T(". Clear it there or try another key.");
                     status.ForeColor = Theme.Error;
-                    tips.SetToolTip(field, "Already assigned to " + duplicate.AccessibleName);
-                    tips.SetToolTip(duplicate, "Conflicts with " + field.AccessibleName);
+                    tips.SetToolTip(field, Language.T("Already assigned to ") + duplicate.AccessibleName);
+                    tips.SetToolTip(duplicate, Language.T("Conflicts with ") + field.AccessibleName);
                     Keys old = field.Binding;
-                    using (var conflict = new ShortcutConflictWindow(KeyBindings.Label(key), field.AccessibleName, duplicate.AccessibleName, old == Keys.None ? "Unassigned" : KeyBindings.Label(old), duplicate.AllowModifiers || (old & Keys.Modifiers) == Keys.None))
+                    using (var conflict = new ShortcutConflictWindow(KeyBindings.Label(key), field.AccessibleName, duplicate.AccessibleName, old == Keys.None ? Language.T("Unassigned") : KeyBindings.Label(old), duplicate.AllowModifiers || (old & Keys.Modifiers) == Keys.None))
                     {
                         conflict.ShowDialog(this);
                         field.Binding = old;
@@ -116,20 +116,20 @@ namespace AniimoAffinities
                             field.ShowValidation(false, true);
                             duplicate.ShowValidation(false, true);
                             status.ForeColor = Theme.Muted;
-                            status.Text = "Shortcuts updated. Click Save to keep your changes.";
+                            status.Text = Language.T("Shortcuts updated. Click Save to keep your changes.");
                         }
                         else
                         {
                             status.ForeColor = Theme.Muted;
-                            status.Text = "Cancelled. Both shortcuts are unchanged.";
+                            status.Text = Language.T("Cancelled. Both shortcuts are unchanged.");
                         }
                     }
                     return false;
                 };
-                var clear = new SettingsButton { Quiet = true, Glyph = "close", AccessibleName = "Clear shortcut : " + KeyBindings.Actions[i], Location = new Point(404, 117 + rowIndex * 38), Size = new Size(26, 26), TabIndex = i * 2 + 1 };
+                var clear = new SettingsButton { Quiet = true, Glyph = "close", AccessibleName = Language.T("Clear shortcut : ") + Language.T(KeyBindings.Actions[i]), Location = new Point(404, 117 + rowIndex * 38), Size = new Size(26, 26), TabIndex = i * 2 + 1 };
                 clear.TabStop = false;
                 clearButtons[i] = clear;
-                tips.SetToolTip(clear, "Clear shortcut · Del");
+                tips.SetToolTip(clear, Language.T("Clear shortcut · Del"));
                 clear.Click += (s, e) => { field.Focus(); field.Binding = Keys.None; status.Text = ""; };
                 Controls.Add(clear);
                 testRowFeedback[i] = held =>
@@ -143,15 +143,19 @@ namespace AniimoAffinities
                 for (int c = startCount; c < Controls.Count; c++)
                     Controls[c].Tag = i >= 10 ? "window" : "types";
             }
-            Controls.Add(UiFonts.Own(new Label { Text = "Delete clears the focused shortcut. Esc cancels.", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), Location = new Point(28, 492), Size = new Size(404, 18) }));
-            var reset = ActionButton("Defaults", 24);
-            var cancel = ActionButton("Cancel", 216);
-            var save = ActionButton("Save", 330, true);
+            Controls.Add(UiFonts.Own(new ShortcutLabel { Text = Language.T("Delete clears the focused shortcut. Esc cancels."), ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), Location = new Point(28, 492), Size = new Size(404, 24) }));
+            var reset = ActionButton(Language.T("Defaults"), 24);
+            var cancel = ActionButton(Language.T("Cancel"), 216);
+            var save = ActionButton(Language.T("Save"), 330, true);
+            var independentContent = new RoundCheckBox { Text = Language.T("Keep content windows visible when minimizing"), Checked = ContentWindowPreferences.KeepVisible, Tag = "window", Location = new Point(28, 115 + (fields.Length - 10) * 38), Size = new Size(404, 44) };
+            Controls.Add(independentContent);
+            independentContent.CheckedChanged += (s, e) => save.Enabled = independentContent.Checked != ContentWindowPreferences.KeepVisible || !fields.Select(item => item.Binding).SequenceEqual(current);
+            tips.SetToolTip(independentContent, Language.T("Enabled by default. Radar, matrix and suggestion windows stay visible when the main window is minimized. Closing the app still closes them."));
             save.Enabled = false;
             foreach (var field in fields)
                 field.BindingChanged += (s, e) =>
                 {
-                    save.Enabled = !fields.Select(item => item.Binding).SequenceEqual(current);
+                    save.Enabled = independentContent.Checked != ContentWindowPreferences.KeepVisible || !fields.Select(item => item.Binding).SequenceEqual(current);
                     RefreshNavigationHints();
                 };
             reset.Click += (s, e) => { for (int i = 0; i < fields.Length; i++) fields[i].Binding = KeyBindings.Defaults()[i]; status.Text = ""; };
@@ -163,24 +167,25 @@ namespace AniimoAffinities
                 var values = fields.Select(field => field.Binding).ToArray();
                 if (!KeyBindings.Valid(values))
                 {
-                    status.Text = "This key is already assigned to another action.";
+                    status.Text = Language.T("This key is already assigned to another action.");
                     return;
                 }
                 try
                 {
                     KeyBindings.Save(KeyBindings.FilePath, values);
+                    ContentWindowPreferences.Save(independentContent.Checked);
                     Result = values;
                     DialogResult = DialogResult.OK;
                     Close();
                 }
-                catch (System.IO.IOException) { status.Text = "Unable to save. Your previous settings have been kept."; }
-                catch (UnauthorizedAccessException) { status.Text = "Access to the preferences file was denied."; }
+                catch (System.IO.IOException) { status.Text = Language.T("Unable to save. Your previous settings have been kept."); }
+                catch (UnauthorizedAccessException) { status.Text = Language.T("Access to the preferences file was denied."); }
             };
             foreach (Control control in Controls)
                 if (control.Top >= 88)
                     control.Top += 38;
-            var typesTab = new SettingsButton { Text = "Types", Location = new Point(24, 82), Size = new Size(130, 30), TabIndex = 0, Primary = true };
-            var windowTab = new SettingsButton { Text = "Window & overlay", Location = new Point(160, 82), Size = new Size(180, 30), TabIndex = 1 };
+            var typesTab = new SettingsButton { Text = Language.T("Types"), Location = new Point(24, 82), Size = new Size(130, 30), TabIndex = 0, Primary = true };
+            var windowTab = new SettingsButton { Text = Language.T("Window & overlay"), Location = new Point(160, 82), Size = new Size(180, 30), TabIndex = 1 };
             var shortcutControls = Controls.Cast<Control>().Where(control => control.Top >= 126).ToArray();
             var editor = new DisplayDialog(this, mainType, () => fields.Select(field => field.Binding).ToArray(), startTutorial == null ? (Action)null : () =>
             {
@@ -197,31 +202,31 @@ namespace AniimoAffinities
                 Size = new Size(440, 472)
             };
             Resize += (s, e) => { if (editor.Visible) editor.Height = Math.Max(200, ClientSize.Height - editor.Top - 16); };
-            var display = new SettingsButton { Text = "Display", Location = new Point(346, 82), Size = new Size(90, 30), TabIndex = 2 };
+            var display = new SettingsButton { Text = Language.T("Display"), Location = new Point(346, 82), Size = new Size(90, 30), TabIndex = 2 };
             var aboutPanel = new AboutPanel { Location = new Point(24, 124), Visible = false };
-            var about = new SettingsButton { Glyph = "info", AccessibleName = "About & Credits", Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
-            tips.SetToolTip(about, "About & Credits · Creator, links and acknowledgements");
+            var about = new SettingsButton { Glyph = "info", AccessibleName = Language.T("About & Credits"), Location = new Point(312, 14), Size = new Size(34, 32), TabIndex = 1 };
+            tips.SetToolTip(about, Language.T("About & Credits · Creator, links and acknowledgements"));
             var guidePanel = new Panel { Location = new Point(24, 82), Size = new Size(412, 156), Visible = false };
             AddTutorialChoices(guidePanel, startTutorial);
-            var backToSettings = new SettingsButton { Text = "Settings", AccessibleName = "Back to settings", Bounds = new Rectangle(330, 82, 106, 34), Visible = false, TabIndex = 0 };
+            var backToSettings = new SettingsButton { Text = Language.T("Settings"), AccessibleName = Language.T("Back to settings"), Bounds = new Rectangle(330, 82, 106, 34), Visible = false, TabIndex = 0 };
             Controls.Add(backToSettings);
             Resize += (s, e) => { if (guidePanel.Visible) guidePanel.Height = Math.Max(120, ClientSize.Height - guidePanel.Top - 16); };
-            var guide = new SettingsButton { Glyph = "help", AccessibleName = "Tutorial", Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
-            tips.SetToolTip(guide, "Help & Tutorial · Discord, diagnostics and guided tour");
-            var heading = Controls.OfType<Label>().First(label => label.Text == "Keyboard shortcuts");
+            var guide = new SettingsButton { Glyph = "help", AccessibleName = Language.T("Tutorial"), Location = new Point(354, 14), Size = new Size(34, 32), TabIndex = 1 };
+            tips.SetToolTip(guide, Language.T("Help & Tutorial · Discord, diagnostics and guided tour"));
+            var heading = Controls.OfType<Label>().First(label => label.Text == Language.T("Keyboard shortcuts"));
             heading.UseMnemonic = false;
-            var description = Controls.OfType<Label>().First(label => label.Text == "Click a shortcut and press a key to change it.");
-            var shortcutHint = Controls.OfType<Label>().Single(label => label.Text == "Delete clears the focused shortcut. Esc cancels.");
+            var description = Controls.OfType<Label>().First(label => label.Text == Language.T("Click a shortcut and press a key to change it."));
+            var shortcutHint = Controls.OfType<Label>().Single(label => label.Text == Language.T("Delete clears the focused shortcut. Esc cancels."));
             status.TextChanged += (s, e) => { status.Visible = !displaySection && status.Text.Length > 0; shortcutHint.Visible = !displaySection && status.Text.Length == 0; };
             int fullHeight = ClientSize.Height + 36;
             bool layoutReady = false;
-            var footerPositions = shortcutControls.Where(control => control.Top >= 530).ToDictionary(control => control, control => control.Top + 36);
+            var footerPositions = shortcutControls.Where(control => control != independentContent && control.Top >= 530).ToDictionary(control => control, control => control.Top + 36);
             SettingsButton.Group(typesTab, windowTab, display);
             Action<bool> selectSection = window =>
             {
                 if (layoutReady)
                 {
-                    int reduction = window ? (20 - KeyBindings.Actions.Length) * 38 : 28;
+                    int reduction = window ? (20 - KeyBindings.Actions.Length) * 38 - 50 : 28;
                     foreach (var item in footerPositions)
                         item.Key.Top = item.Value - (window ? reduction : item.Key is Button ? 28 : 0);
                     if (!window)
@@ -243,8 +248,8 @@ namespace AniimoAffinities
                 editor.Hide();
                 display.Primary = false;
                 display.Invalidate();
-                heading.Text = "Keyboard shortcuts";
-                description.Text = "Click a shortcut and press a key to change it.";
+                heading.Text = Language.T("Keyboard shortcuts");
+                description.Text = Language.T("Click a shortcut and press a key to change it.");
                 foreach (var control in shortcutControls)
                     control.Visible = true;
                 status.Visible = status.Text.Length > 0;
@@ -289,8 +294,8 @@ namespace AniimoAffinities
                 foreach (var hint in navigationHints)
                     if (hint != null)
                         hint.Visible = false;
-                heading.Text = "Display";
-                description.Text = "Window scale, text size, keyboard badges and frosted glass.";
+                heading.Text = Language.T("Display");
+                description.Text = Language.T("Window scale, text size, keyboard badges and frosted glass.");
                 typesTab.Primary = false;
                 windowTab.Primary = false;
                 display.Primary = true;
@@ -315,8 +320,8 @@ namespace AniimoAffinities
                 foreach (var hint in navigationHints)
                     if (hint != null)
                         hint.Visible = false;
-                heading.Text = "Help & Tutorial";
-                description.Text = "Learn the app, or get a hand from the community.";
+                heading.Text = Language.T("Help & Tutorial");
+                description.Text = Language.T("Learn the app, or get a hand from the community.");
                 typesTab.Primary = false;
                 windowTab.Primary = false;
                 display.Primary = false;
@@ -352,8 +357,8 @@ namespace AniimoAffinities
                 foreach (var hint in navigationHints)
                     if (hint != null)
                         hint.Visible = false;
-                heading.Text = "About & Credits";
-                description.Text = "Made by Lapinosaur. Built for the community.";
+                heading.Text = Language.T("About & Credits");
+                description.Text = Language.T("Made by Lapinosaur. Built for the community.");
                 foreach (var button in new[] { typesTab, windowTab, display, guide })
                 {
                     button.Primary = false;
@@ -377,7 +382,7 @@ namespace AniimoAffinities
         }
         internal void TutorialSection(string name)
         {
-            Controls.OfType<SettingsButton>().Single(button => button.Text == name).PerformClick();
+            Controls.OfType<SettingsButton>().Single(button => button.Text == Language.T(name)).PerformClick();
             if (heightTransition.Enabled)
             {
                 heightTransition.Stop();
@@ -395,7 +400,7 @@ namespace AniimoAffinities
             foreach (var field in fields.Where(item => item != null))
             {
                 field.ShowValidation(false, false);
-                tips.SetToolTip(field, "Rebind");
+                tips.SetToolTip(field, Language.T("Rebind"));
             }
         }
         protected override void Dispose(bool disposing)

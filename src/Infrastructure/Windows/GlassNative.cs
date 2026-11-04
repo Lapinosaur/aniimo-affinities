@@ -117,7 +117,7 @@ namespace AniimoAffinities
                 RoundedCorners = DwmSetWindowAttribute(window, 33, ref corners, sizeof(int)) == 0;
                 int noBorder = -2;
                 if (DwmSetWindowAttribute(window, 34, ref noBorder, sizeof(int)) != 0)
-                    System.Diagnostics.Debug.WriteLine("Native border styling unavailable.");
+                    System.Diagnostics.Debug.WriteLine(Language.T("Native border styling unavailable."));
                 if (!SetLayeredWindowAttributes(window, 0, 255, 2))
                     return false;
                 return SetWindowCompositionAttribute(window, ref attribute);
@@ -177,7 +177,7 @@ namespace AniimoAffinities
         private static void ReleaseScreen(IntPtr screen)
         {
             if (ReleaseDC(IntPtr.Zero, screen) == 0)
-                System.Diagnostics.Debug.WriteLine("Could not release the glass display DC.");
+                System.Diagnostics.Debug.WriteLine(Language.T("Could not release the glass display DC."));
         }
     }
 }

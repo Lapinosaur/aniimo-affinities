@@ -28,6 +28,7 @@ namespace AniimoAffinities
         internal InteractiveGlass(Form form)
         {
             source = form;
+            foreground.CloseOwner = backdrop.CloseOwner = form;
             AssignHandle(form.Handle);
             Watch(form);
             Theme.Changed += Queue;

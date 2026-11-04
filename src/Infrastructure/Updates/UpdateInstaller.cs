@@ -17,7 +17,7 @@ namespace AniimoAffinities
         private static FileStream Lock()
         {
             Directory.CreateDirectory(Folder);
-            return new FileStream(Path.Combine(Folder, "update.lock"), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
+            return new FileStream(Path.Combine(Folder, Language.T("update.lock")), FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.None);
         }
         internal static bool BeginInstall(string target)
         {
@@ -45,7 +45,7 @@ namespace AniimoAffinities
             {
                 using (var parent = Process.GetProcessById(parentId))
                     if (!parent.WaitForExit(15000))
-                        throw new IOException("Please close the app before updating.");
+                        throw new IOException(Language.T("Please close the app before updating."));
             }
             catch (ArgumentException) { }
         }
@@ -111,14 +111,14 @@ namespace AniimoAffinities
                     if (ready.WaitOne(100))
                         return;
                     if (child.HasExited)
-                        throw new IOException("The updated app exited before confirming startup.");
+                        throw new IOException(Language.T("The updated app exited before confirming startup."));
                 }
                 if (!child.HasExited)
                 {
                     child.Kill();
                     child.WaitForExit(5000);
                 }
-                throw new IOException("The updated app did not confirm startup.");
+                throw new IOException(Language.T("The updated app did not confirm startup."));
             }
         }
         internal static void Recover(int parentId, Action<string> launch = null)
@@ -131,7 +131,7 @@ namespace AniimoAffinities
                     return;
                 var plan = File.ReadAllLines(Journal);
                 if (plan.Length != 2 || !Path.IsPathRooted(plan[0]) || plan[1] != plan[0] + ".previous")
-                    throw new InvalidDataException("Invalid recovery plan.");
+                    throw new InvalidDataException(Language.T("Invalid recovery plan."));
                 if (File.Exists(plan[1]))
                     AtomicCopy(plan[1], plan[0], null);
                 File.Delete(Pending);
@@ -178,12 +178,12 @@ namespace AniimoAffinities
             {
                 string retained = null;
                 if (File.Exists(Journal))
-                    throw new IOException("An update is being installed. Try again after restarting.");
+                    throw new IOException(Language.T("An update is being installed. Try again after restarting."));
                 if (File.Exists(Pending))
                 {
                     var plan = File.ReadAllLines(Pending);
                     if (plan.Length != 4)
-                        throw new IOException("An update needs recovery before cleanup.");
+                        throw new IOException(Language.T("An update needs recovery before cleanup."));
                     retained = Path.GetFullPath(plan[1]);
                 }
                 foreach (string path in Directory.GetFiles(Folder, "*.exe"))

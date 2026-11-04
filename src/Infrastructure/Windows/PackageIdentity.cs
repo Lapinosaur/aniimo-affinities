@@ -20,7 +20,7 @@ namespace AniimoAffinities
         internal static void RequirePortableUpdates()
         {
             if (IsPackaged)
-                throw new InvalidOperationException("Updates for this packaged installation are managed by its distribution channel, not the portable updater.");
+                throw new InvalidOperationException(Language.T("Updates for this packaged installation are managed by its distribution channel, not the portable updater."));
         }
     }
 }

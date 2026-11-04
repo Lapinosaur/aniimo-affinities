@@ -16,13 +16,13 @@ namespace AniimoAffinities
             foreach (var control in footer)
                 control.Top += 72;
             ClientSize = new Size(ClientSize.Width, ClientSize.Height + 72);
-            threatToggle = new ThreatReportHeader { Text = "Threat report ▾", AccessibleName = "Expand threat report and vulnerable allies", Location = new Point(32, 410), Size = new Size(618, 64) };
+            threatToggle = new ThreatReportHeader { Text = Language.T("Threat report ▾"), AccessibleName = Language.T("Expand threat report and vulnerable allies"), Location = new Point(32, 410), Size = new Size(618, 64) };
             threatReport = new ThreatReportPanel
             {
                 Location = new Point(32, 482),
                 Size = new Size(618, 280),
                 Visible = false,
-                AccessibleName = "Team threats and most exposed allies",
+                AccessibleName = Language.T("Team threats and most exposed allies"),
                 TabIndex = 21
             };
             threatToggle.TabIndex = 20;
@@ -33,8 +33,8 @@ namespace AniimoAffinities
                 {
                     int delta = expanded ? 290 : -290;
                     threatReport.Visible = expanded;
-                    threatToggle.Text = expanded ? "Threat report ▴" : "Threat report ▾";
-                    threatToggle.AccessibleName = expanded ? "Collapse threat report and vulnerable allies" : "Expand threat report and vulnerable allies";
+                    threatToggle.Text = expanded ? Language.T("Threat report ▴") : Language.T("Threat report ▾");
+                    threatToggle.AccessibleName = expanded ? Language.T("Collapse threat report and vulnerable allies") : Language.T("Expand threat report and vulnerable allies");
                     foreach (var control in footer)
                         control.Top += delta;
                     ClientSize = new Size(ClientSize.Width, ClientSize.Height + delta);
@@ -48,7 +48,7 @@ namespace AniimoAffinities
         {
             if (threatReport != null && threatReport.Visible)
             {
-                threatReport.AccessibleName = (enemy ? "Known opponents" : "Your team") + " threats and most exposed members";
+                threatReport.AccessibleName = (enemy ? Language.T("Known opponents") : Language.T("Your team")) + Language.T(" threats and most exposed members");
                 threatReport.UpdateReport(plan, enemy);
             }
         }

@@ -8,6 +8,15 @@ namespace AniimoAffinities
     internal sealed class RoundCheckBox : CheckBox
     {
         internal Func<Color> SurfaceColor;
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                SurfaceColor = null;
+                Events.Dispose();
+            }
+        }
         internal RoundCheckBox()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);

@@ -6,14 +6,14 @@ namespace AniimoAffinities
 {
     internal sealed class TutorialProgress
     {
-        internal const int All = 511;
+        internal const int All = 1023;
         internal const int News = 128;
         internal int Sections = All;
         internal int Step;
         internal bool Pending;
         internal int Completed, Started;
-        internal readonly int[] ViewedSteps = new int[9];
-        internal readonly int[] SectionSteps = new int[9];
+        internal readonly int[] ViewedSteps = new int[10];
+        internal readonly int[] SectionSteps = new int[10];
         internal static readonly string FilePath = PreferenceFiles.FilePath("tutorial-progress.txt");
         internal static TutorialProgress Load(string path = null)
         {
@@ -24,13 +24,13 @@ namespace AniimoAffinities
                 int sections, step;
                 bool legacy = lines.Length == 4 && lines[0] == "tour-v1";
                 bool current = (lines.Length == 7 || lines.Length == 8) && lines[0] == "tour-v2";
-                if ((legacy || current) && int.TryParse(lines[1], out sections) && sections > 0 && sections <= All && int.TryParse(lines[2], out step) && step >= 0 && step < 32 && (lines[3] == "pending" || lines[3] == "done"))
+                if ((legacy || current) && int.TryParse(lines[1], out sections) && sections > 0 && sections <= All && int.TryParse(lines[2], out step) && step >= 0 && step < 36 && (lines[3] == "pending" || lines[3] == "done"))
                 {
                     if (current)
                     {
                         int completed, started;
                         var checkpoints = lines[6].Split(',');
-                        if (!int.TryParse(lines[4], out completed) || completed < 0 || completed > All || !int.TryParse(lines[5], out started) || started < 0 || started > All || (checkpoints.Length < 7 || checkpoints.Length > 9))
+                        if (!int.TryParse(lines[4], out completed) || completed < 0 || completed > All || !int.TryParse(lines[5], out started) || started < 0 || started > All || (checkpoints.Length < 7 || checkpoints.Length > 10))
                             return new TutorialProgress();
                         for (int i = 0; i < checkpoints.Length; i++)
                             if (!int.TryParse(checkpoints[i], out result.SectionSteps[i]) || result.SectionSteps[i] < 0 || result.SectionSteps[i] > 7)
@@ -38,7 +38,7 @@ namespace AniimoAffinities
                         if (lines.Length == 8)
                         {
                             var viewed = lines[7].Split(',');
-                            if (viewed.Length != 9)
+                            if (viewed.Length < 9 || viewed.Length > 10)
                                 return new TutorialProgress();
                             for (int i = 0; i < viewed.Length; i++)
                                 if (!int.TryParse(viewed[i], out result.ViewedSteps[i]) || result.ViewedSteps[i] < 0 || result.ViewedSteps[i] > 255)

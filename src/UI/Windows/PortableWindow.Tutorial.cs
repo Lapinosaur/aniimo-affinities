@@ -16,7 +16,7 @@ namespace AniimoAffinities
         internal void SetTutorialPinState(string view)
         {
             if (!TutorialSnapshot)
-                throw new InvalidOperationException("Only isolated tutorial windows may preview pin states.");
+                throw new InvalidOperationException(Language.T("Only isolated tutorial windows may preview pin states."));
             if (OverlayLocked && view != "pin-locked")
                 SetOverlayLocked(false);
             SetPinned(view != "pin-normal");
@@ -31,7 +31,7 @@ namespace AniimoAffinities
         internal void SetTutorialHoldProgress(float value)
         {
             if (!TutorialSnapshot)
-                throw new InvalidOperationException("Only tutorial snapshots may simulate a hold.");
+                throw new InvalidOperationException(Language.T("Only tutorial snapshots may simulate a hold."));
             holdProgress = Math.Max(0, Math.Min(1, value));
         }
 

@@ -10,9 +10,53 @@ namespace AniimoAffinities
         private sealed class HintTextBox : TextBox
         {
             internal string Hint;
+            internal string Completion = "";
+            internal bool CanComplete
+            {
+                get
+                {
+                    return Focused && TextLength > 0 && SelectionLength == 0 && SelectionStart == TextLength && Completion.Length > TextLength;
+                }
+            }
+            protected override bool ProcessCmdKey(ref Message message, Keys keyData)
+            {
+                if (keyData == Keys.Tab && CanComplete)
+                {
+                    Text = Completion;
+                    SelectionStart = TextLength;
+                    Invalidate();
+                    return true;
+                }
+                return base.ProcessCmdKey(ref message, keyData);
+            }
+            protected override void OnKeyUp(KeyEventArgs e)
+            {
+                base.OnKeyUp(e);
+                Invalidate();
+            }
+            protected override void OnMouseUp(MouseEventArgs e)
+            {
+                base.OnMouseUp(e);
+                Invalidate();
+            }
+            protected override void Dispose(bool disposing)
+            {
+                base.Dispose(disposing);
+                if (disposing)
+                    Events.Dispose();
+            }
             protected override void WndProc(ref Message message)
             {
                 base.WndProc(ref message);
+                if ((message.Msg == 0x000F || message.Msg == 0x0318) && CanComplete)
+                {
+                    Point caret;
+                    if (NativeMethods.GetCaretPos(out caret))
+                        using (var graphics = message.Msg == 0x0318 ? Graphics.FromHdc(message.WParam) : Graphics.FromHwnd(Handle))
+                            TextRenderer.DrawText(graphics, Completion.Substring(TextLength), Font,
+                                new Rectangle(caret.X + 2, caret.Y, Math.Max(0, ClientSize.Width - caret.X - 2), ClientSize.Height - caret.Y), Theme.Muted,
+                                TextFormatFlags.NoPadding | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
+                }
                 if ((message.Msg != 0x000F && message.Msg != 0x0318) || TextLength != 0 || Focused || string.IsNullOrEmpty(Hint))
                     return;
                 using (var graphics = message.Msg == 0x0318 ? Graphics.FromHdc(message.WParam) : Graphics.FromHwnd(Handle))
@@ -21,8 +65,25 @@ namespace AniimoAffinities
             }
         }
         internal readonly TextBox Editor = new HintTextBox();
+        internal void SetCompletion(string value)
+        {
+            ((HintTextBox)Editor).Completion = value ?? "";
+            Editor.Invalidate();
+        }
+        internal void SetHint(string value)
+        {
+            ((HintTextBox)Editor).Hint = value;
+            Editor.Invalidate();
+        }
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+                Events.Dispose();
+        }
         private bool hover;
         internal string NavigationHint = "";
+        internal bool? NavigationHintVisible;
         internal NameInput(string value, string hint, string accessibleName)
         {
             DoubleBuffered = true;
@@ -72,7 +133,7 @@ namespace AniimoAffinities
             Editor.ForeColor = Enabled ? Theme.TextColor : Theme.Muted;
             Drawing.Box(e.Graphics, new RectangleF(1, 1, Width - 3, Height - 3), Theme.Surface,
                 Editor.Focused && Enabled ? Theme.Accent : hover && Enabled ? Theme.StrongBorder : Theme.Border, Theme.ControlRadius);
-            if (DisplaySettings.ShowBadges && NavigationHint.Length > 0)
+            if ((NavigationHintVisible ?? DisplaySettings.ShowBadges) && NavigationHint.Length > 0)
             {
                 float zoom = WindowZoom.Factor(this);
                 float width = (NavigationHint.Length * 5 + 10) * zoom;

@@ -18,12 +18,12 @@ namespace AniimoAffinities
         }
         internal LegalWindow()
         {
-            Text = "Legal & Privacy";
+            Text = Language.T("Legal & Privacy");
             ClientSize = new Size(660, 600);
             MinimumSize = new Size(420, 320);
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
-            var document = new SlimFlowPanel { Location = new Point(22, 52), Size = new Size(616, 488), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = "Conditions d'utilisation, confidentialité et licences" };
+            var document = new SlimFlowPanel { Location = new Point(22, 52), Size = new Size(616, 488), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right, BackColor = Theme.Background, AutoScroll = true, FlowDirection = FlowDirection.TopDown, WrapContents = false, AccessibleName = Language.T("Conditions d'utilisation, confidentialité et licences") };
             using (var stream = typeof(LegalWindow).Assembly.GetManifestResourceStream("legal.md"))
             using (var reader = new StreamReader(stream))
             {
@@ -63,7 +63,7 @@ namespace AniimoAffinities
             BusyOperation.OpenLink(this, linkStatus, url, error =>
             {
                 linkStatus.Hide();
-                linkFeedback.Text = error == null ? "Opened in your browser" : "Unable to open your browser. Select the link to retry.";
+                linkFeedback.Text = error == null ? Language.T("Opened in your browser") : Language.T("Unable to open your browser. Select the link to retry.");
                 linkFeedback.Show();
                 if (error != null)
                     DiagnosticReport.Record(error);

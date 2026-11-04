@@ -13,9 +13,11 @@ export async function filesUnder(directory, extension = '.cs') {
 }
 export async function resources() {
   const data = await filesUnder(path.join(root, 'data'), '.txt');
+  const { packLocales } = await import('./pack-locales.mjs');
+  const locales = await packLocales(path.join(output, 'resources', 'locales'));
   const icons = await filesUnder(path.join(root, 'assets/types'), '.svg');
   const branding = ['app.ico', 'buy-me-a-coffee.png', 'support-qr.png'].map(name => path.join(root, 'assets/branding', name));
-  const resources = [...data, ...icons, ...branding, path.join(root, 'docs/legal.md')];
+  const resources = [...data.filter(file => !/^locale-[a-z]+\.txt$/.test(path.basename(file))), ...locales, ...icons, ...branding, path.join(root, 'docs/legal.md')];
   const names = resources.map(file => path.basename(file));
   if (new Set(names).size !== names.length) throw new Error('Embedded resource names must be unique.');
   return resources.map(file => `/resource:${file},${path.basename(file)}`);

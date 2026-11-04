@@ -11,14 +11,14 @@ namespace AniimoAffinities
         internal readonly Image QrCode;
         internal void ConfigureStarBubble(ApplicationTips tips, Form owner)
         {
-            tips.SetToolTip(this, "Support Lapinosaur\nScan with your phone");
+            tips.SetToolTip(this, Language.T("Support Lapinosaur\nScan with your phone"));
             tips.SetHoverBubble(this, true);
             tips.SetOpenAction(this, () => BusyOperation.OpenLink(owner, this, "https://github.com/Lapinosaur/aniimo-affinities", error =>
             {
                 if (error != null)
                 {
                     DiagnosticReport.Record(error);
-                    MessageBox.Show(owner, "Unable to open GitHub in your browser. Please try again.", "Star on GitHub", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(owner, Language.T("Unable to open GitHub in your browser. Please try again."), Language.T("Star on GitHub"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
             }));
         }
@@ -29,7 +29,7 @@ namespace AniimoAffinities
                 QrCode = new Bitmap(source);
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
-            AccessibleName = "Buy me a carrot · Support Lapinosaur";
+            AccessibleName = Language.T("Buy me a carrot · Support Lapinosaur");
         }
         protected override void Dispose(bool disposing)
         {
@@ -114,7 +114,7 @@ namespace AniimoAffinities
                 g.DrawLine(leaf, x + 11, y + 5, x + 16, y + 2);
             }
             using (var font = UiFonts.Create("Segoe UI", 8.5f, FontStyle.Bold))
-                Drawing.Text(g, "Buy me a carrot", font, Color.White, new RectangleF(bounds.X + 31, bounds.Y, bounds.Width - 35, bounds.Height), true);
+                Drawing.Text(g, Language.T("Buy me a carrot"), font, Color.White, new RectangleF(bounds.X + 31, bounds.Y, bounds.Width - 35, bounds.Height), true);
             FinishPaint(g, w, h);
         }
     }

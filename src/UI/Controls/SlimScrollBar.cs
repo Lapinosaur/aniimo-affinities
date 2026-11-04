@@ -9,12 +9,21 @@ namespace AniimoAffinities
         private int value, maximum, viewport = 1, dragOffset, wheelDelta;
         private bool hover, dragging;
         internal event Action<int> ValueChanged;
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                ValueChanged = null;
+                Events.Dispose();
+            }
+        }
         internal SlimScrollBar()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw, true);
             TabStop = false;
             AccessibleRole = AccessibleRole.ScrollBar;
-            AccessibleName = "Scroll rows";
+            AccessibleName = Language.T("Scroll rows");
             Cursor = Cursors.Hand;
         }
         internal void Configure(int current, int limit, int page)
@@ -23,7 +32,7 @@ namespace AniimoAffinities
             viewport = Math.Max(1, page);
             value = Math.Max(0, Math.Min(maximum, current));
             Visible = maximum > 0;
-            AccessibleDescription = "Row " + (value + 1) + ". Use the mouse wheel or the table's arrow and Page keys.";
+            AccessibleDescription = Language.T("Row ") + (value + 1) + Language.T(". Use the mouse wheel or the table's arrow and Page keys.");
             Invalidate();
         }
         private RectangleF Thumb

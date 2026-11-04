@@ -113,7 +113,7 @@ namespace AniimoAffinities
                     y = ny;
                 }
                 else
-                    throw new InvalidDataException("Unsupported SVG command: " + command);
+                    throw new InvalidDataException(Language.T("Unsupported SVG command: ") + command);
             }
             return p;
         }

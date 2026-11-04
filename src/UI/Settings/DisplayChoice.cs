@@ -65,7 +65,7 @@ namespace AniimoAffinities
                 var main = new RectangleF(left + 15, 53, 25, 10);
                 Drawing.Box(g, main, Theme.AccentSurface, Theme.AccentSurface, 3);
                 using (var font = UiFonts.Create("Segoe UI", 6, FontStyle.Bold))
-                    Drawing.Text(g, "Main", font, Theme.AccentForeground, main, true);
+                    Drawing.Text(g, Language.T("Main"), font, Theme.AccentForeground, main, true);
                 string shortcut = KeyBindings.Label(PreviewBindings()[Array.IndexOf(KeyBindings.Actions, Model.Names[type])]);
                 if (PreviewBadges && shortcut.Length > 0)
                 {
@@ -108,9 +108,9 @@ namespace AniimoAffinities
                 return;
             }
             using (var title = new Font("Segoe UI", 13 * PreviewScale, FontStyle.Bold))
-                Drawing.Text(g, "Attack", title, Theme.Attack, new RectangleF(12, 25, 104, 28), false);
+                Drawing.Text(g, Language.T("Attack"), title, Theme.Attack, new RectangleF(12, 25, 104, 28), false);
             using (var body = new Font("Segoe UI", 9 * PreviewScale))
-                Drawing.Text(g, "Damage dealt", body, Theme.TextColor, new RectangleF(12, 53, 104, 22), false);
+                Drawing.Text(g, Language.T("Damage dealt"), body, Theme.TextColor, new RectangleF(12, 53, 104, 22), false);
             using (var number = new Font("Segoe UI", 8 * PreviewScale, FontStyle.Bold))
                 Drawing.Text(g, "×1.6  ·  ×0.625", number, Theme.Muted, new RectangleF(12, 75, 104, 20), false);
             PaintAvailability(g);

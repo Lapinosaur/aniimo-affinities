@@ -15,7 +15,7 @@ namespace AniimoAffinities
         private readonly KeyboardHold keyboard;
         internal HoldSizeButton()
         {
-            AccessibleDescription = "Hold Space or the left mouse button for 0.9 seconds to apply. Release early to cancel.";
+            AccessibleDescription = Language.T("Hold Space or the left mouse button for 0.9 seconds to apply. Release early to cancel.");
             EnabledChanged += (s, e) => { if (!Enabled) CancelHold(); };
             VisibleChanged += (s, e) => { if (!Visible) CancelHold(); };
             LostFocus += (s, e) => CancelHold();
@@ -93,6 +93,8 @@ namespace AniimoAffinities
             if (disposing)
                 timer.Dispose();
             base.Dispose(disposing);
+            if (disposing)
+                Commit = null;
         }
     }
 }
