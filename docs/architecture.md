@@ -41,7 +41,7 @@ The native app still targets the .NET Framework 4.x APIs and C# 5 compiler avail
 
 ## Locked overlay glass
 
-`PortableWindow.Glass` enables glass only while the overlay is locked. Simple pinning keeps the existing opaque surfaces and color-key background. `LockedGlass` uses separate click-through native accent windows for the visible surface bounds and a premultiplied layered foreground for sharp text, icons and borders. The main host retains its unlock hotkey; the independent unlock bar stays interactive. Unlocking removes the companion surfaces from the desktop and restores normal opacity; hiding the host hides its active surfaces too. Disposing the host destroys all companion handles.
+`PortableWindow.Glass` selects locked-overlay glass or interactive glass according to the separate locked, main-window and secondary-window preferences. Interactive glass preserves the real input host and places click-through visual companions behind it. Simple pinning keeps the existing opaque surfaces and color-key background. `LockedGlass` uses separate click-through native accent windows for the visible surface bounds and a premultiplied layered foreground for sharp text, icons and borders. The main host retains its unlock hotkey; the independent unlock bar stays interactive. Unlocking removes the companion surfaces from the desktop and restores normal opacity; hiding the host hides its active surfaces too. Disposing the host destroys all companion handles.
 
 `GlassFrame` processes only the application's own rendering; it never captures the desktop. Background-key pixels remain fully transparent, surface fills receive alpha, and foreground pixels remain opaque. Native composition updates the blurred desktop continuously; the foreground is refreshed after content invalidation or layout/theme changes. Windows 10/11 accent composition is capability-probed, with ordinary opaque content retained if composition is unavailable or high-contrast mode is active. Windows 11's optional corner attribute is not required on Windows 10. Actual Windows 10 visual validation still requires a Windows 10 host.
 
@@ -62,3 +62,16 @@ Display settings directly expose three independent preferences in `transparency.
 `InteractiveGlass` keeps the original form and child HWNDs as the input surface with minimal nonzero alpha. Separate non-activating, click-through native windows render the blurred background and sharp content immediately below the host in desktop z-order. They move with the host and disappear when it is hidden, minimized or disposed. Ordinary interactive windows include their full background; locked overlays retain gaps between panels. Embedded settings editors and invisible tutorial snapshot hosts do not create companions. Unsupported composition and high-contrast mode retain opaque rendering. Native Windows 10 visual validation still requires a Windows 10 host.
 
 Scrollable content uses `SlimScrollPanel` or `SlimFlowPanel` by default. They retain native focus and wheel scrolling while presenting the shared `SlimScrollBar`; do not introduce raw auto-scrolling panels with native scrollbars.
+
+## Shared interaction conventions
+
+- Use Theme semantic colors and radii, UiFonts, Drawing and Glyphs. Group related choices with SettingsButton.Group; the parent owns their layout.
+- Assign primary action roles explicitly; never infer an action role from its displayed label.
+- Preview cards distinguish pending selection (accent surface), hover and keyboard focus (an outer ring shown with focus cues). Content previews remain visible. A hover must not persist preferences.
+- Transparency previews show the inverse pending toggle on hover; theme previews show the candidate theme. Restore previews on leave, deactivation and disposal. Main-window previews target the owning main window.
+- Use temporary tooltips for explanations and hoverable bubbles for interactive content. Preserve the bridge between anchor and bubble, keyboard access, close control and click delivery.
+- Use key-shaped shortcut badges. Keep focus, selection, visibility and lock distinct. Hold actions must cancel on capture/focus loss; do not use hold for ordinary selection.
+- Use SlimScrollPanel/SlimFlowPanel for overflowing content. Keep primary actions accessible outside scrolling content where appropriate.
+- Preserve specialised native caption/overlay controls: their drag, hit testing, capture and pin/hold contracts justify their distinct implementation. Illustrative miniature corners may differ from actual control radii.
+- Affinisaur identifies itself as Unofficial in the main interface and Settings; About retains the full non-affiliation explanation. Keep UI text in English.
+- Verify shared rendering in multiple consumers, both themes and scaled layouts. Preview rendering is not proof of real desktop DPI or assistive-technology behavior.

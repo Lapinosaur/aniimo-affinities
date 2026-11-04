@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10" xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities" IgnorableNamespaces="uap rescap">
+  <Identity Name="Lapinosaur.Affinisaur.LocalTest" Publisher="CN=Affinisaur Local Test" Version="0.8.2.0" ProcessorArchitecture="x64" />
+  <Properties><DisplayName>Affinisaur (local test)</DisplayName><PublisherDisplayName>Lapinosaur</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
+  <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
+  <Resources><Resource Language="en-us" /><Resource Language="fr-fr" /></Resources>
+  <Applications>
+    <Application Id="App" Executable="Affinisaur.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="Affinisaur (local test)" Description="Unofficial elemental matchup companion" BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" />
+    </Application>
+  </Applications>
+  <Capabilities><rescap:Capability Name="runFullTrust" /></Capabilities>
+</Package>

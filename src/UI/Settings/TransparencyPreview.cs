@@ -39,6 +39,7 @@ namespace AniimoAffinities
             this.kind = kind;
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
+            PreviewCard.Attach(this);
             AutoCheck = false;
             TabStop = true;
             Checked = option.Checked;
@@ -47,6 +48,9 @@ namespace AniimoAffinities
             AccessibleName = option.AccessibleName;
             MouseEnter += (s, e) => Inverse = true;
             MouseLeave += (s, e) => Inverse = false;
+            GotFocus += (s, e) => Invalidate();
+            LostFocus += (s, e) => Invalidate();
+            ChangeUICues += (s, e) => Invalidate();
             option.CheckedChanged += Changed;
             Click += (s, e) => { if (option.Enabled) option.Checked = !option.Checked; };
             UpdateDescription();
@@ -91,9 +95,9 @@ namespace AniimoAffinities
             using (var background = new SolidBrush(Theme.Background))
                 g.FillRectangle(background, ClientRectangle);
             g.SmoothingMode = SmoothingMode.AntiAlias;
-            Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), Checked ? Theme.AccentSurface : Theme.Surface, Checked || Focused ? Theme.Accent : Theme.Border, Theme.ControlRadius);
+            PreviewCard.Draw(g, new RectangleF(0, 0, Width - 1, Height - 1), Checked, Enabled, ClientRectangle.Contains(PointToClient(Cursor.Position)), Focused && ShowFocusCues);
             using (var font = UiFonts.Create("Segoe UI", 7.5f))
-                Drawing.Text(g, Text, font, Checked ? Theme.AccentForeground : Theme.Muted, new RectangleF(5, 3, Width - 10, 18), true);
+                Drawing.Text(g, Text, font, PreviewCard.LabelColor(Checked, Enabled), new RectangleF(5, 3, Width - 10, 18), true);
             var state = g.Save();
             g.TranslateTransform(5, 24);
             g.ScaleTransform((Width - 10f) / Width, (Height - 30f) / 54);

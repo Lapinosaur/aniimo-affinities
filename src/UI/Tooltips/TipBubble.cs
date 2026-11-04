@@ -8,7 +8,7 @@ namespace AniimoAffinities
 {
     internal sealed class TipBubble : Form
     {
-        private sealed class BubbleButton : SettingsButton
+        private class BubbleButton : SettingsButton
         {
             internal BubbleButton()
             {
@@ -32,6 +32,22 @@ namespace AniimoAffinities
             }
         }
         internal bool ScrollGraphic;
+        private sealed class QrButton : BubbleButton
+        {
+            internal Image Code;
+            protected override void OnPaint(PaintEventArgs e)
+            {
+                e.Graphics.Clear(Theme.Surface);
+                if (Code != null)
+                    SupportQr.Draw(e.Graphics, Code, new Rectangle(3, 3, 111, 111));
+                if (ClientRectangle.Contains(PointToClient(Cursor.Position)))
+                    using (var path = Drawing.Round(new RectangleF(1, 1, Width - 3, Height - 3), 10))
+                    using (var pen = new Pen(Theme.Accent, 2))
+                        e.Graphics.DrawPath(pen, path);
+            }
+        }
+        private readonly QrButton qrButton = new QrButton { AccessibleName = "Buy me a carrot", Visible = false };
+        internal Action SupportQrAction;
         private readonly SlimScrollPanel graphicScroll = new SlimScrollPanel { Visible = false };
         private readonly DrawingPanel graphicContent = new DrawingPanel();
         internal float Remaining;
@@ -64,7 +80,7 @@ namespace AniimoAffinities
                 RecreateHandle();
         }
         private Action dismissAction;
-        private readonly SettingsButton closeButton = new BubbleButton { Text = "×", Quiet = true, AccessibleName = "Close bubble", Visible = false, SurroundColor = () => Theme.Surface };
+        private readonly SettingsButton closeButton = new BubbleButton { Glyph = "close", Quiet = true, AccessibleName = "Close bubble", Visible = false, SurroundColor = () => Theme.Surface };
         internal void SetDismissAction(Action action)
         {
             bool changed = (dismissAction == null) != (action == null);
@@ -74,9 +90,17 @@ namespace AniimoAffinities
                 RecreateHandle();
         }
         private Action openAction;
+        private bool supportAction;
         private readonly SettingsButton openButton = new BubbleButton { Glyph = "open", Text = "", Quiet = true, AccessibleName = "Open all suggestions", Visible = false, SurroundColor = () => Theme.Surface };
-        internal void SetOpenAction(Action action)
+        internal void SetOpenAction(Action action, bool support = false)
         {
+            supportAction = support;
+            openButton.Glyph = support ? "star" : "open";
+            openButton.Text = support ? "Star on GitHub" : "";
+            openButton.GlyphWithText = support;
+            openButton.CenterGlyphWithText = support;
+            openButton.Quiet = !support;
+            openButton.AccessibleName = support ? "Star Affinisaur on GitHub" : "Open all suggestions";
             bool changed = (openAction == null) != (action == null);
             openAction = action;
             openButton.Visible = action != null;
@@ -118,6 +142,9 @@ namespace AniimoAffinities
             arrowX = Math.Max(12, Math.Min(Width - 18, anchorBounds.Left + anchorBounds.Width / 2f - Left));
             arrowY = Math.Max(12, Math.Min(Height - 18, anchorBounds.Top + anchorBounds.Height / 2f - Top));
             UpdateShape();
+            if (supportAction)
+                openButton.SetBounds((int)Body.X + 14, (int)Body.Bottom - 40, (int)Body.Width - 28, 30);
+            qrButton.SetBounds((int)Body.Right - 128, (int)Body.Y + 45, 117, 117);
             Invalidate();
         }
         private Image illustration;
@@ -157,6 +184,8 @@ namespace AniimoAffinities
             Controls.Add(applyButton);
             applyButton.Click += (s, e) => { if (applyAction != null) applyAction(); };
             Controls.Add(openButton);
+            Controls.Add(qrButton);
+            qrButton.Click += (s, e) => { if (SupportQrAction != null) SupportQrAction(); };
             Controls.Add(closeButton);
             closeButton.Click += (s, e) => { if (dismissAction != null) dismissAction(); };
             openButton.Click += (s, e) => { if (openAction != null) openAction(); };
@@ -196,6 +225,8 @@ namespace AniimoAffinities
         {
             graphicPainter = paint;
             illustration = image;
+            qrButton.Code = image;
+            qrButton.Visible = image != null;
             BackColor = Theme.Surface;
             label = text;
             rows.Clear();
@@ -250,7 +281,7 @@ namespace AniimoAffinities
                 Size = new Size(maxTextWidth + 24, height + 24);
             }
             if (illustration != null)
-                Size = new Size(Math.Max(QrSize + 24, Width), Height + QrSize + 12);
+                Size = new Size(310, 234);
             if (graphicPainter != null && graphicSize.HasValue)
                 Size = new Size(graphicSize.Value.Width + 24, graphicSize.Value.Height + 24);
             graphicScroll.Visible = ScrollGraphic && graphicPainter != null && graphicSize.HasValue;
@@ -325,6 +356,11 @@ namespace AniimoAffinities
                 graphicPainter(g, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12 - FooterHeight));
                 return;
             }
+            if (illustration != null)
+            {
+                SupportBubbleContent.Draw(g, body, illustration);
+                return;
+            }
             if (rows.Count == 0)
                 ShortcutText.Layout(g, label, Font, Theme.TextColor, new RectangleF(body.X + 8, body.Y + 6, body.Width - 16, body.Height - 12), true);
             else
@@ -350,11 +386,6 @@ namespace AniimoAffinities
                     }
                     y += row.Height;
                 }
-            }
-            if (illustration != null)
-            {
-                var qrBounds = new Rectangle((Width - QrSize) / 2, (int)body.Bottom - QrSize - 10, QrSize, QrSize);
-                SupportQr.Draw(g, illustration, qrBounds);
             }
         }
     }

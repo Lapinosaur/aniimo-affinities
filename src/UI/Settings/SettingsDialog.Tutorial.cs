@@ -8,6 +8,7 @@ namespace AniimoAffinities
 {
     internal sealed partial class SettingsDialog
     {
+        private Action fitHelpHeight;
         private void AddTutorialChoices(Panel panel, Action startTutorial)
         {
             panel.Height = 548;
@@ -18,9 +19,19 @@ namespace AniimoAffinities
             var help = new SlimScrollPanel { Bounds = list.Bounds, Anchor = list.Anchor, Visible = false, AutoScroll = true, TabIndex = 3 };
             AddTechnicalHelp(help);
             help.Bounds = list.Bounds;
+            int supportContentHeight = help.Controls.Cast<Control>().Max(control => control.Bottom);
+            fitHelpHeight = () =>
+            {
+                int desired = support.Primary ? panel.Top + help.Top + supportContentHeight + 20 : 720;
+                var workArea = Screen.FromControl(this).WorkingArea;
+                int target = Math.Min(desired, workArea.Height - 32);
+                if (Top + target > workArea.Bottom)
+                    Top = Math.Max(workArea.Top, workArea.Bottom - target);
+                TransitionHeight(target);
+            };
             panel.Controls.AddRange(new Control[] { tutorials, support, list, help });
-            tutorials.Click += (s, e) => { tutorials.Primary = true; support.Primary = false; list.Show(); help.Hide(); tutorials.Invalidate(); support.Invalidate(); };
-            support.Click += (s, e) => { tutorials.Primary = false; support.Primary = true; list.Hide(); help.Show(); tutorials.Invalidate(); support.Invalidate(); };
+            tutorials.Click += (s, e) => { tutorials.Primary = true; support.Primary = false; list.Show(); help.Hide(); tutorials.Invalidate(); support.Invalidate(); fitHelpHeight(); };
+            support.Click += (s, e) => { tutorials.Primary = false; support.Primary = true; list.Hide(); help.Show(); tutorials.Invalidate(); support.Invalidate(); fitHelpHeight(); };
             var summary = new Label { ForeColor = Theme.TextColor, Bounds = new Rectangle(0, 0, 390, 24) };
             list.Controls.Add(summary);
             var playAll = new SettingsButton { Text = "Play all", AccessibleName = "Play all tutorials", Primary = true, Bounds = new Rectangle(0, 28, 125, 34), Enabled = startTutorial != null, TabIndex = 0 };

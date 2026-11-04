@@ -64,10 +64,14 @@ After building both executables, `npm test` / `npm run check` run up to three is
 
 Each process has its own temporary preference directory and static state. Do not move a suite that opens a window into a background group, even if it passes alone. New suites must be registered in `RegressionTests`; the runner discovers groups from the executable. Builds finish before tests start, so packaging always reads the completed runtime executable.
 
-Use `npm run test:serial` for comparison or debugging; it uses the same groups and process isolation, one at a time. Reports include timings per suite and group in `dist/tests.txt`, structured results in `dist/tests.json`, and separate reports/logs in `dist/test-results/`. All groups are awaited even when one fails. A group timeout (120 seconds) or nonzero exit fails the run; failures are never silently retried. CI uploads these reports even on failure. Parallelism does not imply UI tests can share a desktop safely; larger UI shards would need separate Windows runners.
+Use `npm run test:serial` for comparison or debugging; it uses the same groups and process isolation, one at a time. Reports include timings per suite and group in `dist/tests.txt`, structured results in `dist/tests.json`, and separate reports/logs in `dist/test-results/`. All groups are awaited even when one fails. A group timeout (240 seconds for the sequential UI group, 120 seconds for other groups) or nonzero exit fails the run; failures are never silently retried. CI uploads these reports even on failure. Parallelism does not imply UI tests can share a desktop safely; larger UI shards would need separate Windows runners.
 
 ## Toolchain dependency maintenance
 
 `.node-version` pins the tested Node.js LTS patch used in CI. GitHub Actions are pinned to full commit IDs with their release versions alongside; update both after reviewing upstream release notes. The workflows use current Node 24-based actions rather than deprecated Node 20 actions. The .NET SDK follows the supported `10.0.x` patch line; no runtime framework migration is involved.
 
 There are no npm dependencies. Check SDK reference packages with `dotnet list AniimoAffinities.csproj package --outdated --include-transitive` and `--vulnerable --include-transitive`. Do not suppress compiler, analyzer or runtime deprecation warnings to make checks pass.
+
+## Experimental Microsoft Store packaging
+
+An unsigned local-test MSIX build is available via `powershell -NoProfile -File scripts/package-msix.ps1` (Windows SDK required). It is not a published Store edition. See [compatibility findings and remaining validation](docs/msix-readiness.md).

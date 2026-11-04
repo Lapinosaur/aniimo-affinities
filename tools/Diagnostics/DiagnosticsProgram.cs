@@ -261,13 +261,13 @@ namespace AniimoAffinities
                     }
                     return 0;
                 }
-                if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-display-theme-hover" || args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings"))
+                if (args.Length == 2 && (args[0] == "--preview-display-settings" || args[0] == "--preview-display-theme-hover" || args[0] == "--preview-guide-settings" || args[0] == "--preview-support-settings" || args[0] == "--preview-about-settings"))
                 {
                     using (var form = new SettingsDialog(KeyBindings.Defaults()))
                     {
                         form.Show();
                         Application.DoEvents();
-                        if (args[0] == "--preview-guide-settings" || args[0] == "--preview-about-settings")
+                        if (args[0] == "--preview-guide-settings" || args[0] == "--preview-support-settings" || args[0] == "--preview-about-settings")
                         {
                             form.Controls.OfType<SettingsButton>().Single(button => button.AccessibleName == (args[0] == "--preview-about-settings" ? "About & Credits" : "Tutorial")).PerformClick();
                             var settle = System.Diagnostics.Stopwatch.StartNew();
@@ -282,6 +282,27 @@ namespace AniimoAffinities
                             form.TutorialSection("Display");
                             var navigation = Message.Create(form.Handle, 0x100, (IntPtr)Keys.Tab, IntPtr.Zero);
                             form.PreFilterMessage(ref navigation);
+                        }
+                        if (args[0] == "--preview-support-settings")
+                        {
+                            var pending = new System.Collections.Generic.Queue<Control>();
+                            pending.Enqueue(form);
+                            while (pending.Count > 0)
+                            {
+                                var control = pending.Dequeue();
+                                var button = control as SettingsButton;
+                                if (button != null && button.Text == "Support")
+                                    button.PerformClick();
+                                foreach (Control child in control.Controls)
+                                    pending.Enqueue(child);
+                            }
+                            var supportSettle = System.Diagnostics.Stopwatch.StartNew();
+                            while (supportSettle.ElapsedMilliseconds < 250)
+                            {
+                                Application.DoEvents();
+                                System.Threading.Thread.Sleep(5);
+                            }
+                            Application.DoEvents();
                         }
                         if (args[0] == "--preview-display-theme-hover")
                         {

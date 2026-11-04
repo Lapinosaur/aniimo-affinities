@@ -9,6 +9,19 @@ namespace AniimoAffinities
     {
         private bool hover, pressed;
         internal readonly Image QrCode;
+        internal void ConfigureStarBubble(ApplicationTips tips, Form owner)
+        {
+            tips.SetToolTip(this, "Support Lapinosaur\nScan with your phone");
+            tips.SetHoverBubble(this, true);
+            tips.SetOpenAction(this, () => BusyOperation.OpenLink(owner, this, "https://github.com/Lapinosaur/aniimo-affinities", error =>
+            {
+                if (error != null)
+                {
+                    DiagnosticReport.Record(error);
+                    MessageBox.Show(owner, "Unable to open GitHub in your browser. Please try again.", "Star on GitHub", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }));
+        }
         internal SupportButton()
         {
             using (var stream = typeof(SupportButton).Assembly.GetManifestResourceStream("support-qr.png"))

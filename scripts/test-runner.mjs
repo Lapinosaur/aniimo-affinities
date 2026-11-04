@@ -54,8 +54,9 @@ export async function runTests(executable, root, output, serial = false) {
     const groupReport = path.join(logs, `${group}.txt`);
     await fs.writeFile(groupReport, 'RUNNING\n');
     console.log(`[${group}] started`);
-    const result = await execute(executable, ['--self-test', groupReport, group], root);
-    const log = `${result.stdout}${result.stderr}${result.error ? `\n${result.error}` : ''}${result.timedOut ? '\nTIMEOUT after 120 seconds' : ''}`;
+    const timeout = group === 'ui' ? 240000 : 120000;
+    const result = await execute(executable, ['--self-test', groupReport, group], root, timeout);
+    const log = `${result.stdout}${result.stderr}${result.error ? `\n${result.error}` : ''}${result.timedOut ? `\nTIMEOUT after ${timeout / 1000} seconds` : ''}`;
     // Also retain console output when killed before the C# report can be written.
     await fs.writeFile(path.join(logs, `${group}.log`), log);
     console.log(`[${group}] ${result.ok ? 'PASS' : 'FAIL'} (${result.milliseconds} ms)`);

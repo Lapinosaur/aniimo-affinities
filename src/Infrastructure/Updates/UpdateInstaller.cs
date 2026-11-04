@@ -21,6 +21,7 @@ namespace AniimoAffinities
         }
         internal static bool BeginInstall(string target)
         {
+            PackageIdentity.RequirePortableUpdates();
             string planPath = File.Exists(Journal) ? Journal : Pending;
             if (!File.Exists(planPath))
                 return false;
@@ -61,6 +62,7 @@ namespace AniimoAffinities
         }
         internal static void Install(int parentId, Action<string> launch = null)
         {
+            PackageIdentity.RequirePortableUpdates();
             WaitForParent(parentId);
             using (var guard = Lock())
             {
@@ -121,6 +123,7 @@ namespace AniimoAffinities
         }
         internal static void Recover(int parentId, Action<string> launch = null)
         {
+            PackageIdentity.RequirePortableUpdates();
             WaitForParent(parentId);
             using (var guard = Lock())
             {

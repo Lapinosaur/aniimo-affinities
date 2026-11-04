@@ -73,7 +73,8 @@ def payload(release, repo, editing=False, previous=None):
                 {'name': 'Version', 'value': clean(release['tag_name'], 100), 'inline': True},
                 {'name': 'Channel', 'value': 'Preview build' if release.get('prerelease') else 'Stable release', 'inline': True},
                 {'name': 'Downloads', 'value': downloads + f'\n[All files & release notes]({page})'},
-                {'name': 'Community', 'value': 'Ideas & bugs: <#1562109423516917765>\nNeed help: <#1562649870320533554>'}
+                {'name': 'Community', 'value': 'Ideas & bugs: <#1562109423516917765>\nNeed help: <#1562649870320533554>'},
+                {'name': 'Support the project', 'value': f'Finding this project useful? [\u2b50 Star on GitHub]({base}) — it is a free way to support it. Sign in and click **Star** on the repository.'}
             ],
             'footer': {'text': clean(repo + ' \u00b7 Official GitHub release', 150)}
         }]

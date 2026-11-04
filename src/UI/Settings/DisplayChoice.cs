@@ -14,6 +14,7 @@ namespace AniimoAffinities
         {
             Appearance = Appearance.Button;
             Cursor = Cursors.Hand;
+            PreviewCard.Attach(this);
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
         }
         protected override void OnCheckedChanged(EventArgs e)
@@ -47,13 +48,9 @@ namespace AniimoAffinities
             var g = e.Graphics;
             g.Clear(Theme.Background);
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), Checked ? Theme.AccentSurface : Theme.Surface, Checked ? Theme.Accent : Theme.Border, Theme.ControlRadius);
-            if (Focused && ShowFocusCues)
-                using (var outline = Drawing.Round(new RectangleF(0, 0, Width - 1, Height - 1), Theme.ControlRadius + 2))
-                using (var pen = new Pen(Theme.AccentForeground))
-                    g.DrawPath(pen, outline);
+            PreviewCard.Draw(g, new RectangleF(0, 0, Width - 1, Height - 1), Checked, Enabled, ClientRectangle.Contains(PointToClient(Cursor.Position)), Focused && ShowFocusCues);
             using (var label = UiFonts.Create("Segoe UI", 7.5f))
-                Drawing.Text(g, Text, label, Checked ? Theme.AccentForeground : Theme.Muted, new RectangleF(8, 5, Width - 16, 18), true);
+                Drawing.Text(g, Text, label, PreviewCard.LabelColor(Checked, Enabled), new RectangleF(8, 5, Width - 16, 18), true);
             if (BadgePreview)
             {
                 var saved = g.Save();
@@ -86,7 +83,7 @@ namespace AniimoAffinities
             {
                 float fit = Math.Min(1, Math.Max(.4f, (Height - 30) / 39f));
                 float width = 42 * PreviewScale * fit, height = 26 * PreviewScale * fit, left = (Width - width) / 2f, top = Height - 6 - height;
-                var ink = Checked ? Theme.AccentForeground : Theme.Muted;
+                var ink = PreviewCard.LabelColor(Checked, Enabled);
                 Drawing.Box(g, new RectangleF(left, top, width, height), Theme.Background, ink, 3);
                 using (var pen = new Pen(ink))
                     g.DrawLine(pen, left + 1, top + height * .23f, left + width - 1, top + height * .23f);

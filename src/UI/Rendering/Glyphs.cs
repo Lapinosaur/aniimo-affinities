@@ -19,7 +19,30 @@ namespace AniimoAffinities
             g.ScaleTransform(box.Width / 24, box.Height / 24);
             using (var pen = new Pen(color, 1.7f) { StartCap = LineCap.Round, EndCap = LineCap.Round, LineJoin = LineJoin.Round })
             {
-                if (name == "open")
+                if (name == "phone")
+                {
+                    using (var outline = Drawing.Round(new RectangleF(6, 2, 12, 20), 3))
+                        g.DrawPath(pen, outline);
+                    g.DrawLine(pen, 10, 5, 14, 5);
+                    g.DrawLine(pen, 11, 19, 13, 19);
+                }
+                else if (name == "star")
+                {
+                    var points = new PointF[10];
+                    for (int i = 0; i < points.Length; i++)
+                    {
+                        double angle = -Math.PI / 2 + i * Math.PI / 5;
+                        float radius = i % 2 == 0 ? 10 : 4.5f;
+                        points[i] = new PointF(12 + radius * (float)Math.Cos(angle), 12 + radius * (float)Math.Sin(angle));
+                    }
+                    g.DrawPolygon(pen, points);
+                }
+                else if (name == "close")
+                {
+                    g.DrawLine(pen, 6, 6, 18, 18);
+                    g.DrawLine(pen, 18, 6, 6, 18);
+                }
+                else if (name == "open")
                 {
                     g.DrawLines(pen, new[] { new PointF(11, 4), new PointF(4, 4), new PointF(4, 20), new PointF(20, 20), new PointF(20, 13) });
                     g.DrawLines(pen, new[] { new PointF(15, 3), new PointF(22, 3), new PointF(22, 10) });

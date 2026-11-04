@@ -7,7 +7,7 @@ namespace AniimoAffinities
 {
     internal class SettingsButton : InteractiveButton
     {
-        internal bool Primary, Quiet, Segment, KeyBadges;
+        internal bool Primary, Quiet, Segment, KeyBadges, CenterGlyphWithText;
         protected override bool IsBusy
         {
             get
@@ -196,8 +196,10 @@ namespace AniimoAffinities
             else if (Glyph.Length > 0 && GlyphWithText)
             {
                 Color ink = !Enabled ? Theme.Muted : Primary ? Theme.AccentInk : Theme.TextColor;
-                Glyphs.Draw(g, Glyph, new RectangleF(14, (Height - 18) / 2f, 18, 18), Brand.IsEmpty || !Enabled ? ink : Theme.BrandInk(Brand, fill));
-                Drawing.Text(g, Text, Font, ink, new RectangleF(40, 0, Width - 46, Height), true);
+                float textWidth = CenterGlyphWithText ? Math.Min(Width - 46, TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPadding).Width + 4) : Width - 46;
+                float iconX = CenterGlyphWithText ? (Width - textWidth - 26) / 2f : 14;
+                Glyphs.Draw(g, Glyph, new RectangleF(iconX, (Height - 18) / 2f, 18, 18), Brand.IsEmpty || !Enabled ? ink : Theme.BrandInk(Brand, fill));
+                Drawing.Text(g, Text, Font, ink, new RectangleF(iconX + 26, 0, textWidth, Height), true);
             }
             else if (Glyph.Length > 0)
                 Glyphs.Draw(g, Glyph, new RectangleF((Width - 20) / 2f, (Height - 20) / 2f, 20, 20), !Enabled ? Theme.Muted : Primary ? (Segment ? Theme.AccentForeground : Theme.AccentInk) : Theme.TextColor);

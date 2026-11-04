@@ -47,6 +47,7 @@ namespace AniimoAffinities
         }
         internal static ReleaseUpdate Check()
         {
+            PackageIdentity.RequirePortableUpdates();
             string json = Encoding.UTF8.GetString(Fetch("https://api.github.com/repos/Lapinosaur/aniimo-affinities/releases/latest", 2 * 1024 * 1024));
             var update = ParseRelease(json);
             if (update != null)
@@ -123,6 +124,7 @@ namespace AniimoAffinities
         }
         internal static void Prepare(ReleaseUpdate update, string target, Action<int> progress = null, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken))
         {
+            PackageIdentity.RequirePortableUpdates();
             string expected = Checksum(Encoding.UTF8.GetString(Fetch(update.Checksums, 65536, null, cancellation)), update.AssetName ?? "AniimoAffinities.exe");
             byte[] bytes = Fetch(update.Download, 64 * 1024 * 1024, progress, cancellation);
             cancellation.ThrowIfCancellationRequested();

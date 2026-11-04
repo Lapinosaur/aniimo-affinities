@@ -2,6 +2,8 @@
 
 Unofficial Aniimo companion by Lapinosaur. Formerly Aniimo Affinities.
 
+Finding Affinisaur useful? [⭐ Star on GitHub](https://github.com/Lapinosaur/aniimo-affinities) — it's a free way to support the project. Sign in and click **Star** at the top of the repository.
+
 The executable is named `Affinisaur.exe`. The repository URL and local preference folder keep their existing names. Releases from v0.6.0 also provide an identical `AniimoAffinities.exe` compatibility asset for older update clients; existing installations keep their chosen file path when updating.
 
 A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur**.
@@ -10,7 +12,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
-Latest: [v0.8.1](docs/releases/v0.8.1.md) fixes window scaling and refines locked overlay controls.
+Latest: [v0.8.2](docs/releases/v0.8.2.md) polishes settings and interactive support bubbles, with direct GitHub stars and a clickable support QR code.
 
 See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive suggestion bubbles, radar previews and animated tutorials.
 
@@ -86,6 +88,10 @@ The app does not perform screen capture or recognition. Preferences are stored i
 ## Community
 
 [Join the Lapinosaur Discord community](https://discord.gg/qdsWumFaZz) for updates, feedback and support. This invitation never expires, has no usage limit and assigns the **Member** and **GitHub** roles when you join.
+
+The support bubble offers a clickable QR code for Buy me a carrot and a **Star on GitHub** button. You can also find the GitHub button in Settings > Help & Tutorial > Support.
+
+![Support bubble with a clickable QR code and Star on GitHub button](docs/images/support-bubble.png)
 
 ## Build and develop
 

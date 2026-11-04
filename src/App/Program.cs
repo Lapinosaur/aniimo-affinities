@@ -12,6 +12,7 @@ namespace AniimoAffinities
             {
                 if (args.Length == 2 && (args[0] == "--apply-update" || args[0] == "--recover-update"))
                 {
+                    PackageIdentity.RequirePortableUpdates();
                     int parent;
                     if (!int.TryParse(args[1], out parent))
                         return 1;
@@ -23,7 +24,7 @@ namespace AniimoAffinities
                 }
                 try
                 {
-                    if (!(args.Length == 2 && args[0] == "--update-ready") && ReleaseUpdates.BeginInstall(Application.ExecutablePath))
+                    if (!PackageIdentity.IsPackaged && !(args.Length == 2 && args[0] == "--update-ready") && ReleaseUpdates.BeginInstall(Application.ExecutablePath))
                         return 0;
                 }
                 catch (Exception)
@@ -37,7 +38,7 @@ namespace AniimoAffinities
                 main.Shown += (s, e) =>
                 {
                     UpdatePrompt.OnStartup(main);
-                    if (args.Length == 2 && args[0] == "--update-ready")
+                    if (!PackageIdentity.IsPackaged && args.Length == 2 && args[0] == "--update-ready")
                     {
                         var startup = new Timer { Interval = 5000 };
                         main.Disposed += (a, b) => startup.Dispose();
@@ -45,7 +46,8 @@ namespace AniimoAffinities
                         startup.Start();
                     }
                 };
-                ReleaseUpdates.Cleanup();
+                if (!PackageIdentity.IsPackaged)
+                    ReleaseUpdates.Cleanup();
                 Application.Run(main);
                 return 0;
             }

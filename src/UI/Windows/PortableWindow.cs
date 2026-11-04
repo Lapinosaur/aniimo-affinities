@@ -521,7 +521,7 @@ namespace AniimoAffinities
                 var coffee = new SupportButton { Dock = DockStyle.Right, Width = 154 };
                 UiFonts.Assign(coffee, UiFonts.Create("Segoe UI", 9));
                 coffee.Cursor = Cursors.Hand;
-                captionTips.SetToolTip(coffee, "Support Lapinosaur\nScan with your phone");
+                coffee.ConfigureStarBubble(captionTips, this);
                 captionTips.SetAnchorBounds(coffee, () =>
                 {
                     int height = (int)Math.Round(32 * AppliedWindowScale);

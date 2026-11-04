@@ -13,6 +13,8 @@ namespace AniimoAffinities
         private static readonly List<SettingsButton> buttons = new List<SettingsButton>();
         internal static void Track(SettingsButton button)
         {
+            if (PackageIdentity.IsPackaged)
+                button.Text = "Updates managed by Microsoft Store";
             buttons.Add(button);
             button.Disposed += (s, e) => buttons.Remove(button);
             if (busy)
@@ -20,6 +22,8 @@ namespace AniimoAffinities
         }
         internal static void OnStartup(Form owner)
         {
+            if (PackageIdentity.IsPackaged)
+                return;
             var timer = new Timer { Interval = 1000 };
             owner.Disposed += (s, e) => timer.Dispose();
             timer.Tick += (s, e) =>
@@ -34,6 +38,12 @@ namespace AniimoAffinities
         }
         internal static void Check(Form owner, bool manual)
         {
+            if (PackageIdentity.IsPackaged)
+            {
+                if (manual)
+                    MessageBox.Show(owner, "For the Store edition, open Microsoft Store > Library to check for updates. Locally installed test packages must be updated separately.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             foreach (Form form in Application.OpenForms)
                 if (form is UpdateWindow)
                 {

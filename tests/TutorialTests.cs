@@ -251,12 +251,15 @@ namespace AniimoAffinities
                         if (i == 2)
                         {
                             var animation = System.Diagnostics.Stopwatch.StartNew();
-                            while (animation.ElapsedMilliseconds < 2100)
+                            MainForm demo = null;
+                            while (animation.ElapsedMilliseconds < 6000)
                             {
                                 Application.DoEvents();
+                                demo = (MainForm)typeof(TutorialOverlay).GetField("pinAnimationHost", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(lockTour);
+                                if (demo != null && demo.OverlayLocked && demo.TutorialSnapshot)
+                                    break;
                                 System.Threading.Thread.Sleep(5);
                             }
-                            var demo = (MainForm)typeof(TutorialOverlay).GetField("pinAnimationHost", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(lockTour);
                             if (demo == null || !demo.OverlayLocked || !demo.TutorialSnapshot)
                                 throw new Exception("The running hold animation must reach the real locked demo state.");
                         }

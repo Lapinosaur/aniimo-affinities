@@ -189,7 +189,11 @@ namespace AniimoAffinities
                     Application.DoEvents();
                     bubble.Remaining = mode.StartsWith("team-support-tooltip") ? 0 : .65f;
                     if (mode.StartsWith("team-support-tooltip"))
+                    {
+                        bubble.SetOpenAction(() => { }, true);
+                        bubble.SetDismissAction(() => bubble.Hide());
                         bubble.Present(card, "Support Lapinosaur\nScan with your phone", null, support.QrCode);
+                    }
                     else
                         bubble.Present(card, mode == "team-card-tooltip" ? "[types:3,5]Ally 4\n\nClick to select\nHover counters for matchups" : card.CounterTooltip(true));
                     if (mode == "team-support-tooltip-side")

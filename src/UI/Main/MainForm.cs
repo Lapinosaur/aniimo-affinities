@@ -47,7 +47,7 @@ namespace AniimoAffinities
         internal MainForm(bool remember = false, bool child = false)
         {
             childView = child;
-            Text = "Affinisaur";
+            Text = "Affinisaur · Unofficial";
             ClientSize = new Size(902, 500);
             MinimumSize = new Size(878, 500);
             StartPosition = FormStartPosition.CenterScreen;

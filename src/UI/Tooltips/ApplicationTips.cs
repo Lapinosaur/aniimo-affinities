@@ -6,7 +6,7 @@ using System.Windows.Forms;
 
 namespace AniimoAffinities
 {
-    internal sealed class ApplicationTips : IDisposable
+    internal sealed class ApplicationTips : IDisposable, IMessageFilter
     {
         private readonly Dictionary<Control, string> labels = new Dictionary<Control, string>();
         private readonly Dictionary<Control, Func<Rectangle>> anchors = new Dictionary<Control, Func<Rectangle>>();
@@ -254,11 +254,12 @@ namespace AniimoAffinities
             owner.LocationChanged += Leave;
             Func<Rectangle> bounds;
             var support = anchor as SupportButton;
+            bubble.SupportQrAction = support == null ? (Action)null : () => { Hide(); support.PerformClick(); };
             Action<Graphics, RectangleF> paint;
             graphics.TryGetValue(anchor, out paint);
             Action open;
             openActions.TryGetValue(anchor, out open);
-            bubble.SetOpenAction(open == null ? (Action)null : () => { Hide(); open(); });
+            bubble.SetOpenAction(open == null ? (Action)null : () => { Hide(); open(); }, support != null);
             Action apply;
             applyActions.TryGetValue(anchor, out apply);
             bubble.SetApplyAction(apply == null ? (Action)null : () => { Hide(); apply(); });
@@ -269,6 +270,8 @@ namespace AniimoAffinities
             bubble.Remaining = support == null && !hoverBubbles.Contains(anchor) ? 1 : 0;
             bubble.ScrollGraphic = scrollableGraphics.Contains(anchor);
             bubble.Present(anchor, text, anchors.TryGetValue(anchor, out bounds) ? bounds() : anchor.ClientRectangle, support == null ? null : support.QrCode, paint, paint == null ? (Size?)null : graphicSizes[anchor]);
+            if (!displayed)
+                Application.AddMessageFilter(this);
             displayed = true;
             if (support != null && SupportPlacement != null)
                 bubble.Relocate(SupportPlacement(bubble.Bounds));
@@ -281,6 +284,17 @@ namespace AniimoAffinities
                 timer.Start();
             }
         }
+        public bool PreFilterMessage(ref Message message)
+        {
+            if (!displayed || anchor == null || message.Msg != 0x100 || (Keys)message.WParam.ToInt32() != Keys.Escape)
+                return false;
+            var target = Control.FromHandle(message.HWnd);
+            var form = target == null ? null : target.FindForm();
+            if (form != anchor.FindForm() && form != bubble)
+                return false;
+            Hide();
+            return true;
+        }
         private void Hide()
         {
             if (displayed && anchor is SupportButton && SupportBoundsChanged != null)
@@ -288,6 +302,7 @@ namespace AniimoAffinities
             timer.Stop();
             lifetime.Reset();
             outside.Reset();
+            Application.RemoveMessageFilter(this);
             bubble.Hide();
             displayed = false;
             anchor = null;

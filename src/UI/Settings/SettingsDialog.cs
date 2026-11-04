@@ -21,7 +21,7 @@ namespace AniimoAffinities
         {
             heightTransition.Tick += (s, e) => AdvanceHeight();
             VisibleChanged += (s, e) => { if (!Visible && heightTransition.Enabled) { heightTransition.Stop(); ClientSize = new Size(ClientSize.Width, heightTarget); } };
-            Text = "Settings";
+            Text = "Affinisaur · Unofficial · Settings";
             ClientSize = new Size(460, 632);
             FormBorderStyle = FormBorderStyle.FixedDialog;
             MaximizeBox = false;
@@ -126,7 +126,7 @@ namespace AniimoAffinities
                     }
                     return false;
                 };
-                var clear = new SettingsButton { Quiet = true, Text = "×", AccessibleName = "Clear shortcut : " + KeyBindings.Actions[i], Location = new Point(404, 117 + rowIndex * 38), Size = new Size(26, 26), TabIndex = i * 2 + 1 };
+                var clear = new SettingsButton { Quiet = true, Glyph = "close", AccessibleName = "Clear shortcut : " + KeyBindings.Actions[i], Location = new Point(404, 117 + rowIndex * 38), Size = new Size(26, 26), TabIndex = i * 2 + 1 };
                 clear.TabStop = false;
                 clearButtons[i] = clear;
                 tips.SetToolTip(clear, "Clear shortcut · Del");
@@ -146,7 +146,7 @@ namespace AniimoAffinities
             Controls.Add(UiFonts.Own(new Label { Text = "Delete clears the focused shortcut. Esc cancels.", ForeColor = Theme.Muted, Font = UiFonts.Create("Segoe UI", 8), Location = new Point(28, 492), Size = new Size(404, 18) }));
             var reset = ActionButton("Defaults", 24);
             var cancel = ActionButton("Cancel", 216);
-            var save = ActionButton("Save", 330);
+            var save = ActionButton("Save", 330, true);
             save.Enabled = false;
             foreach (var field in fields)
                 field.BindingChanged += (s, e) =>
@@ -307,7 +307,7 @@ namespace AniimoAffinities
                 aboutPanel.Hide();
                 about.Primary = false;
                 about.Invalidate();
-                TransitionHeight(720);
+                fitHelpHeight();
                 displaySection = true;
                 editor.Hide();
                 foreach (var control in shortcutControls)
@@ -384,9 +384,9 @@ namespace AniimoAffinities
                 ClientSize = new Size(ClientSize.Width, heightTarget);
             }
         }
-        private Button ActionButton(string text, int x)
+        private Button ActionButton(string text, int x, bool primary = false)
         {
-            var button = new SettingsButton { Text = text, Primary = text == "Save", Location = new Point(x, 552), Size = new Size(106, 34), TabIndex = 40 + Controls.OfType<Button>().Count() };
+            var button = new SettingsButton { Text = text, Primary = primary, Location = new Point(x, 552), Size = new Size(106, 34), TabIndex = 40 + Controls.OfType<Button>().Count() };
             Controls.Add(button);
             return button;
         }

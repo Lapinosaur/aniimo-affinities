@@ -29,7 +29,9 @@ namespace AniimoAffinities
                     scroll.AutoScrollPosition = new Point(0, 2400);
                     if (!scroll.Visible || scrollBubble.Height > 540 || scroll.AutoScrollPosition.Y >= -1800 || scrollBubble.Remaining != 0)
                         throw new Exception("Matchup bubble must reach its final entries without a timed cooldown.");
-                    scrollBubble.Controls.OfType<SettingsButton>().Single(item => item.AccessibleName == "Close bubble").PerformClick();
+                    var escape = Message.Create(anchor.Handle, 0x100, new IntPtr((int)Keys.Escape), IntPtr.Zero);
+                    if (!tips.PreFilterMessage(ref escape) || scrollBubble.Visible || tips.PreFilterMessage(ref escape))
+                        throw new Exception("Escape must dismiss the bubble once, without consuming subsequent owner commands.");
                     tips.SetScrollableGraphic(anchor, false);
                     tips.SetGraphicTip(anchor, "Suggested coverage", new Size(350, 150), (g, r) => { });
                     tips.SetHoverBubble(anchor, true);

@@ -42,29 +42,38 @@ namespace AniimoAffinities
         {
             if (pinAnimationHost == null || !Visible)
                 return;
-            float progress;
-            string state = PinAnimationState(pinAnimationView == "pin-hold", pinAnimationClock.Elapsed.TotalMilliseconds, out progress, out pinGesture);
-            bool changed = state != pinAnimationState;
-            if (changed)
+            pinAnimationTimer.Stop();
+            try
             {
-                pinAnimationHost.SetTutorialPinState(state);
-                pinAnimationState = state;
+                float progress;
+                string state = PinAnimationState(pinAnimationView == "pin-hold", pinAnimationClock.Elapsed.TotalMilliseconds, out progress, out pinGesture);
+                bool changed = state != pinAnimationState;
+                if (changed)
+                {
+                    pinAnimationHost.SetTutorialPinState(state);
+                    pinAnimationState = state;
+                }
+                if (!changed && !pinGesture)
+                    return;
+                pinAnimationHost.SetTutorialHoldProgress(progress);
+                var frame = frames[pinAnimationView];
+                if (frame.Image.Size != pinAnimationHost.Size)
+                {
+                    frame.Image.Dispose();
+                    frame.Image = new Bitmap(pinAnimationHost.Width, pinAnimationHost.Height);
+                }
+                using (var graphics = Graphics.FromImage(frame.Image))
+                    graphics.Clear(Theme.Background);
+                pinAnimationHost.DrawToBitmap(frame.Image, new Rectangle(Point.Empty, frame.Image.Size));
+                frame.Targets["pin"] = pinAnimationHost.DrawTutorialPinState(frame.Image);
+                ArrangeStep();
+                Invalidate();
             }
-            if (!changed && !pinGesture)
-                return;
-            pinAnimationHost.SetTutorialHoldProgress(progress);
-            var frame = frames[pinAnimationView];
-            if (frame.Image.Size != pinAnimationHost.Size)
+            finally
             {
-                frame.Image.Dispose();
-                frame.Image = new Bitmap(pinAnimationHost.Width, pinAnimationHost.Height);
+                if (pinAnimationHost != null && Visible && !IsDisposed)
+                    pinAnimationTimer.Start();
             }
-            using (var graphics = Graphics.FromImage(frame.Image))
-                graphics.Clear(Theme.Background);
-            pinAnimationHost.DrawToBitmap(frame.Image, new Rectangle(Point.Empty, frame.Image.Size));
-            frame.Targets["pin"] = pinAnimationHost.DrawTutorialPinState(frame.Image);
-            ArrangeStep();
-            Invalidate();
         }
 
         private void PaintPinGesture(Graphics graphics)

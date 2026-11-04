@@ -10,8 +10,14 @@ namespace AniimoAffinities
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
             Cursor = Cursors.Hand;
+            PreviewCard.Attach(this);
             MouseEnter += (s, e) => Invalidate();
             MouseLeave += (s, e) => Invalidate();
+            GotFocus += (s, e) => Invalidate();
+            LostFocus += (s, e) => Invalidate();
+            CheckedChanged += (s, e) => Invalidate();
+            ChangeUICues += (s, e) => Invalidate();
+            EnabledChanged += (s, e) => { Cursor = Enabled ? Cursors.Hand : Cursors.Default; Invalidate(); };
         }
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -21,9 +27,9 @@ namespace AniimoAffinities
             g.ScaleTransform(zoom, zoom);
             g.SmoothingMode = SmoothingMode.AntiAlias;
             float w = Width / zoom, h = Height / zoom;
-            Drawing.Box(g, new RectangleF(1, 1, w - 3, h - 3), Theme.Surface, Checked || ClientRectangle.Contains(PointToClient(Cursor.Position)) ? Theme.Accent : Theme.Border, 7);
+            PreviewCard.Draw(g, new RectangleF(0, 0, w - 1, h - 1), Checked, Enabled, ClientRectangle.Contains(PointToClient(Cursor.Position)), Focused && ShowFocusCues);
             using (var font = UiFonts.Create("Segoe UI", 7))
-                Drawing.Text(g, Text, font, Theme.TextColor, new RectangleF(4, 1, w - 8, 15), true);
+                Drawing.Text(g, Text, font, PreviewCard.LabelColor(Checked, Enabled), new RectangleF(4, 1, w - 8, 15), true);
             int count = Mode == 1 ? 2 : 1;
             for (int i = 0; i < count; i++)
             {

@@ -41,6 +41,17 @@ namespace AniimoAffinities
             tips.SetToolTip(storage, "Open the data folder or clear temporary files");
             panel.Controls.Add(storage);
             panel.Controls.Add(feedback);
+            panel.Controls.Add(UiFonts.Own(new Label { Text = "Support Affinisaur", Location = new Point(0, 405), Size = new Size(412, 27), Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold), ForeColor = Theme.TextColor }));
+            panel.Controls.Add(new Label { Text = "Finding Affinisaur useful? A GitHub star is a free way\nto support the project.", Location = new Point(0, 438), Size = new Size(412, 40), ForeColor = Theme.Muted });
+            var star = new SettingsButton { Text = "Star on GitHub", AccessibleName = "Star Affinisaur on GitHub", Glyph = "github", GlyphWithText = true, Location = new Point(0, 486), Size = new Size(412, 36) };
+            star.Click += (s, e) => BusyOperation.OpenLink(this, star, "https://github.com/Lapinosaur/aniimo-affinities", error =>
+            {
+                feedback.Text = error == null ? "GitHub opened. Sign in and click Star on the repository." : "Unable to open GitHub in your browser.";
+                if (error != null)
+                    DiagnosticReport.Record(error);
+            });
+            tips.SetToolTip(star, "Open the repository, sign in to GitHub and click Star.");
+            panel.Controls.Add(star);
             foreach (Control control in panel.Controls)
                 control.Top -= 174;
         }

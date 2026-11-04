@@ -49,7 +49,7 @@ namespace AniimoAffinities
                     Glyphs.Draw(e.Graphics, "team", new RectangleF(18, 12, 36, 36), Theme.AccentForeground);
                     using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
                         Drawing.Text(e.Graphics, "Team comparison", title, Theme.TextColor, new RectangleF(70, 5, 500, 35), false);
-                    Drawing.Text(e.Graphics, comparison.Length + " selected · Colors shown on ally cards", Font, Theme.Muted, new RectangleF(72, 39, 420, 20), false);
+                    Drawing.Text(e.Graphics, comparison.Length + " selected · Ally card colors · Unofficial", Font, Theme.Muted, new RectangleF(72, 39, 420, 20), false);
                 }
                 return;
             }
@@ -66,7 +66,7 @@ namespace AniimoAffinities
                     VectorIcon.Draw(g, b, new RectangleF(64, 12, 36, 36));
                 using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
                     Drawing.Text(g, name, title, Theme.TextColor, new RectangleF(b >= 0 ? 116 : 70, 5, 500, 35), false);
-                Drawing.Text(g, teamPreview >= 0 || hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? "Temporary preview" : "Type affinities", Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
+                Drawing.Text(g, teamPreview >= 0 || hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? "Temporary preview · Unofficial" : "Type affinities · Unofficial", Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
             }
         }
         private void DrawInlineMatrix(Graphics g, float cardTop)
@@ -239,9 +239,9 @@ namespace AniimoAffinities
             using (var heading = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
                 Drawing.Text(g, "Explore type affinities", heading, Theme.TextColor, new RectangleF(0, cy + 99, canvas.Width, 34), true);
             using (var body = UiFonts.Create("Segoe UI", 10))
-                Drawing.Text(g, "Hover to explore · Click to select", body, Theme.Muted, new RectangleF(0, cy + 139, canvas.Width, 25), true);
+                Drawing.Text(g, "Unofficial Aniimo companion", body, Theme.Muted, new RectangleF(0, cy + 139, canvas.Width, 25), true);
             using (var hint = UiFonts.Create("Segoe UI", 8.5f))
-                Drawing.Text(g, "Choose a main type, then a second if needed.", hint, Theme.Muted, new RectangleF(0, cy + 174, canvas.Width, 22), true);
+                Drawing.Text(g, "Hover to explore · Click to select one or two types.", hint, Theme.Muted, new RectangleF(0, cy + 174, canvas.Width, 22), true);
         }
         protected override void Dispose(bool disposing)
         {
