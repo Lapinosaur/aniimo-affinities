@@ -31,7 +31,7 @@ namespace AniimoAffinities
             listening = true;
             rejectedKey = null;
             if (Feedback != null)
-                Feedback("Press a key, then release it. Esc cancels.");
+                Feedback(Language.T("Press a key, then release it. Esc cancels."));
             Invalidate();
         }
         internal void ReleaseCapturedKey(Keys key)
@@ -52,7 +52,7 @@ namespace AniimoAffinities
                 Binding = result;
                 ShowValidation(false, true);
                 if (Feedback != null)
-                    Feedback("Shortcut updated. Click Save to keep your changes.");
+                    Feedback(Language.T("Shortcut updated. Click Save to keep your changes."));
             }
         }
         public bool PreFilterMessage(ref Message message)
@@ -113,7 +113,7 @@ namespace AniimoAffinities
             ForeColor = Theme.TextColor;
             Cursor = Cursors.Hand;
             AccessibleRole = AccessibleRole.PushButton;
-            AccessibleDescription = "Press Enter or Space to change this shortcut. Release the new key to confirm. Escape cancels; Delete clears.";
+            AccessibleDescription = Language.T("Press Enter or Space to change this shortcut. Release the new key to confirm. Escape cancels; Delete clears.");
         }
         private void RefreshLabel()
         {
@@ -123,8 +123,16 @@ namespace AniimoAffinities
             Invalid = false;
             CaptureValidated = false;
             rejectedKey = null;
-            Text = binding == Keys.None ? "Unassigned" : KeyBindings.Label(binding);
+            Text = binding == Keys.None ? Language.T("Unassigned") : KeyBindings.Label(binding);
             Invalidate();
+        }
+        internal void CancelForSupport()
+        {
+            RefreshLabel();
+            if (Feedback != null)
+                Feedback(Language.T("Shortcut unchanged. F11 opens Support."));
+            if (CaptureEnded != null)
+                CaptureEnded(this, EventArgs.Empty);
         }
         protected override void OnEnter(EventArgs e)
         {
@@ -160,14 +168,14 @@ namespace AniimoAffinities
             {
                 get
                 {
-                    return capture.listening ? "Waiting for shortcut" : capture.Text;
+                    return capture.listening ? Language.T("Waiting for shortcut") : capture.Text;
                 }
             }
             public override string DefaultAction
             {
                 get
                 {
-                    return "Change shortcut";
+                    return Language.T("Change shortcut");
                 }
             }
             public override void DoDefaultAction()
@@ -194,6 +202,13 @@ namespace AniimoAffinities
                 validationTimer.Dispose();
             }
             base.Dispose(disposing);
+            if (disposing)
+            {
+                Feedback = null;
+                ValidateBinding = null;
+                BindingChanged = null;
+                CaptureEnded = null;
+            }
         }
         protected override void OnMouseDown(MouseEventArgs e)
         {
@@ -223,7 +238,7 @@ namespace AniimoAffinities
             g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             Drawing.Box(g, new RectangleF(2, 2, Width - 5, Height - 5), listening || TestHeld ? Theme.AccentSurface : Theme.Surface, listening || TestHeld ? Theme.AccentForeground : Focused ? Theme.AccentForeground : hover ? Theme.StrongBorder : Theme.Border, 6);
             string modifiers = (heldModifiers.HasFlag(Keys.Control) ? "Ctrl + " : "") + (heldModifiers.HasFlag(Keys.Shift) ? "Shift + " : "") + (heldModifiers.HasFlag(Keys.Alt) ? "Alt + " : "");
-            Drawing.Text(g, Invalid && rejectedKey != null ? rejectedKey + " · Not assigned" : pending != Keys.None ? KeyBindings.Label(pending) + " · Release" : listening ? modifiers + "Press a key…" : Text, Font, Invalid ? Theme.Error : listening || TestHeld ? Theme.AccentForeground : binding == Keys.None ? Theme.Muted : Theme.TextColor, new RectangleF(8, 0, Width - (Invalid || CaptureValidated ? 34 : 16), Height), true);
+            Drawing.Text(g, Invalid && rejectedKey != null ? rejectedKey + Language.T(" · Not assigned") : pending != Keys.None ? KeyBindings.Label(pending) + Language.T(" · Release") : listening ? modifiers + Language.T("Press a key…") : Text, Font, Invalid ? Theme.Error : listening || TestHeld ? Theme.AccentForeground : binding == Keys.None ? Theme.Muted : Theme.TextColor, new RectangleF(8, 0, Width - (Invalid || CaptureValidated ? 34 : 16), Height), true);
             if (Invalid || CaptureValidated)
             {
                 Color color = Invalid ? Theme.Error : Theme.AccentForeground;
@@ -305,7 +320,7 @@ namespace AniimoAffinities
                 rejectedKey = KeyBindings.Label(keyData);
                 ShowValidation(true, false);
                 if (Feedback != null)
-                    Feedback(AllowModifiers ? "Use a letter, number or function key, optionally with Ctrl, Alt or Shift." : "Use a single letter, number or function key for this action.");
+                    Feedback(AllowModifiers ? Language.T("Use a letter, number or function key, optionally with Ctrl, Alt or Shift.") : Language.T("Use a single letter, number or function key for this action."));
             }
             return true;
         }

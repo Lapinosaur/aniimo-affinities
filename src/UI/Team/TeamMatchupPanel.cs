@@ -11,9 +11,9 @@ namespace AniimoAffinities
         internal TeamMatchupPanel(TeamPlan value)
         {
             plan = value;
-            AccessibleName = "Team matchup comparison";
+            AccessibleName = Language.T("Team matchup comparison");
             AccessibleRole = AccessibleRole.Table;
-            AccessibleText = () => string.Join("; ", plan.Allies.SelectMany((ally, i) => plan.Opponents.Select((opponent, j) => ally.Title(i) + " against " + opponent.Title(j, true) + ": " + (!ally.Known || !opponent.Known ? "not set" : "attack " + Model.Factor(TeamPlan.Damage(ally, opponent)) + ", damage received " + Model.Factor(TeamPlan.Damage(opponent, ally))))).ToArray());
+            AccessibleText = () => string.Join("; ", plan.Allies.SelectMany((ally, i) => plan.Opponents.Select((opponent, j) => ally.Title(i) + Language.T(" against ") + opponent.Title(j, true) + ": " + (!ally.Known || !opponent.Known ? Language.T("not set") : Language.T("attack ") + Model.Factor(TeamPlan.Damage(ally, opponent)) + Language.T(", damage received ") + Model.Factor(TeamPlan.Damage(opponent, ally))))).ToArray());
         }
         internal void Configure()
         {
@@ -23,14 +23,14 @@ namespace AniimoAffinities
                 g.SmoothingMode = SmoothingMode.AntiAlias;
                 using (var font = UiFonts.Create("Segoe UI", 8))
                 {
-                    Drawing.Text(g, "Your team ↓", font, Theme.Muted, new RectangleF(0, 0, 108, 30), false);
+                    Drawing.Text(g, Language.T("Your team ↓"), font, Theme.Muted, new RectangleF(0, 0, 108, 30), false);
                     float cell = (Width - 108) / 6f;
                     for (int j = 0; j < 6; j++)
                     {
                         var opponent = plan.Opponents[j];
                         DrawName(g, opponent.Title(j, true), font, Theme.Muted, new RectangleF(108 + j * cell, 0, cell - 4, 20), true);
                         if (!opponent.Known)
-                            DrawName(g, "Not set", font, Theme.Muted, new RectangleF(108 + j * cell, 20, cell - 4, 20), true);
+                            DrawName(g, Language.T("Not set"), font, Theme.Muted, new RectangleF(108 + j * cell, 20, cell - 4, 20), true);
                         DrawElements(g, opponent, 108 + j * cell + (cell - (opponent.Sub >= 0 ? 38 : 18)) / 2, 21);
                     }
                     for (int i = 0; i < 6; i++)

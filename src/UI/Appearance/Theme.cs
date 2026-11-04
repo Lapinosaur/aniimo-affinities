@@ -38,7 +38,7 @@ namespace AniimoAffinities
         internal static void PreviewAppearance(object owner, int mode)
         {
             if (owner == null || mode < 0 || mode > 2)
-                throw new ArgumentException("Invalid appearance preview.");
+                throw new ArgumentException(Language.T("Invalid appearance preview."));
             previewOwner = owner;
             previewAppearance = mode;
             ApplyAppearance();

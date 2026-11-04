@@ -19,25 +19,25 @@ namespace AniimoAffinities
         private bool downloading, ready, restarting;
         internal UpdateWindow(ReleaseUpdate update, Func<string, bool> install = null, Action exit = null)
         {
-            Text = "Update available";
+            Text = Language.T("Update available");
             ClientSize = new Size(560, 580);
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
-            Controls.Add(UiFonts.Own(new Label { Text = "Version " + update.Version + " is available", Location = new Point(24, 54), Size = new Size(512, 30), Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold) }));
-            var status = new Label { Text = "Download now, then restart to install the update.", Location = new Point(24, 92), Size = new Size(382, 44) };
+            Controls.Add(UiFonts.Own(new Label { Text = Language.T("Version ") + update.Version + Language.T(" is available"), Location = new Point(24, 54), Size = new Size(512, 30), Font = UiFonts.Create("Segoe UI", 13, FontStyle.Bold) }));
+            var status = new Label { Name = "updateStatus", Text = Language.T("Download now, then restart to install the update."), Location = new Point(24, 92), Size = new Size(382, 44) };
             Controls.Add(status);
             status.Width = 512;
             Controls.Add(UpdateHistoryView.Create(update));
             int percent = 0;
-            var progress = new DrawingPanel { Location = new Point(24, 143), Size = new Size(382, 8), AccessibleRole = AccessibleRole.ProgressBar, AccessibleName = "Download progress" };
+            var progress = new DrawingPanel { Location = new Point(24, 143), Size = new Size(382, 8), AccessibleRole = AccessibleRole.ProgressBar, AccessibleName = Language.T("Download progress") };
             progress.Paint += (s, e) => { e.Graphics.Clear(Theme.Border); using (var brush = new SolidBrush(Theme.Accent)) e.Graphics.FillRectangle(brush, 0, 0, progress.Width * percent / 100f, progress.Height); };
             Controls.Add(progress);
-            var skip = new SettingsButton { Text = "Skip this version", Location = new Point(24, 182), Size = new Size(114, 34) };
-            var later = new SettingsButton { Text = "Remind me later", Location = new Point(146, 182), Size = new Size(114, 34) };
-            var download = new SettingsButton { Text = "Download", Primary = true, Location = new Point(268, 182), Size = new Size(138, 34) };
+            var skip = new SettingsButton { Text = Language.T("Skip this version"), Location = new Point(24, 182), Size = new Size(114, 34) };
+            var later = new SettingsButton { Text = Language.T("Remind me later"), Location = new Point(146, 182), Size = new Size(114, 34) };
+            var download = new SettingsButton { Text = Language.T("Download"), Primary = true, Location = new Point(268, 182), Size = new Size(138, 34) };
             Controls.Add(skip);
             Controls.Add(later);
             Controls.Add(download);
@@ -56,7 +56,7 @@ namespace AniimoAffinities
                     PreferenceFiles.WriteText(PreferenceFiles.FilePath("skipped-update.txt"), update.Version);
                     Close();
                 }
-                catch (Exception error) { DiagnosticReport.Record(error); status.Text = "Unable to save this preference."; }
+                catch (Exception error) { DiagnosticReport.Record(error); status.Text = Language.T("Unable to save this preference."); }
             };
             download.Click += (s, e) =>
             {
@@ -64,12 +64,12 @@ namespace AniimoAffinities
                 {
                     restarting = true;
                     later.Enabled = false;
-                    status.Text = "Preparing the restart… Please wait.";
+                    status.Text = Language.T("Preparing the restart… Please wait.");
                     string executable = Application.ExecutablePath;
-                    BusyOperation.Run(this, download, "Restarting…", () =>
+                    BusyOperation.Run(this, download, Language.T("Restarting…"), () =>
                     {
                         if (!(install ?? ReleaseUpdates.BeginInstall)(executable))
-                            throw new System.IO.IOException("No prepared update is available.");
+                            throw new System.IO.IOException(Language.T("No prepared update is available."));
                         return true;
                     }, (result, error) =>
                     {
@@ -80,20 +80,20 @@ namespace AniimoAffinities
                         {
                             DiagnosticReport.Record(error);
                             later.Enabled = true;
-                            status.Text = "Unable to restart. Your current app is still open. Try again.";
+                            status.Text = Language.T("Unable to restart. Your current app is still open. Try again.");
                         }
                     }, true);
                     return;
                 }
                 downloading = true;
-                download.BeginBusy("Downloading…");
+                download.BeginBusy(Language.T("Downloading…"));
                 skip.Enabled = false;
-                later.Text = "Cancel";
-                status.Text = "Downloading… 0%";
+                later.Text = Language.T("Cancel");
+                status.Text = Language.T("Downloading… 0%");
                 string target = Application.ExecutablePath;
                 var worker = new BackgroundWorker { WorkerReportsProgress = true };
                 worker.DoWork += (a, b) => ReleaseUpdates.Prepare(update, target, value => worker.ReportProgress(value), cancellation.Token);
-                worker.ProgressChanged += (a, b) => { if (!IsDisposed) { percent = b.ProgressPercentage; status.Text = percent >= 100 ? "Verifying and preparing the update…" : "Downloading… " + percent + "%"; progress.Invalidate(); } };
+                worker.ProgressChanged += (a, b) => { if (!IsDisposed) { percent = b.ProgressPercentage; status.Text = percent >= 100 ? Language.T("Verifying and preparing the update…") : Language.T("Downloading… ") + percent + "%"; progress.Invalidate(); } };
                 worker.RunWorkerCompleted += (a, b) =>
                 {
                     downloading = false;
@@ -105,7 +105,7 @@ namespace AniimoAffinities
                     if (b.Error != null)
                     {
                         DiagnosticReport.Record(b.Error);
-                        status.Text = "Download failed. Your current app is unchanged. Close and try again.";
+                        status.Text = Language.T("Download failed. Your current app is unchanged. Close and try again.");
                         download.Enabled = false;
                     }
                     else
@@ -114,16 +114,18 @@ namespace AniimoAffinities
                         progress.Invalidate();
                         ready = true;
                         skip.Visible = false;
-                        download.Text = "Restart app";
+                        download.Text = Language.T("Restart app");
                         download.Enabled = true;
-                        status.Text = "Update ready. Restart Affinisaur to apply it. Your PC stays on.";
+                        status.Text = Language.T("Update ready. Restart Affinisaur to apply it. Your PC stays on.");
                     }
-                    later.Text = ready ? "Later" : "Close";
+                    later.Text = ready ? Language.T("Later") : Language.T("Close");
                 };
                 worker.RunWorkerAsync();
             };
             FormClosing += (s, e) => { if (restarting) e.Cancel = true; else if (downloading) cancellation.Cancel(); };
-            Disposed += (s, e) => { if (!downloading) cancellation.Dispose(); };
+            // Direct disposal (including owner shutdown) can bypass FormClosing.
+            // Cancel work then let its completion release the token source.
+            Disposed += (s, e) => { if (downloading) cancellation.Cancel(); else cancellation.Dispose(); };
         }
     }
 }

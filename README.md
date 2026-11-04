@@ -12,7 +12,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
-Latest: [v0.8.2](docs/releases/v0.8.2.md) polishes settings and interactive support bubbles, with direct GitHub stars and a clickable support QR code.
+Prepared release: [v0.9.0](docs/releases/v0.9.0.md) adds a keyboard-friendly welcome flow, 30 offline interface languages (beta), independent content windows and more reliable support, updates and resource cleanup.
 
 See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive suggestion bubbles, radar previews and animated tutorials.
 
@@ -35,6 +35,30 @@ See [what changed in v0.8.0](docs/releases/v0.8.0.md), including interactive sug
 - Read consistent keyboard-key badges in tooltips and tutorials.
 - Settings and committed selections are remembered locally.
 
+## Welcome, language and keyboard navigation
+
+First launch offers a searchable language choice, appearance previews and an optional guided tour. Choosing a language or theme advances automatically; other preferences remain staged until you finish.
+
+![Search languages with inline completion and Ctrl+K](docs/images/onboarding-language.png)
+
+- **Ctrl+K** focuses language search; the gray inline suggestion is completed with **Tab**.
+- A single result is highlighted provisionally. **Enter** or Continue confirms it; clearing the query restores the current default.
+- **Up / Down** move focus and wrap at the ends. **Page Up / Page Down** jump to the first / last item. **Space** activates the focused choice.
+- **1 / 2 / 3** choose a theme; **1 / 2** choose guided or independent exploration. **Backspace** returns to the previous page, except while editing search. **Enter** continues.
+- Settings > Display > Language changes language later with **Apply and restart**, preserving your team and other preferences.
+
+The 30 embedded language catalogs work offline. Translations are **beta**, with further native-speaker review needed. User names and external release notes keep their original text. See [translation scope and maintenance](docs/localization.md).
+
+![Comfort options and independent content-window preview](docs/images/onboarding-comfort.png)
+
+## Content windows and support
+
+Separate radar, matrix and suggestion windows can stay visible when the main window is minimized (enabled by default). Each has its own minimize and pin/lock controls. Ctrl+wheel changes the focused/hovered content window temporarily; resizing the main window does not resize existing content windows. Display settings can still change all windows together. Closing the app closes its content windows.
+
+**F11** opens Support from anywhere in the app and refocuses the existing Support window. The troubleshooting area offers a confirmed factory reset with a profile backup. Updates are checked at startup; release notes render Markdown headings, lists and tables, with Skip this version and Remind me later available.
+
+![Support and contact window](docs/images/support-window.png)
+
 ## Team planning in practice
 
 Suggestions are planned in slot order. Their **before** counts include both applied allies and earlier unapplied proposals. The explanation lists these separately and shows the earlier proposals in gray. Applying one slot does not apply the others; it recalculates the remaining suggestions. Coverage is a type-based heuristic, not a guarantee of an optimal team: it does not use species, moves or combat statistics.
@@ -45,7 +69,7 @@ Select several ally checkboxes to compare them on the main radars. Clicking a ca
 
 ![Grouped dual-type threat report](docs/images/threat-report.png)
 
-Existing users, including v0.7.0 users, receive a new three-step, skippable **What's new** tour once for v0.8.0, even if they previously hid the introductory tutorial. Skip/Esc prevents automatic reopening; Help & Tutorial lets you resume or replay it. Existing completion history is retained. New installations follow the updated introductory tutorials.
+Existing users receive a new three-step, skippable **What's new** tour once for v0.9.0, even if they previously hid tutorials or completed the v0.8 tour. It introduces languages, independent windows and the new welcome/support controls. Skip/Esc prevents automatic reopening; Help & Tutorial lets you resume or replay it. Other tutorial completion history is preserved.
 
 ![Compact tutorial list](docs/images/tutorials.png)
 
@@ -74,6 +98,8 @@ Compare the proposed ally with your team, hover a legend to emphasize one trace,
 ## Preview your display
 
 Display combines text size, window scale, keyboard badges, theme and glass previews. Glass can be enabled separately for the locked overlay, secondary windows and the main window. A slightly stronger translucent veil and more contrasted secondary labels improve readability while keeping the background visible. Hover previews restore on exit without saving; use Apply to commit. The lock preview links to the animated pin/hold tutorial.
+
+First launch offers a searchable language picker, theme previews, optional comfort settings and a guided-tour choice. Selecting a language or theme advances automatically. Enter continues, 1–3 select themes, and Backspace goes back (without interfering with search editing). Keyboard hints follow the badge preference. Change language later in **Settings → Display → Language**; apply and restart while preserving your team and other settings. The 30 bundled language catalogs work offline; non-English translations are currently beta. See [language coverage and review status](docs/localization.md).
 
 ![Display settings with theme and glass previews](docs/images/display-settings.png)
 

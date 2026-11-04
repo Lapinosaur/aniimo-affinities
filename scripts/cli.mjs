@@ -8,8 +8,8 @@ try {
   switch (command) {
     case 'build': await build(); break;
     case 'test':
-      if (args.some(arg => arg !== '--serial')) throw new Error('Usage: test [--serial]');
-      await test(args.includes('--serial'));
+      if (args.some(arg => arg !== '--serial' && !/^--groups=[a-z]+(?:,[a-z]+)*$/.test(arg))) throw new Error('Usage: test [--serial] [--groups=uisettings,uiteams]');
+      await test(args.includes('--serial'), args.filter(arg => arg.startsWith('--groups=')).flatMap(arg => arg.slice(9).split(',')));
       break;
     case 'lint':
       await import('./lint.mjs');
@@ -17,6 +17,7 @@ try {
     case 'check':
       await import('./lint.mjs');
       await import('./check-architecture.mjs');
+      await import('./check-localization.mjs');
       await test();
       break;
     case 'profile:resources': {

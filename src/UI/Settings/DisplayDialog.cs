@@ -115,7 +115,7 @@ namespace AniimoAffinities
                 var savedBindings = KeyBindings.Load(KeyBindings.FilePath);
                 previewBindings = () => savedBindings;
             }
-            Text = "Display settings";
+            Text = Language.T("Display settings");
             ClientSize = new Size(440, 460);
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -124,32 +124,35 @@ namespace AniimoAffinities
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
-            Controls.Add(new Label { Text = "Text size", ForeColor = Theme.Muted, Location = new Point(24, 46), Size = new Size(220, 18) });
+            Controls.Add(new Label { Text = Language.T("Text size"), ForeColor = Theme.Muted, Location = new Point(24, 46), Size = new Size(220, 18) });
+            var language = new SettingsButton { Text = Language.T("Language…"), Bounds = new Rectangle(270, 40, 146, 26) };
+            language.Click += (s, e) => { using (var dialog = new LanguageDialog()) dialog.ShowDialog(settingsHost ?? this); };
+            Controls.Add(language);
             for (int i = 0; i < 3; i++)
             {
                 float value = 0.9f + i * 0.1f;
                 var preview = new DisplayChoice
                 {
-                    Text = new[] { "Small · 90%", "Default · 100%", "Large · 110%" }[i],
+                    Text = new[] { Language.T("Small · 90%"), Language.T("Default · 100%"), Language.T("Large · 110%") }[i],
                     PreviewScale = value,
                     Location = new Point(24 + i * 132, 66),
                     Size = new Size(128, 100),
                     TabIndex = i + 1,
                     Checked = Math.Abs(scale - value) < .01,
-                    AccessibleName = "Text size: " + Math.Round(value * 100) + " percent"
+                    AccessibleName = Language.T("Text size: ") + Math.Round(value * 100) + Language.T(" percent")
                 };
                 preview.CheckedChanged += (s, e) => { if (preview.Checked) scale = value; };
                 Controls.Add(preview);
             }
-            Controls.Add(new Label { Text = "Keyboard badges", ForeColor = Theme.Muted, Location = new Point(24, 280), Size = new Size(200, 22) });
-            var badgeChoices = new Panel { Location = new Point(224, 268), Size = new Size(192, 72), TabIndex = 8, AccessibleName = "Keyboard badge visibility" };
+            Controls.Add(new Label { Text = Language.T("Keyboard badges"), ForeColor = Theme.Muted, Location = new Point(24, 280), Size = new Size(200, 22) });
+            var badgeChoices = new Panel { Location = new Point(224, 268), Size = new Size(192, 72), TabIndex = 8, AccessibleName = Language.T("Keyboard badge visibility") };
             Controls.Add(badgeChoices);
             for (int i = 0; i < 2; i++)
             {
                 bool visible = i == 0;
                 var choice = new DisplayChoice
                 {
-                    Text = visible ? "Shown" : "Hidden",
+                    Text = visible ? Language.T("Shown") : Language.T("Hidden"),
                     BadgePreview = true,
                     PreviewBadges = visible,
                     PreviewType = previewType,
@@ -158,21 +161,21 @@ namespace AniimoAffinities
                     Size = new Size(94, 72),
                     TabIndex = i,
                     Checked = badges == visible,
-                    AccessibleName = visible ? "Show keyboard badges" : "Hide keyboard badges"
+                    AccessibleName = visible ? Language.T("Show keyboard badges") : Language.T("Hide keyboard badges")
                 };
                 choice.CheckedChanged += (s, e) => { if (choice.Checked) badges = visible; };
                 badgeChoices.Controls.Add(choice);
             }
             var status = new Label { ForeColor = Theme.Error, Location = new Point(24, 376), Size = new Size(392, 22) };
             Controls.Add(status);
-            var cancel = new SettingsButton { Text = "Cancel", DialogResult = DialogResult.Cancel, Location = new Point(196, 400), Size = new Size(106, 34), TabIndex = 4 };
-            var save = new SettingsButton { Text = "Save", Primary = true, Location = new Point(310, 400), Size = new Size(106, 34), TabIndex = 5 };
+            var cancel = new SettingsButton { Text = Language.T("Cancel"), DialogResult = DialogResult.Cancel, Location = new Point(196, 400), Size = new Size(106, 34), TabIndex = 4 };
+            var save = new SettingsButton { Text = Language.T("Save"), Primary = true, Location = new Point(310, 400), Size = new Size(106, 34), TabIndex = 5 };
             Controls.Add(cancel);
             Controls.Add(save);
             CancelButton = cancel;
             AcceptButton = save;
-            Controls.Add(new Label { Text = "Window scale", ForeColor = Theme.Muted, Location = new Point(24, 172), Size = new Size(392, 18) });
-            var windowChoices = new Panel { Location = new Point(24, 192), Size = new Size(392, 72), TabIndex = 4, AccessibleName = "Window size" };
+            Controls.Add(new Label { Text = Language.T("Window scale"), ForeColor = Theme.Muted, Location = new Point(24, 172), Size = new Size(392, 18) });
+            var windowChoices = new Panel { Location = new Point(24, 192), Size = new Size(392, 72), TabIndex = 4, AccessibleName = Language.T("Window size") };
             Controls.Add(windowChoices);
             zoomChoices = windowChoices;
             DisplaySettings.DisplayChanged += SyncZoom;
@@ -188,7 +191,7 @@ namespace AniimoAffinities
                     Size = new Size(76, 72),
                     TabIndex = i,
                     Checked = Math.Abs(windowScale - zoom) < .01,
-                    AccessibleName = "Window size: " + Math.Round(zoom * 100) + " percent"
+                    AccessibleName = Language.T("Window size: ") + Math.Round(zoom * 100) + Language.T(" percent")
                 };
                 choice.CheckedChanged += (s, e) => { if (choice.Checked) windowScale = zoom; };
                 windowChoices.Controls.Add(choice);
@@ -201,15 +204,15 @@ namespace AniimoAffinities
             foreach (Control choice in badgeChoices.Controls)
                 choice.Height = 60;
             foreach (Control control in Controls)
-                if (control is Label && control.Text == "Keyboard badges")
+                if (control is Label && control.Text == Language.T("Keyboard badges"))
                     control.Top = 264;
-            themeChoices = new Panel { Bounds = new Rectangle(24, 318, 392, 44), TabIndex = 9, AccessibleName = "Theme previews" };
+            themeChoices = new Panel { Bounds = new Rectangle(24, 318, 392, 44), TabIndex = 9, AccessibleName = Language.T("Theme previews") };
             for (int i = 0; i < 3; i++)
             {
                 int mode = i;
-                var choice = new ThemePreview { Mode = mode, Text = new[] { "Dark", "System", "Light" }[i], Bounds = new Rectangle(i * 132, 0, 128, 44), TabIndex = i, Checked = appearance == mode };
-                choice.AccessibleName = "Theme: " + choice.Text;
-                choice.AccessibleDescription = "Hover to preview on the window. Select then Apply to save.";
+                var choice = new ThemePreview { Mode = mode, Text = new[] { Language.T("Dark theme"), Language.T("System theme"), Language.T("Light theme") }[i], Bounds = new Rectangle(i * 132, 0, 128, 44), TabIndex = i, Checked = appearance == mode };
+                choice.AccessibleName = Language.T("Theme: ") + choice.Text;
+                choice.AccessibleDescription = Language.T("Hover to preview on the window. Select then Apply to save.");
                 choice.MouseEnter += (s, e) => Theme.PreviewAppearance(this, mode);
                 choice.MouseLeave += EndThemePreview;
                 choice.CheckedChanged += (s, e) => { if (choice.Checked) appearance = mode; };
@@ -217,11 +220,11 @@ namespace AniimoAffinities
             }
             Controls.Add(themeChoices);
             Theme.Changed += SyncAppearance;
-            Controls.Add(new Label { Text = "Frosted glass", ForeColor = Theme.Muted, Bounds = new Rectangle(24, 346, 220, 18) });
-            var lockGlass = new RoundCheckBox { Text = "Locked overlay", Checked = TransparencyPreferences.Locked, AccessibleDescription = "Enabled by default. Spaces between locked panels stay transparent.", Bounds = new Rectangle(24, 366, 128, 24), TabIndex = 9 };
-            var lockHelp = new SettingsButton { Glyph = "help", AccessibleName = "Lock tutorial", Bounds = new Rectangle(126, 422, 26, 26), TabIndex = 10, Enabled = lockTutorial != null };
-            var childGlass = new RoundCheckBox { Text = "Secondary", AccessibleName = "Secondary windows", Checked = TransparencyPreferences.Children, AccessibleDescription = "Frosted glass in settings, downloads and other secondary windows.", Bounds = new Rectangle(156, 366, 128, 24), TabIndex = 11 };
-            var mainGlass = new RoundCheckBox { Text = "Main window", Checked = TransparencyPreferences.Main, AccessibleDescription = "Frosted glass in the unlocked main window; text and icons stay sharp.", Bounds = new Rectangle(288, 366, 128, 24), TabIndex = 12 };
+            Controls.Add(new Label { Text = Language.T("Frosted glass"), ForeColor = Theme.Muted, Bounds = new Rectangle(24, 346, 220, 18) });
+            var lockGlass = new RoundCheckBox { Text = Language.T("Locked overlay"), Checked = TransparencyPreferences.Locked, AccessibleDescription = Language.T("Enabled by default. Spaces between locked panels stay transparent."), Bounds = new Rectangle(24, 366, 128, 24), TabIndex = 9 };
+            var lockHelp = new SettingsButton { Glyph = "help", AccessibleName = Language.T("Lock tutorial"), Bounds = new Rectangle(126, 422, 26, 26), TabIndex = 10, Enabled = lockTutorial != null };
+            var childGlass = new RoundCheckBox { Text = Language.T("Secondary"), AccessibleName = Language.T("Secondary windows"), Checked = TransparencyPreferences.Children, AccessibleDescription = Language.T("Frosted glass in settings, downloads and other secondary windows."), Bounds = new Rectangle(156, 366, 128, 24), TabIndex = 11 };
+            var mainGlass = new RoundCheckBox { Text = Language.T("Main window"), Checked = TransparencyPreferences.Main, AccessibleDescription = Language.T("Frosted glass in the unlocked main window; text and icons stay sharp."), Bounds = new Rectangle(288, 366, 128, 24), TabIndex = 12 };
             lockHelp.Click += (s, e) => { if (lockTutorial != null) lockTutorial(); };
             Controls.Add(lockHelp);
             var glassOptions = new[] { lockGlass, childGlass, mainGlass };
@@ -280,11 +283,11 @@ namespace AniimoAffinities
                         else
                         {
                             status.ForeColor = Theme.AccentForeground;
-                            status.Text = "Display settings saved.";
+                            status.Text = Language.T("Display settings saved.");
                         }
                     }
-                    catch (System.IO.IOException) { status.Text = "Unable to save transparency preferences."; }
-                    catch (UnauthorizedAccessException) { status.Text = "Unable to save transparency preferences."; }
+                    catch (System.IO.IOException) { status.Text = Language.T("Unable to save transparency preferences."); }
+                    catch (UnauthorizedAccessException) { status.Text = Language.T("Unable to save transparency preferences."); }
                     return;
                 }
                 try
@@ -333,11 +336,11 @@ namespace AniimoAffinities
                     else
                     {
                         status.ForeColor = Theme.AccentForeground;
-                        status.Text = "Display settings saved.";
+                        status.Text = Language.T("Display settings saved.");
                     }
                 }
-                catch (System.IO.IOException) { status.Text = "Unable to save display preferences."; }
-                catch (UnauthorizedAccessException) { status.Text = "Unable to save display preferences."; }
+                catch (System.IO.IOException) { status.Text = Language.T("Unable to save display preferences."); }
+                catch (UnauthorizedAccessException) { status.Text = Language.T("Unable to save display preferences."); }
                 finally { if (!kept) DisplaySettings.ApplyDisplay(oldScale, oldBadges, oldWindowScale); }
             };
             if (settingsHost != null)
@@ -347,7 +350,7 @@ namespace AniimoAffinities
                 foreach (Control control in Controls)
                     control.Top -= 38;
                 cancel.Visible = false;
-                save.Text = "Apply";
+                save.Text = Language.T("Apply");
                 CancelButton = null;
                 AcceptButton = null;
                 ClientSize = new Size(440, 492);

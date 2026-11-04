@@ -18,37 +18,43 @@ namespace AniimoAffinities
                 Execute = execute;
             }
         }
-        // Only groups without visible windows may overlap the single UI worker.
+        // ui-prefixed batches share an exclusive desktop lease in the runner.
+        // Other batches must never show windows or use foreground input.
         private static readonly Suite[] Suites = {
             new Suite("Updates", "storage", UpdateTests.Run),
-            new Suite("Resources", "ui", ResourceTests.Run),
+            new Suite("Resources", "uilifecycle", ResourceTests.Run),
+            new Suite("Control lifetimes", "controls", LifetimeTests.Run),
             new Suite("Packaging", "storage", PackagingTests.Run),
             new Suite("PreferenceFiles", "storage", PreferenceFilesTests.Run),
-            new Suite("Tutorial", "ui", TutorialTests.Run),
-            new Suite("Startup", "ui", StartupTests.Run),
+            new Suite("Tutorial", "uitutorial", TutorialTests.Run),
+            new Suite("Startup", "uilifecycle", StartupTests.Run),
             new Suite("Session", "storage", SessionTests.Run),
-            new Suite("Settings", "ui", SettingsTests.Run),
-            new Suite("BusyFeedback", "ui", BusyFeedbackTests.Run),
-            new Suite("Accessibility", "ui", AccessibilityTests.Run),
-            new Suite("HoldControls", "ui", HoldControlsTests.Run),
-            new Suite("Zoom", "ui", ZoomTests.Run),
-            new Suite("ViewSwitching", "ui", ViewSwitchingTests.Run),
-            new Suite("Teams", "ui", TeamTests.Run),
-            new Suite("Suggestions", "ui", SuggestionTests.Run),
-            new Suite("BubbleClicks", "ui", BubbleClickTests.Run),
-            new Suite("DisplayRollback", "ui", DisplayRollbackTests.Run),
-            new Suite("WindowAttention", "ui", WindowAttentionTests.Run),
-            new Suite("Radar", "ui", RadarTests.Run),
-            new Suite("Comparisons", "ui", ComparisonTests.Run),
-            new Suite("Matrix", "ui", MatrixTests.Run),
-            new Suite("Theme", "ui", ThemeTests.Run),
-            new Suite("LockedGlass", "ui", GlassTests.Run),
-            new Suite("Transparency", "ui", TransparencyTests.Run),
-            new Suite("WindowBounds", "ui", WindowBoundsTests.Run),
-            new Suite("Keyboard", "ui", KeyboardTests.Run),
+            new Suite("Settings", "uisettings", SettingsTests.Run),
+            new Suite("BusyFeedback", "uiinput", BusyFeedbackTests.Run),
+            new Suite("Accessibility", "uiinput", AccessibilityTests.Run),
+            new Suite("HoldControls", "uiinput", HoldControlsTests.Run),
+            new Suite("Zoom", "uiwindows", ZoomTests.Run),
+            new Suite("ViewSwitching", "uiwindows", ViewSwitchingTests.Run),
+            new Suite("Teams", "uiteams", TeamTests.Run),
+            new Suite("Suggestions", "uiteams", SuggestionTests.Run),
+            new Suite("BubbleClicks", "uiteams", BubbleClickTests.Run),
+            new Suite("DisplayRollback", "uisettings", DisplayRollbackTests.Run),
+            new Suite("WindowAttention", "uiwindows", WindowAttentionTests.Run),
+            new Suite("Radar", "uiteams", RadarTests.Run),
+            new Suite("Comparisons", "uiteams", ComparisonTests.Run),
+            new Suite("Matrix", "controls", MatrixTests.Run),
+            new Suite("Theme", "rendering", ThemeTests.Run),
+            new Suite("LockedGlass", "uiglass", GlassTests.Run),
+            new Suite("Transparency", "uiglass", TransparencyTests.Run),
+            new Suite("WindowBounds", "model", WindowBoundsTests.Run),
+            new Suite("Keyboard", "uiinput", KeyboardTests.Run),
             new Suite("Matchups", "model", MatchupsTests.Run),
             new Suite("CalculationParity", "model", CalculationParityTests.Run),
-            new Suite("MainRender", "ui", MatchupsTests.RenderMain),
+            new Suite("MainRender", "uilifecycle", MatchupsTests.RenderMain),
+            new Suite("Onboarding", "uisettings", OnboardingTests.Run),
+            new Suite("Support", "uisettings", SupportTests.Run),
+            new Suite("Factory reset", "storage", FactoryResetTests.Run),
+            new Suite("Localization", "uisettings", LocalizationTests.Run),
         };
         internal static string[] Groups()
         {
@@ -58,7 +64,7 @@ namespace AniimoAffinities
         {
             if (Theme.Appearance != 1)
                 throw new Exception("A fresh profile must default to the System theme");
-            var selected = Suites.Where(suite => group == "all" || suite.Group == group).ToArray();
+            var selected = Suites.Where(suite => group == "all" || suite.Group == group || (group == "ui" && suite.Group.StartsWith("ui")) || suite.Name == group).ToArray();
             if (selected.Length == 0)
                 throw new ArgumentException("Unknown test group: " + group);
             var report = new StringBuilder();

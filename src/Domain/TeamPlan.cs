@@ -16,7 +16,7 @@ namespace AniimoAffinities
         }
         internal string Title(int index, bool opponent = false)
         {
-            return string.IsNullOrWhiteSpace(Name) ? (opponent ? "Opponent " : "Ally ") + (index + 1) : Name;
+            return string.IsNullOrWhiteSpace(Name) ? (opponent ? Language.T("Opponent ") : Language.T("Ally ")) + (index + 1) : Name;
         }
         internal static string JoinNames(string[] names, TeamMember[] members)
         {
@@ -25,7 +25,7 @@ namespace AniimoAffinities
             for (int i = 0; i < names.Length; i++)
             {
                 string prefix = string.IsNullOrWhiteSpace(members[i].Name)
-                    ? (names[i].StartsWith("Ally ", StringComparison.Ordinal) ? "Ally " : names[i].StartsWith("Opponent ", StringComparison.Ordinal) ? "Opponent " : "") : "";
+                    ? (names[i].StartsWith(Language.T("Ally "), StringComparison.Ordinal) ? Language.T("Ally ") : names[i].StartsWith(Language.T("Opponent "), StringComparison.Ordinal) ? Language.T("Opponent ") : "") : "";
                 labels[i] = prefix.Length > 0 && prefix == previousPrefix ? names[i].Substring(prefix.Length) : names[i];
                 previousPrefix = prefix;
             }
@@ -56,11 +56,11 @@ namespace AniimoAffinities
         internal string Summary(TeamMember member)
         {
             if (!member.Known)
-                return "Choose elements";
+                return Language.T("Choose elements");
             var counts = CountMatchups(member);
             if (counts.Total == 0)
-                return "No known opponents";
-            return "Strong vs " + counts.Strong + "/" + counts.Total + " · Weak vs " + counts.Weak + "/" + counts.Total;
+                return Language.T("No known opponents");
+            return Language.T("Strong vs ") + counts.Strong + "/" + counts.Total + Language.T(" · Weak vs ") + counts.Weak + "/" + counts.Total;
         }
         internal MatchupCounts CountMatchups(TeamMember member)
         {

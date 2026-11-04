@@ -29,6 +29,7 @@ namespace AniimoAffinities
         {
             this.source = source;
             this.pool = pool;
+            foreground.CloseOwner = source;
             Watch(source);
             source.LocationChanged += Move;
             Theme.Changed += ThemeChanged;
@@ -164,6 +165,7 @@ namespace AniimoAffinities
                             if (added)
                                 backdrops.Add(pool == null ? new GlassWindow() : pool.Take());
                             var backdrop = backdrops[i];
+                            backdrop.CloseOwner = source;
 
                             if (backdrop.MaterialRevision != Theme.Revision && !GlassNative.Enable(backdrop.Handle, Theme.Surface))
                             {
@@ -232,6 +234,8 @@ namespace AniimoAffinities
         }
         internal sealed class GlassWindow : NativeWindow, IDisposable
         {
+            internal Form CloseOwner;
+            private bool closeQueued;
             internal IntPtr Below;
             internal int MaterialRevision = -1;
             internal void PrepareBounds(Rectangle value)
@@ -251,7 +255,7 @@ namespace AniimoAffinities
             {
                 CreateHandle(new CreateParams
                 {
-                    Caption = "Affinisaur glass",
+                    Caption = Language.T("Affinisaur glass"),
                     Style = unchecked((int)0x80000000),
                     ExStyle = 0x08000000 | 0x80 | 0x20 | (topMost ? 0x8 : 0) | 0x80000
                 });
@@ -280,10 +284,21 @@ namespace AniimoAffinities
             }
             public void Dispose()
             {
+                CloseOwner = null;
                 DestroyHandle();
             }
             protected override void WndProc(ref Message message)
             {
+                if ((message.Msg == 0x10 || message.Msg == 0x112 && (message.WParam.ToInt64() & 0xfff0) == 0xf060) && CloseOwner != null)
+                {
+                    var owner = CloseOwner;
+                    if (!closeQueued && !owner.IsDisposed && owner.IsHandleCreated)
+                    {
+                        closeQueued = true;
+                        owner.BeginInvoke(new Action(() => { closeQueued = false; if (!owner.IsDisposed) owner.Close(); }));
+                    }
+                    return;
+                }
                 if (message.Msg == 0x47)
                 {
                     bounds = GlassNative.WindowBounds(Handle);

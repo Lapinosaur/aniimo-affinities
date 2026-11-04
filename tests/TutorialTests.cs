@@ -46,6 +46,10 @@ namespace AniimoAffinities
                 restored = TutorialProgress.Load(tutorialTestPath);
                 if (restored.Completed != 63 || restored.SectionSteps[6] != 1 || restored.SectionSteps[7] != 0 || restored.Started != 127)
                     throw new Exception("Adding the news tour must preserve seven-section user progress.");
+                File.WriteAllText(tutorialTestPath, "tour-v2\n511\n30\npending\n255\n511\n0,0,0,0,0,0,0,0,2\n0,0,0,0,0,0,0,0,3");
+                restored = TutorialProgress.Load(tutorialTestPath);
+                if (restored.Completed != 255 || restored.ViewedSteps[8] != 3 || restored.ViewedSteps[9] != 0 || restored.Step != 30)
+                    throw new Exception("Adding updates must preserve existing nine-section progress.");
                 File.WriteAllText(tutorialTestPath, "tour-v1\n0\n999\npending");
                 if (TutorialProgress.Load(tutorialTestPath).Pending || TutorialProgress.Load(tutorialTestPath).Sections != TutorialProgress.All)
                     throw new Exception("Invalid tutorial progress must safely reset");
@@ -55,13 +59,14 @@ namespace AniimoAffinities
             if (File.Exists(TutorialNews.FilePath))
                 File.Delete(TutorialNews.FilePath);
             File.WriteAllText(PreferenceFiles.FilePath("team-features-tour.txt"), "returning");
+            File.WriteAllText(PreferenceFiles.FilePath("interactive-features-tour-v08.txt"), "returning");
             var upgraded = new TutorialProgress { Completed = TutorialProgress.All, Started = TutorialProgress.All, Sections = 2, Step = 1, Pending = true };
             upgraded.SectionSteps[1] = 1;
             upgraded.SectionSteps[7] = 2;
             upgraded.ViewedSteps[7] = 7;
             TutorialNews.PrepareProgress(upgraded);
             if (upgraded.Completed != (TutorialProgress.All & ~TutorialProgress.News) || upgraded.Sections != TutorialProgress.News || upgraded.Step != 0 || upgraded.Pending || upgraded.SectionSteps[1] != 1 || upgraded.SectionSteps[7] != 0 || upgraded.ViewedSteps[7] != 0)
-                throw new Exception("The 0.8 news tour must reset only its own completion and preserve other checkpoints.");
+                throw new Exception("The 0.9 news tour must reset only its own completion and preserve other checkpoints.");
             if (!TutorialNews.PrepareStartup() || !TutorialNews.ReturningUser || TutorialNews.PrepareStartup())
                 throw new Exception("Returning users must be offered news once, even with old tutorials hidden.");
             using (var newsSource = new MainForm())
@@ -79,6 +84,24 @@ namespace AniimoAffinities
                 }
             }
             TutorialPreferences.Save(false);
+            using (var updateSource = new MainForm())
+            {
+                new TutorialProgress { Sections = 512 }.Save();
+                string skippedPath = PreferenceFiles.FilePath("skipped-update.txt");
+                string skippedBefore = File.Exists(skippedPath) ? File.ReadAllText(skippedPath) : null;
+                using (var tour = new TutorialOverlay(updateSource, true))
+                {
+                    tour.Show();
+                    if (tour.StepCount != 5)
+                        throw new Exception("Updates tutorial must have four steps and a finish page.");
+                    for (int step = 0; step < 4; step++)
+                        tour.NavigateStep(1);
+                    if ((TutorialProgress.Load().Completed & 512) == 0)
+                        throw new Exception("Updates tutorial completion must be recorded.");
+                }
+                if ((File.Exists(skippedPath) ? File.ReadAllText(skippedPath) : null) != skippedBefore)
+                    throw new Exception("Updates tutorial must not change the skipped-version preference.");
+            }
             using (var source = new MainForm())
             {
                 new TutorialProgress { Sections = 2 }.Save();

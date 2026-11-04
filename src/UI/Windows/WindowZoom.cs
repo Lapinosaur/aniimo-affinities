@@ -10,22 +10,34 @@ namespace AniimoAffinities
         {
             return Math.Max(.5f, Math.Min(1.5f, scale + direction * .25f));
         }
-        internal static bool HandleShortcut(Keys input, IntPtr flags)
+        internal static bool HandleShortcut(Keys input, IntPtr flags, PortableWindow target = null)
         {
             if (input != (Keys.Control | Keys.Up) && input != (Keys.Control | Keys.Down))
                 return false;
             if ((flags.ToInt64() & (1L << 30)) != 0)
                 return true;
-            float next = Step(DisplaySettings.WindowScale, input == (Keys.Control | Keys.Up) ? 1 : -1);
-            if (next == DisplaySettings.WindowScale)
+            target = target ?? Form.ActiveForm as PortableWindow ?? (Form.ActiveForm == null ? null : Form.ActiveForm.Owner as PortableWindow);
+            float current = target != null && target.IsContentWindow ? target.AppliedWindowScale : DisplaySettings.WindowScale;
+            float next = Step(current, input == (Keys.Control | Keys.Up) ? 1 : -1);
+            if (next == current)
                 return true;
             try
             {
-                DisplaySettings.SaveDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, next);
+                SetScale(target, next);
             }
             catch (System.IO.IOException) { System.Media.SystemSounds.Exclamation.Play(); }
             catch (UnauthorizedAccessException) { System.Media.SystemSounds.Exclamation.Play(); }
             return true;
+        }
+        internal static void SetScale(PortableWindow target, float value)
+        {
+            if (target != null && target.IsContentWindow)
+            {
+                target.LocalWindowScale = value;
+                target.ApplyWindowScale();
+            }
+            else
+                DisplaySettings.SaveDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, value, false);
         }
         internal static float[] Neighbors(float scale)
         {
@@ -78,7 +90,7 @@ namespace AniimoAffinities
                 window.ResumeLayout(true);
                 Arrange(window);
                 window.Invalidate(true);
-                var desired = window is MainForm ? new Point(anchoredRight - window.Width, anchoredTop) : window.Location;
+                var desired = new Point(anchoredRight - window.Width, anchoredTop);
                 window.Location = FitLocation(desired, window.Size, area);
             }
         }

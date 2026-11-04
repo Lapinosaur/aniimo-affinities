@@ -31,8 +31,8 @@ namespace AniimoAffinities
             Drawing.Box(g, new RectangleF(16, 16, 32, 32), Theme.InsetSurface, Theme.Border, 9);
             Glyphs.Draw(g, "def", new RectangleF(22, 22, 20, 20), Theme.TextColor);
             using (var title = UiFonts.Create("Segoe UI", 13, FontStyle.Bold))
-                Drawing.Text(g, "Team analysis", title, Theme.TextColor, new RectangleF(60, 9, width - 105, 27), false);
-            Drawing.Text(g, "Threats, resistances & replies", Font, Theme.Muted, new RectangleF(60, 35, width - 105, 20), false);
+                Drawing.Text(g, Language.T("Team analysis"), title, Theme.TextColor, new RectangleF(60, 9, width - 105, 27), false);
+            Drawing.Text(g, Language.T("Threats, resistances & replies"), Font, Theme.Muted, new RectangleF(60, 35, width - 105, 20), false);
             Drawing.Text(g, Text.Contains("▴") ? "−" : "+", Font, Theme.Muted, new RectangleF(width - 40, 16, 24, 32), true);
             FinishPaint(g, (int)width, (int)height, false);
         }

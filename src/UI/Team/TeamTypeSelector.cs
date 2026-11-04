@@ -9,13 +9,13 @@ namespace AniimoAffinities
     {
         private readonly TypeSelector selector = new TypeSelector();
         private readonly ApplicationTips tips = ApplicationTips.Create();
-        private readonly DrawingPanel modifierHint = new DrawingPanel { PhysicalPainting = true, TabStop = false, Visible = false, AccessibleName = "Ctrl modifier" };
+        private readonly DrawingPanel modifierHint = new DrawingPanel { PhysicalPainting = true, TabStop = false, Visible = false, AccessibleName = Language.T("Ctrl modifier") };
         private readonly TeamMember member;
-        private readonly Action changed;
+        private Action changed;
         internal event Action<bool> FilterFocusChanged;
         private TeamPlan suggestionPlan;
         private bool suggestionEnemy;
-        private readonly SettingsButton applySuggestion = new SettingsButton { Text = "+", Visible = false, TabStop = false, AccessibleName = "Apply suggested elements", Location = new Point(426, 3), Size = new Size(32, 32) };
+        private readonly SettingsButton applySuggestion = new SettingsButton { Text = "+", Visible = false, TabStop = false, AccessibleName = Language.T("Apply suggested elements"), Location = new Point(426, 3), Size = new Size(32, 32) };
         private TeamSuggestions.Recommendation recommendation;
         private TeamSuggestions.Recommendation[] plannedAdditions;
         internal void SetSuggestions(TeamPlan plan, bool enemy = false, TeamSuggestions.Recommendation[] additions = null)
@@ -53,12 +53,12 @@ namespace AniimoAffinities
             UiFonts.Assign(modifierHint, UiFonts.Create("Segoe UI", 7));
             Controls.Add(modifierHint);
             modifierHint.BringToFront();
-            tips.SetToolTip(modifierHint, "Hold Ctrl and press a number to select an element. Ctrl+0 clears the row.");
+            tips.SetToolTip(modifierHint, Language.T("Hold Ctrl and press a number to select an element. Ctrl+0 clears the row."));
             string[] order = { "Dark", "Earth", "Fire", "Grass", "Ice", "Light", "Lightning", "Water", "Wind" };
             for (int i = 0; i < order.Length; i++)
             {
                 int type = Array.IndexOf(Model.Names, order[i]);
-                var button = new IconButton { Type = type, TabIndex = i, TabStop = false, AccessibleName = order[i] };
+                var button = new IconButton { Type = type, TabIndex = i, TabStop = false, AccessibleName = Language.T(order[i]) };
                 button.Click += (s, e) =>
                 {
                     var selection = new Selection { Main = member.Main, Sub = member.Sub };
@@ -69,9 +69,9 @@ namespace AniimoAffinities
                 };
                 selector.Controls.Add(button);
             }
-            var reset = new IconButton { Glyph = "reset", TabIndex = 9, TabStop = false, AccessibleName = "Clear elements" };
+            var reset = new IconButton { Glyph = "reset", TabIndex = 9, TabStop = false, AccessibleName = Language.T("Clear elements") };
             reset.Click += (s, e) => ClearSelection();
-            tips.SetToolTip(reset, "Clear elements (keep name)");
+            tips.SetToolTip(reset, Language.T("Clear elements (keep name)"));
             selector.Controls.Add(reset);
             RefreshSelection();
         }
@@ -180,44 +180,52 @@ namespace AniimoAffinities
             }
             var gains = suggestionPlan == null || !member.Known ? new int[Model.Names.Length] : TeamSuggestions.Gains(suggestionPlan, member, suggestionEnemy);
             int best = gains.Max();
-            string combination = recommendation == null ? "" : Model.Names[recommendation.Types.Main] + (recommendation.Types.Sub < 0 ? "" : " + " + Model.Names[recommendation.Types.Sub]);
-            string advice = recommendation == null ? "" : "Suggested " + (recommendation.Types.Sub < 0 ? "mono" : "dual") + ": " + combination + " · adds " + recommendation.Gain + " coverage points after the suggestions above. Apply with + or Ctrl+Enter. Other suggestions update after each selection. Names are kept.";
+            string combination = recommendation == null ? "" : Language.T(Model.Names[recommendation.Types.Main]) + (recommendation.Types.Sub < 0 ? "" : " + " + Language.T(Model.Names[recommendation.Types.Sub]));
+            string advice = recommendation == null ? "" : Language.T("Suggested ") + (recommendation.Types.Sub < 0 ? "mono" : "dual") + ": " + combination + Language.T(" · adds ") + recommendation.Gain + Language.T(" coverage points after the suggestions above. Apply with + or Ctrl+Enter. Other suggestions update after each selection. Names are kept.");
             applySuggestion.Visible = recommendation != null;
             applySuggestion.AccessibleDescription = advice;
             string visualAdvice = RecommendationTip(recommendation);
-            SuggestionGraphic.Attach(tips, applySuggestion, recommendation, "Apply with + or Ctrl+Enter");
+            SuggestionGraphic.Attach(tips, applySuggestion, recommendation, Language.T("Apply with + or Ctrl+Enter"));
             foreach (var button in selector.Controls.OfType<IconButton>().Where(b => b.Type >= 0))
             {
                 button.Active = button.Type == member.Main || button.Type == member.Sub;
-                button.Badge = button.Type == member.Main ? "Main" : button.Type == member.Sub ? "Sub" : "";
+                button.Badge = button.Type == member.Main ? Language.T("Main") : button.Type == member.Sub ? Language.T("Sub") : "";
                 button.IncomingFactor = factors == null ? double.NaN : factors[9 + button.Type];
                 button.Suggested = recommendation != null ? button.Type == recommendation.Types.Main || button.Type == recommendation.Types.Sub : best > 0 && gains[button.Type] == best;
-                string matchup = factors == null ? "" : " · Incoming " + Model.Factor(button.IncomingFactor) + (button.IncomingFactor > 1.0001 ? " · Weakness" : button.IncomingFactor < .9999 ? " · Resistance" : " · Neutral");
-                string suggestion = button.Suggested ? " · " + (recommendation != null ? advice : "Suggested: improves team coverage by " + best + " points (2 per strong answer, 1 per resistance)") : "";
-                button.AccessibleDescription = (button.Badge.Length == 0 ? "Not selected" : button.Badge + " element") + matchup + suggestion;
-                string visualSuggestion = !button.Suggested ? "" : recommendation != null ? "\n\n" + visualAdvice : "\nSuggested: +" + best + " coverage points";
-                tips.SetToolTip(button, "[types:" + button.Type + ",-1]" + (button.Badge.Length > 0 ? button.Badge : "Element") + "\n" + (matchup.Length > 0 ? matchup.Substring(3) + "\n" : "") + (button.Badge.Length > 0 ? "Click to remove" : "Click to select") + visualSuggestion);
+                string matchup = factors == null ? "" : Language.T(" · Incoming ") + Model.Factor(button.IncomingFactor) + (button.IncomingFactor > 1.0001 ? Language.T(" · Weakness") : button.IncomingFactor < .9999 ? Language.T(" · Resistance") : Language.T(" · Neutral"));
+                string suggestion = button.Suggested ? " · " + (recommendation != null ? advice : Language.T("Suggested: improves team coverage by ") + best + Language.T(" points (2 per strong answer, 1 per resistance)")) : "";
+                button.AccessibleDescription = (button.Badge.Length == 0 ? Language.T("Not selected") : button.Badge + Language.T(" element")) + matchup + suggestion;
+                string visualSuggestion = !button.Suggested ? "" : recommendation != null ? "\n\n" + visualAdvice : Language.T("\nSuggested: +") + best + Language.T(" coverage points");
+                tips.SetToolTip(button, "[types:" + button.Type + ",-1]" + (button.Badge.Length > 0 ? button.Badge : Language.T("Element")) + "\n" + (matchup.Length > 0 ? matchup.Substring(3) + "\n" : "") + (button.Badge.Length > 0 ? Language.T("Click to remove") : Language.T("Click to select")) + visualSuggestion);
                 button.Invalidate();
                 if (button.Suggested && recommendation != null)
-                    SuggestionGraphic.Attach(tips, button, recommendation, "Apply with + or Ctrl+Enter");
+                    SuggestionGraphic.Attach(tips, button, recommendation, Language.T("Apply with + or Ctrl+Enter"));
             }
             selector.Arrange(member.Known);
         }
-        internal static string RecommendationTip(TeamSuggestions.Recommendation value, string action = "Apply with + or Ctrl+Enter")
+        internal static string RecommendationTip(TeamSuggestions.Recommendation value, string action = null)
         {
+            if (action == null)
+                action = Language.T("Apply with + or Ctrl+Enter");
             if (value == null)
                 return "";
             return "[types:" + value.Types.Main + "," + value.Types.Sub + "]" + SuggestionGraphic.Title(value)
-                + (value.Gain > 0 ? "\n+" + value.Gain + " coverage points" : "\nReinforces coverage with backup answers")
-                + "\nProjected team: " + value.AppliedAllies + " applied allies + " + value.EarlierProposals.Length + " earlier unapplied suggestions"
+                + (value.Gain > 0 ? "\n+" + value.Gain + Language.T(" coverage points") : Language.T("\nReinforces coverage with backup answers"))
+                + Language.T("\nProjected team: ") + value.AppliedAllies + Language.T(" applied allies + ") + value.EarlierProposals.Length + Language.T(" earlier unapplied suggestions")
                 + "\n\n" + action
-                + "\nOnly this slot is applied; other suggestions recalculate.";
+                + Language.T("\nOnly this slot is applied; other suggestions recalculate.");
         }
         protected override void Dispose(bool disposing)
         {
             if (disposing)
                 tips.Dispose();
             base.Dispose(disposing);
+            if (disposing)
+            {
+                changed = null;
+                FilterFocusChanged = null;
+                Events.Dispose();
+            }
         }
     }
 }

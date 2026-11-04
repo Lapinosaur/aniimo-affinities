@@ -7,6 +7,12 @@ namespace AniimoAffinities
     // Default scrolling containers: native scrolling/focus behavior with the shared slim thumb.
     internal class SlimScrollPanel : Panel
     {
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+                Events.Dispose();
+        }
         internal SlimScrollPanel()
         {
             AutoScroll = true;
@@ -15,6 +21,12 @@ namespace AniimoAffinities
     }
     internal class SlimFlowPanel : FlowLayoutPanel
     {
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+                Events.Dispose();
+        }
         internal SlimFlowPanel()
         {
             AutoScroll = true;
@@ -34,7 +46,7 @@ namespace AniimoAffinities
         private SlimPanelScroll(ScrollableControl value)
         {
             host = value;
-            bar.AccessibleName = "Scroll content";
+            bar.AccessibleName = Language.T("Scroll content");
             bar.ValueChanged += y => { host.AutoScrollPosition = new Point(0, y); Sync(); };
             host.ParentChanged += (s, e) => { bar.Parent = host.Parent; Sync(); };
             host.HandleCreated += (s, e) => Sync();
@@ -51,7 +63,7 @@ namespace AniimoAffinities
                 bar.DrawScroll(e.Graphics);
                 e.Graphics.Restore(state);
             };
-            host.Disposed += (s, e) => bar.Dispose();
+            host.Disposed += (s, e) => { instances.Remove(host); bar.Dispose(); };
         }
         private void Sync()
         {

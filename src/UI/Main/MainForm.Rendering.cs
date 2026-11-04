@@ -26,7 +26,7 @@ namespace AniimoAffinities
                 return;
             }
             int a = comparison.Length > 0 ? comparison[0].Member.Main : preview.Main, b = comparison.Length > 0 ? comparison[0].Member.Sub : preview.Sub;
-            string name = Model.Names[a] + (b >= 0 ? " + " + Model.Names[b] : "");
+            string name = Language.T(Model.Names[a]) + (b >= 0 ? " + " + Language.T(Model.Names[b]) : "");
             float width = (canvas.Width - 36) / 2f;
             var factors = Model.Factors(a, b);
             float cardTop = 12;
@@ -48,8 +48,8 @@ namespace AniimoAffinities
                     e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                     Glyphs.Draw(e.Graphics, "team", new RectangleF(18, 12, 36, 36), Theme.AccentForeground);
                     using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
-                        Drawing.Text(e.Graphics, "Team comparison", title, Theme.TextColor, new RectangleF(70, 5, 500, 35), false);
-                    Drawing.Text(e.Graphics, comparison.Length + " selected · Ally card colors · Unofficial", Font, Theme.Muted, new RectangleF(72, 39, 420, 20), false);
+                        Drawing.Text(e.Graphics, Language.T("Team comparison"), title, Theme.TextColor, new RectangleF(70, 5, 500, 35), false);
+                    Drawing.Text(e.Graphics, comparison.Length + Language.T(" selected · Ally card colors · Unofficial"), Font, Theme.Muted, new RectangleF(72, 39, 420, 20), false);
                 }
                 return;
             }
@@ -58,7 +58,7 @@ namespace AniimoAffinities
             var g = e.Graphics;
             g.SmoothingMode = SmoothingMode.AntiAlias;
             int a = preview.Main, b = preview.Sub;
-            string name = Model.Names[a] + (b >= 0 ? " + " + Model.Names[b] : "");
+            string name = Language.T(Model.Names[a]) + (b >= 0 ? " + " + Language.T(Model.Names[b]) : "");
             if (!TopMost)
             {
                 VectorIcon.Draw(g, a, new RectangleF(18, 12, 36, 36));
@@ -66,7 +66,7 @@ namespace AniimoAffinities
                     VectorIcon.Draw(g, b, new RectangleF(64, 12, 36, 36));
                 using (var title = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
                     Drawing.Text(g, name, title, Theme.TextColor, new RectangleF(b >= 0 ? 116 : 70, 5, 500, 35), false);
-                Drawing.Text(g, teamPreview >= 0 || hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? "Temporary preview · Unofficial" : "Type affinities · Unofficial", Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
+                Drawing.Text(g, teamPreview >= 0 || hovered >= 0 && hovered != selection.Main && hovered != selection.Sub ? Language.T("Temporary preview · Unofficial") : Language.T("Type affinities · Unofficial"), Font, Theme.Muted, new RectangleF(b >= 0 ? 118 : 72, 39, 300, 20), false);
             }
         }
         private void DrawInlineMatrix(Graphics g, float cardTop)
@@ -92,9 +92,9 @@ namespace AniimoAffinities
             Drawing.Box(g, new RectangleF(box.X + 16, box.Y + 16, 32, 32), Theme.InsetSurface, Theme.Border, 9);
             Glyphs.Draw(g, column == 0 ? "atk" : "def", new RectangleF(box.X + 22, box.Y + 22, 20, 20), Theme.AccentForeground);
             using (var bold = UiFonts.Create("Segoe UI", 13, FontStyle.Bold))
-                Drawing.Text(g, column == 0 ? "Attack" : "Defense", bold, column == 0 ? Theme.Attack : Theme.Defense, new RectangleF(box.X + 60, box.Y + 11, box.Width - 76, 27), false);
+                Drawing.Text(g, column == 0 ? Language.T("Attack") : Language.T("Defense"), bold, column == 0 ? Theme.Attack : Theme.Defense, new RectangleF(box.X + 60, box.Y + 11, box.Width - 76, 27), false);
             using (var caption = UiFonts.Create("Segoe UI", 8.5f))
-                Drawing.Text(g, column == 0 ? "Damage dealt · best available type" : "Damage received · combined types", caption, Theme.Muted, new RectangleF(box.X + 60, box.Y + 37, box.Width - 76, 20), false);
+                Drawing.Text(g, column == 0 ? Language.T("Damage dealt · best available type") : Language.T("Damage received · combined types"), caption, Theme.Muted, new RectangleF(box.X + 60, box.Y + 37, box.Width - 76, 20), false);
             using (var line = new Pen(Theme.Border))
                 g.DrawLine(line, box.X + 16, box.Y + 68, box.Right - 16, box.Y + 68);
             float cy = box.Y + 68 + (box.Height - 68) / 2, cx = box.X + box.Width / 2;
@@ -147,7 +147,7 @@ namespace AniimoAffinities
                     using (var bold = UiFonts.Create("Segoe UI", multipliers.Length == 1 ? 10 : 8.5f, FontStyle.Bold))
                         Drawing.Text(g, value, bold, color, valueBox, true);
                 }
-                string label = column == 0 ? (side == 0 ? "Not effective" : "Super effective") : (side == 0 ? "Resistance" : "Weakness");
+                string label = column == 0 ? (side == 0 ? Language.T("Not effective") : Language.T("Super effective")) : (side == 0 ? Language.T("Resistance") : Language.T("Weakness"));
                 using (var small = UiFonts.Create("Segoe UI", 8, FontStyle.Regular))
                     Drawing.Text(g, label, small, color, new RectangleF(arrowX - 12, cy + 12, arrowW + 24, 34), true);
             }
@@ -237,11 +237,11 @@ namespace AniimoAffinities
             Glyphs.Draw(g, "atk", new RectangleF(cx - 31, cy - 13, 26, 26), Theme.Muted);
             Glyphs.Draw(g, "def", new RectangleF(cx + 6, cy - 13, 26, 26), Theme.Muted);
             using (var heading = UiFonts.Create("Segoe UI", 17, FontStyle.Bold))
-                Drawing.Text(g, "Explore type affinities", heading, Theme.TextColor, new RectangleF(0, cy + 99, canvas.Width, 34), true);
+                Drawing.Text(g, Language.T("Explore type affinities"), heading, Theme.TextColor, new RectangleF(0, cy + 99, canvas.Width, 34), true);
             using (var body = UiFonts.Create("Segoe UI", 10))
-                Drawing.Text(g, "Unofficial Aniimo companion", body, Theme.Muted, new RectangleF(0, cy + 139, canvas.Width, 25), true);
+                Drawing.Text(g, Language.T("Unofficial Aniimo companion"), body, Theme.Muted, new RectangleF(0, cy + 139, canvas.Width, 25), true);
             using (var hint = UiFonts.Create("Segoe UI", 8.5f))
-                Drawing.Text(g, "Hover to explore · Click to select one or two types.", hint, Theme.Muted, new RectangleF(0, cy + 174, canvas.Width, 22), true);
+                Drawing.Text(g, Language.T("Hover to explore · Click to select one or two types."), hint, Theme.Muted, new RectangleF(0, cy + 174, canvas.Width, 22), true);
         }
         protected override void Dispose(bool disposing)
         {

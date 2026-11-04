@@ -44,7 +44,8 @@ namespace AniimoAffinities
         private readonly HoldSizeButton[] sizeButtons = new HoldSizeButton[2];
         internal void RefreshSizes()
         {
-            var values = WindowZoom.Neighbors(DisplaySettings.WindowScale);
+            var content = Owner as PortableWindow;
+            var values = WindowZoom.Neighbors(content != null && content.IsContentWindow ? content.AppliedWindowScale : DisplaySettings.WindowScale);
             for (int i = 0; i < 2; i++)
             {
                 var button = sizeButtons[i];
@@ -52,8 +53,8 @@ namespace AniimoAffinities
                     continue;
                 button.Target = values[i];
                 button.Text = Math.Round(values[i] * 100) + "%";
-                button.AccessibleName = "Resize overlay to " + button.Text;
-                tips.SetToolTip(button, "Hold click or Space for 0.9 s to resize to " + button.Text + ". Release early to cancel.");
+                button.AccessibleName = Language.T("Resize overlay to ") + button.Text;
+                tips.SetToolTip(button, Language.T("Hold click or Space for 0.9 s to resize to ") + button.Text + Language.T(". Release early to cancel."));
                 button.Invalidate();
             }
         }
@@ -83,20 +84,20 @@ namespace AniimoAffinities
                 {
                     try
                     {
-                        DisplaySettings.SaveDisplay(DisplaySettings.FontScale, DisplaySettings.ShowBadges, value);
+                        WindowZoom.SetScale(Owner as PortableWindow, value);
                         RefreshSizes();
                     }
-                    catch (System.IO.IOException) { tips.SetToolTip(sizeButton, "Unable to save window size. Hold to try again."); }
-                    catch (UnauthorizedAccessException) { tips.SetToolTip(sizeButton, "Unable to save window size. Hold to try again."); }
+                    catch (System.IO.IOException) { tips.SetToolTip(sizeButton, Language.T("Unable to save window size. Hold to try again.")); }
+                    catch (UnauthorizedAccessException) { tips.SetToolTip(sizeButton, Language.T("Unable to save window size. Hold to try again.")); }
                 };
             }
             RefreshSizes();
-            var button = new SettingsButton { Location = new Point(140, 0), Size = new Size(32, 32), Glyph = "lock", AccessibleName = "Unlock overlay", Cursor = Cursors.Hand, Primary = true };
+            var button = new SettingsButton { Location = new Point(140, 0), Size = new Size(32, 32), Glyph = "lock", AccessibleName = Language.T("Unlock overlay"), Cursor = Cursors.Hand, Primary = true };
             lockButton = button;
             button.Click += (s, e) => unlock();
             Controls.Add(button);
-            tips.SetToolTip(button, hotkeyAvailable ? "Unlock overlay · " + ShortcutText.Mark(KeyBindings.Label(KeyBindings.Load(KeyBindings.FilePath)[11])) : "Unlock overlay");
-            var grip = new Button { Location = new Point(104, 0), Size = new Size(32, 32), FlatStyle = FlatStyle.Flat, Text = "", AccessibleName = "Move overlay", Cursor = Cursors.SizeAll, BackColor = Theme.Surface };
+            tips.SetToolTip(button, hotkeyAvailable ? Language.T("Unlock overlay · ") + ShortcutText.Mark(KeyBindings.Label(KeyBindings.Load(KeyBindings.FilePath)[11])) : Language.T("Unlock overlay"));
+            var grip = new Button { Location = new Point(104, 0), Size = new Size(32, 32), FlatStyle = FlatStyle.Flat, Text = "", AccessibleName = Language.T("Move overlay"), Cursor = Cursors.SizeAll, BackColor = Theme.Surface };
             grip.FlatAppearance.BorderSize = 0;
             grip.FlatAppearance.MouseOverBackColor = Theme.Surface;
             grip.Paint += (s, e) =>
@@ -131,7 +132,7 @@ namespace AniimoAffinities
                 e.Handled = e.SuppressKeyPress = true;
             };
             Controls.Add(grip);
-            tips.SetToolTip(grip, "Drag to move the overlay, or focus this button and use arrow keys. Shift moves 10 pixels.");
+            tips.SetToolTip(grip, Language.T("Drag to move the overlay, or focus this button and use arrow keys. Shift moves 10 pixels."));
             if (togglePanel != null)
             {
                 foreach (Control control in Controls)
@@ -144,10 +145,10 @@ namespace AniimoAffinities
                 var oldRegion = Region;
                 Region = expandedRegion;
                 oldRegion.Dispose();
-                panelToggle = new HoldSizeButton { Location = Point.Empty, Size = new Size(32, 32), Glyph = panelGlyph(), AccessibleName = "Hold to show or hide team panel" };
+                panelToggle = new HoldSizeButton { Location = Point.Empty, Size = new Size(32, 32), Glyph = panelGlyph(), AccessibleName = Language.T("Hold to show or hide team panel") };
                 panelToggle.Commit += value => { togglePanel(); panelToggle.Glyph = panelGlyph(); panelToggle.Invalidate(); };
                 Controls.Add(panelToggle);
-                tips.SetToolTip(panelToggle, "Hold click or Space for 0.9 s to show or hide the team panel. Release early to cancel.");
+                tips.SetToolTip(panelToggle, Language.T("Hold click or Space for 0.9 s to show or hide the team panel. Release early to cancel."));
             }
 
             foreach (Control control in Controls)

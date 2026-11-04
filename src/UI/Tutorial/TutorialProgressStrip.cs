@@ -83,7 +83,7 @@ namespace AniimoAffinities
                 points[i].First = i == 0;
                 points[i].Last = i == points.Length - 1;
                 points[i].Complete = complete[i];
-                points[i].AccessibleDescription = (i == active ? "Current tutorial. " : "") + (complete[i] ? "Completed." : "Not completed.") + " Click to open.";
+                points[i].AccessibleDescription = (i == active ? Language.T("Current tutorial. ") : "") + (complete[i] ? Language.T("Completed.") : Language.T("Not completed.")) + Language.T(" Click to open.");
                 points[i].Invalidate();
             }
             Reveal(active);
@@ -101,7 +101,7 @@ namespace AniimoAffinities
         }
         private void Reveal(int index)
         {
-            title.Text = index >= 0 && index < titles.Length ? titles[index] : "Tutorials";
+            title.Text = index >= 0 && index < titles.Length ? titles[index] : Language.T("Tutorials");
             int width = Math.Min(Z(260), Math.Max(1, Width - Z(16)));
             int center = index >= 0 && index < points.Length ? points[index].Left + Z(15) : Width / 2;
             title.SetBounds(Math.Max(Z(8), Math.Min(Width - width - Z(8), center - width / 2)), 0, width, Z(24));

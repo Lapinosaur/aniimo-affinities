@@ -25,6 +25,8 @@ This project is one Windows Forms application, compiled into one portable execut
 
 ## Dependency rules
 
+- Before creating the main window, new profiles complete a four-page onboarding flow (searchable language selection, comfort preferences, optional tutorials, community welcome). Language and theme clicks advance; optional preferences stay on the comfort page before theme selection. Enter continues, 1–3 choose themes, and Backspace goes back except in the search field. Choices are staged until the final action. `onboarding.txt` distinguishes interrupted and completed setup; existing profiles bypass it. A new-user news marker prevents freshly saved preferences from triggering an upgrade tour. Update checks start only after the main window is shown.
+
 - Domain and preference storage do not depend on forms, colors or UI controls. Domain affinity grouping reads `Model` projections; `Model` owns embedded data parsing.
 - Feature windows call reusable renderers. Matrix and radar painters do not call feature windows, so the main view and dedicated windows use identical drawing code.
 - `Theme` owns semantic colors, `DisplaySettings` owns live font/window scaling, `Drawing` owns primitives, `Glyphs` owns semantic icon drawing, and `UiFonts` applies font scale.
@@ -65,13 +67,18 @@ Scrollable content uses `SlimScrollPanel` or `SlimFlowPanel` by default. They re
 
 ## Shared interaction conventions
 
+- Content views (radar, matrix, affinities and suggestion comparisons) are tracked modeless windows. Reopening a view activates its existing window. By default they have independent taskbar entries and no native owner, so minimizing the main window leaves them visible; Window & overlay can restore native ownership through `content-windows.txt`. MainForm explicitly closes/disposes its tracked content. Settings, shortcut conflict decisions and team editing remain modal; native taskbar close handles a blocking modal child explicitly.
+- Ctrl+wheel targets the window under the pointer, including a tooltip's owner, without requiring activation. Keyboard zoom targets the focused window. Content zoom is per-window and temporary; main-window shortcuts save the default for future windows without changing already-open content. Applying Display settings resets and synchronizes all open window scales. Radar mode changes and zoom preserve the top-right corner unless screen bounds require repositioning.
+- Support QR codes use SupportQrButton in both About and hover bubbles, with one clickable area and matching pointer/focus feedback. Explanatory keyboard references use ShortcutLabel or ShortcutText rather than ordinary labels.
+
 - Use Theme semantic colors and radii, UiFonts, Drawing and Glyphs. Group related choices with SettingsButton.Group; the parent owns their layout.
 - Assign primary action roles explicitly; never infer an action role from its displayed label.
 - Preview cards distinguish pending selection (accent surface), hover and keyboard focus (an outer ring shown with focus cues). Content previews remain visible. A hover must not persist preferences.
 - Transparency previews show the inverse pending toggle on hover; theme previews show the candidate theme. Restore previews on leave, deactivation and disposal. Main-window previews target the owning main window.
 - Use temporary tooltips for explanations and hoverable bubbles for interactive content. Preserve the bridge between anchor and bubble, keyboard access, close control and click delivery.
 - Use key-shaped shortcut badges. Keep focus, selection, visibility and lock distinct. Hold actions must cancel on capture/focus loss; do not use hold for ordinary selection.
+- F11 opens the shared, modeless Support window throughout the app, including onboarding, tutorials and modal settings. An active shortcut capture is cancelled without changing its binding. Existing Support windows follow the current owner and are re-enabled when a modal dialog had blocked them. F11 is reserved from configurable bindings; legacy assignments migrate to an available key (F12 first), preserving the rest of the map.
 - Use SlimScrollPanel/SlimFlowPanel for overflowing content. Keep primary actions accessible outside scrolling content where appropriate.
 - Preserve specialised native caption/overlay controls: their drag, hit testing, capture and pin/hold contracts justify their distinct implementation. Illustrative miniature corners may differ from actual control radii.
-- Affinisaur identifies itself as Unofficial in the main interface and Settings; About retains the full non-affiliation explanation. Keep UI text in English.
+- Affinisaur identifies itself as Unofficial in the main interface and Settings; About retains the full non-affiliation explanation. English is the source language. Present built-in strings through `Language.T` using embedded catalogs; keep model IDs, user names and external content unchanged. Settings → Display → Language saves `language.txt` and explicitly restarts the app. See [localization.md](localization.md) for translation status and maintenance.
 - Verify shared rendering in multiple consumers, both themes and scaled layouts. Preview rendering is not proof of real desktop DPI or assistive-technology behavior.

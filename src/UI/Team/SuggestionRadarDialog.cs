@@ -23,7 +23,7 @@ namespace AniimoAffinities
             }
         }
         internal readonly RadarRenderer.Series[] Series;
-        internal readonly SettingsButton ApplyButton = new SettingsButton { Text = "Apply suggestion", Primary = true, AccessibleName = "Apply this suggested ally", TabIndex = 0 };
+        internal readonly SettingsButton ApplyButton = new SettingsButton { Text = Language.T("Apply suggestion"), Primary = true, AccessibleName = Language.T("Apply this suggested ally"), TabIndex = 0 };
         private readonly int suggestedSlot;
         private readonly string source;
         internal int HighlightedSlot = -1;
@@ -47,22 +47,22 @@ namespace AniimoAffinities
             if (slots.Length == 0)
                 slots = Enumerable.Range(0, plan.Allies.Length).Where(i => plan.Allies[i].Known).ToArray();
             Series = slots.Select(i => Snapshot(plan.Allies[i], i)).Concat(new[] { Snapshot(suggestion.Types, slot) }).ToArray();
-            Text = "Suggested ally · Radar preview";
+            Text = Language.T("Suggested ally · Radar preview");
             ClientSize = new Size(900, 560);
             MinimumSize = new Size(740, 520);
             StartPosition = FormStartPosition.CenterParent;
             ShowInTaskbar = false;
             var chart = new DrawingPanel { Dock = DockStyle.Fill };
-            chart.AccessibleName = "Suggested ally comparison";
-            chart.AccessibleText = () => "Preview only. " + string.Join(". ", Series.Select(item =>
+            chart.AccessibleName = Language.T("Suggested ally comparison");
+            chart.AccessibleText = () => Language.T("Preview only. ") + string.Join(". ", Series.Select(item =>
                 (item.Slot == suggestedSlot ? source : item.Member.Title(item.Slot)) + ": "
-                + Model.Names[item.Member.Main] + (item.Member.Sub >= 0 ? " and " + Model.Names[item.Member.Sub] : "")
-                + ". Attack " + string.Join(", ", Model.Factors(item.Member.Main, item.Member.Sub).Take(9).Select(Model.Factor))
-                + ". Defense " + string.Join(", ", Model.Factors(item.Member.Main, item.Member.Sub).Skip(9).Select(Model.Factor))));
-            chart.Paint += (s, e) => PaintPreview(e.Graphics, chart.ClientSize);
+                + Language.T(Model.Names[item.Member.Main]) + (item.Member.Sub >= 0 ? Language.T(" and ") + Language.T(Model.Names[item.Member.Sub]) : "")
+                + Language.T(". Attack ") + string.Join(", ", Model.Factors(item.Member.Main, item.Member.Sub).Take(9).Select(Model.Factor))
+                + Language.T(". Defense ") + string.Join(", ", Model.Factors(item.Member.Main, item.Member.Sub).Skip(9).Select(Model.Factor))));
+            chart.Paint += (s, e) => PaintPreview(e.Graphics, chart.ClientRectangle.Size);
             chart.MouseMove += (s, e) =>
             {
-                int slotAtPointer = LegendSlotAt(e.Location, chart.Width);
+                int slotAtPointer = LegendSlotAt(e.Location, (int)(chart.Width / AppliedWindowScale));
                 if (slotAtPointer != HighlightedSlot)
                 {
                     HighlightedSlot = slotAtPointer;
@@ -87,7 +87,7 @@ namespace AniimoAffinities
             using (var font = UiFonts.Create("Segoe UI", 9))
             using (var title = UiFonts.Create("Segoe UI", 12, FontStyle.Bold))
             {
-                Drawing.Text(g, "Hover a legend to highlight · Not applied · Esc to cancel", font, Theme.Muted, new RectangleF(16, 38, size.Width - 212, 24), false);
+                ShortcutText.Layout(g, Language.T("Hover a legend to highlight · Not applied · Esc to close"), font, Theme.Muted, new RectangleF(16, 38, size.Width - 212, 24), true);
                 float legendWidth = (size.Width - 32) / 3f;
                 for (int i = 0; i < Series.Length; i++)
                 {
@@ -109,7 +109,7 @@ namespace AniimoAffinities
                     var box = new RectangleF(12 + column * (width + 12), 140, width, size.Height - 152);
                     Drawing.Box(g, box, Theme.Surface, Theme.Border, Theme.PanelRadius);
                     Glyphs.Draw(g, column == 0 ? "atk" : "def", new RectangleF(box.X + 14, box.Y + 12, 22, 22), Theme.TextColor);
-                    Drawing.Text(g, column == 0 ? "Attack · higher is stronger" : "Defense · lower is safer", title, column == 0 ? Theme.Attack : Theme.Defense, new RectangleF(box.X + 45, box.Y + 10, width - 55, 28), false);
+                    Drawing.Text(g, column == 0 ? Language.T("Attack · higher is stronger") : Language.T("Defense · lower is safer"), title, column == 0 ? Theme.Attack : Theme.Defense, new RectangleF(box.X + 45, box.Y + 10, width - 55, 28), false);
                     float radius = RadarRenderer.FitRadius(new SizeF(width, box.Height - 48));
                     RadarRenderer.DrawRadar(g, new PointF(box.X + width / 2, box.Y + 48 + (box.Height - 48) / 2), radius, column == 0, column == 1, new Selection(), 0, Series, HighlightedSlot);
                 }

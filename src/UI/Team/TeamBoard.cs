@@ -11,7 +11,7 @@ namespace AniimoAffinities
         private readonly TeamPlan plan;
         private readonly TeamCard[] cards = new TeamCard[6];
         private readonly ApplicationTips tips = ApplicationTips.Create();
-        private readonly Action<int> select;
+        private Action<int> select;
         private Rectangle obstruction;
         private bool arranging;
         internal bool TransitionLayout;
@@ -91,7 +91,7 @@ namespace AniimoAffinities
                 int index = i;
                 cards[i] = new TeamCard(plan, index) { TabIndex = i };
                 cards[i].PreviewButton.Click += (s, e) => PreviewSuggestion(index);
-                tips.SetToolTip(cards[i].PreviewButton, "Preview suggested ally on radars against checked allies, or the whole team if none are checked. Nothing is applied.");
+                tips.SetToolTip(cards[i].PreviewButton, Language.T("Preview suggested ally on radars against checked allies, or the whole team if none are checked. Nothing is applied."));
                 cards[i].SuggestButton.Click += (s, e) =>
                 {
                     if (plan.Allies[index].Known)
@@ -107,7 +107,7 @@ namespace AniimoAffinities
                     if (ComparisonChanged != null)
                         ComparisonChanged();
                 };
-                tips.SetToolTip(cards[i].CompareCheck, "Include this ally in both radars. Its card color identifies its traces. Space toggles the checkbox.");
+                tips.SetToolTip(cards[i].CompareCheck, Language.T("Include this ally in both radars. Its card color identifies its traces. Space toggles the checkbox."));
                 cards[i].Click += (s, e) => select(index);
                 cards[i].MouseEnter += (s, e) => { if (onCardHover != null) onCardHover(index); };
                 cards[i].MouseLeave += (s, e) => { if (onCardHover != null) onCardHover(-1); };
@@ -125,7 +125,7 @@ namespace AniimoAffinities
                 {
                     tips.SetToolTip(cards[index], counter < 0 ? cards[index].DefaultTooltip : cards[index].CounterTooltip(counter == 0));
                     if (counter < 0 && cards[index].Suggestion != null)
-                        SuggestionGraphic.Attach(tips, cards[index], cards[index].Suggestion, "Apply this suggestion here or from the card");
+                        SuggestionGraphic.Attach(tips, cards[index], cards[index].Suggestion, Language.T("Apply this suggestion here or from the card"));
                     int mask = 0;
                     if (counter >= 0)
                         foreach (var opponent in plan.Opponents.Where(x => x.Known && (counter == 0 ? TeamPlan.Damage(plan.Allies[index], x) : TeamPlan.Damage(x, plan.Allies[index])) > 1.0001))
@@ -150,28 +150,28 @@ namespace AniimoAffinities
                 var member = plan.Allies[i];
                 cards[i].CompareCheck.Enabled = member.Known;
                 cards[i].Suggestion = additions[i];
-                cards[i].SuggestButton.AccessibleName = "Apply suggested elements for " + member.Title(i);
-                string advice = TeamTypeSelector.RecommendationTip(additions[i], "Apply this suggestion here or from the card");
-                cards[i].SuggestButton.AccessibleDescription = additions[i] == null ? "" : "Apply " + Model.Names[additions[i].Types.Main] + (additions[i].Types.Sub < 0 ? "" : " and " + Model.Names[additions[i].Types.Sub]);
-                SuggestionGraphic.Attach(tips, cards[i].SuggestButton, additions[i], "Apply this suggestion here or from the card");
-                cards[i].CompareCheck.AccessibleName = "Compare " + member.Title(i) + " on radars";
+                cards[i].SuggestButton.AccessibleName = Language.T("Apply suggested elements for ") + member.Title(i);
+                string advice = TeamTypeSelector.RecommendationTip(additions[i], Language.T("Apply this suggestion here or from the card"));
+                cards[i].SuggestButton.AccessibleDescription = additions[i] == null ? "" : Language.T("Apply ") + Language.T(Model.Names[additions[i].Types.Main]) + (additions[i].Types.Sub < 0 ? "" : Language.T(" and ") + Language.T(Model.Names[additions[i].Types.Sub]));
+                SuggestionGraphic.Attach(tips, cards[i].SuggestButton, additions[i], Language.T("Apply this suggestion here or from the card"));
+                cards[i].CompareCheck.AccessibleName = Language.T("Compare ") + member.Title(i) + Language.T(" on radars");
                 if (!member.Known)
                     cards[i].CompareCheck.Checked = false;
                 string detail = member.Known ? "[types:" + member.Main + "," + member.Sub + "]" + member.Title(i) : member.Title(i);
                 if (member.Known)
                 {
-                    detail += "\n\nHover to preview · Click to select\nHover counters for matchups";
+                    detail += Language.T("\n\nHover to preview · Click to select\nHover counters for matchups");
                 }
                 else
-                    detail += "\n\n" + (additions[i] == null ? "Click to choose this ally's elements." : advice);
+                    detail += "\n\n" + (additions[i] == null ? Language.T("Click to choose this ally's elements.") : advice);
                 cards[i].AccessibleName = member.Title(i);
                 cards[i].AccessibleDescription = member.Title(i) + ". " + plan.Summary(member);
                 if (member.Known)
-                    cards[i].AccessibleDescription += ". " + Model.Names[member.Main] + (member.Sub >= 0 ? " + " + Model.Names[member.Sub] : "") + ". Focus to preview; Enter or Space to select.";
+                    cards[i].AccessibleDescription += ". " + Language.T(Model.Names[member.Main]) + (member.Sub >= 0 ? " + " + Language.T(Model.Names[member.Sub]) : "") + Language.T(". Focus to preview; Enter or Space to select.");
                 cards[i].DefaultTooltip = detail;
                 tips.SetToolTip(cards[i], detail);
                 if (additions[i] != null)
-                    SuggestionGraphic.Attach(tips, cards[i], additions[i], "Apply this suggestion here or from the card");
+                    SuggestionGraphic.Attach(tips, cards[i], additions[i], Language.T("Apply this suggestion here or from the card"));
                 int slot = i;
                 Action open = additions[i] == null ? (Action)null : () => { if (SuggestionsRequested != null) SuggestionsRequested(slot); };
                 tips.SetHoverBubble(cards[i], open != null);
@@ -233,6 +233,15 @@ namespace AniimoAffinities
             if (disposing)
                 tips.Dispose();
             base.Dispose(disposing);
+            if (disposing)
+            {
+                select = null;
+                ComparisonChanged = null;
+                TeamChanged = null;
+                SuggestionPreviewRequested = null;
+                SuggestionsRequested = null;
+                Events.Dispose();
+            }
         }
     }
 
@@ -257,7 +266,7 @@ namespace AniimoAffinities
         }
         internal readonly RoundCheckBox CompareCheck = new RoundCheckBox { Text = "", TabIndex = 0, Size = new Size(24, 24) };
         internal readonly SettingsButton SuggestButton = new SettingsButton { Glyph = "suggest", Quiet = true, Text = "", TabIndex = 0, Visible = false };
-        internal readonly SettingsButton PreviewButton = new SettingsButton { Glyph = "radar", Quiet = true, Text = "", TabIndex = 1, Visible = false, AccessibleName = "Preview suggested ally on radars" };
+        internal readonly SettingsButton PreviewButton = new SettingsButton { Glyph = "radar", Quiet = true, Text = "", TabIndex = 1, Visible = false, AccessibleName = Language.T("Preview suggested ally on radars") };
         internal TeamSuggestions.Recommendation Suggestion;
         private Color CardSurface()
         {
@@ -281,7 +290,7 @@ namespace AniimoAffinities
         {
             var window = FindForm() as PortableWindow;
             if (window == null || !window.TutorialSnapshot)
-                throw new InvalidOperationException("Animated hover requires an isolated tutorial window.");
+                throw new InvalidOperationException(Language.T("Animated hover requires an isolated tutorial window."));
             if (active)
                 OnMouseEnter(EventArgs.Empty);
             else
@@ -290,6 +299,16 @@ namespace AniimoAffinities
         internal string DefaultTooltip = "";
         internal event Action<int> CounterHovered;
         internal event Action<int> ElementHovered;
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                CounterHovered = null;
+                ElementHovered = null;
+                Suggestion = null;
+            }
+        }
         private RectangleF CounterBounds(int counter)
         {
             float scale = WindowZoom.Factor(this), w = Width / scale, h = Height / scale;
@@ -304,9 +323,9 @@ namespace AniimoAffinities
             var member = plan.Allies[index];
             var names = plan.Opponents.Select((opponent, slot) => new { opponent, slot }).Where(x => x.opponent.Known).ToArray();
             var affected = names.Where(x => (attack ? TeamPlan.Damage(member, x.opponent) : TeamPlan.Damage(x.opponent, member)) > 1.0001).ToArray();
-            string text = (attack ? "Attack" : "Defense") + " · " + affected.Length + " of " + names.Length + " known opponents\n";
-            text += attack ? "Deals more than ×1 damage." : "Receives more than ×1 damage. Fewer is better.";
-            return text + "\n\n" + (affected.Length == 0 ? "No opponents affected." : string.Join("\n", affected.Select(x => "[types:" + x.opponent.Main + "," + x.opponent.Sub + "]" + x.opponent.Title(x.slot, true) + "  " + Model.Factor(attack ? TeamPlan.Damage(member, x.opponent) : TeamPlan.Damage(x.opponent, member)))));
+            string text = (attack ? Language.T("Attack") : Language.T("Defense")) + " · " + affected.Length + Language.T(" of ") + names.Length + Language.T(" known opponents\n");
+            text += attack ? Language.T("Deals more than ×1 damage.") : Language.T("Receives more than ×1 damage. Fewer is better.");
+            return text + "\n\n" + (affected.Length == 0 ? Language.T("No opponents affected.") : string.Join("\n", affected.Select(x => "[types:" + x.opponent.Main + "," + x.opponent.Sub + "]" + x.opponent.Title(x.slot, true) + "  " + Model.Factor(attack ? TeamPlan.Damage(member, x.opponent) : TeamPlan.Damage(x.opponent, member)))));
         }
         private void SetCounter(int counter)
         {
@@ -427,7 +446,7 @@ namespace AniimoAffinities
             }
             else
                 using (var font = UiFonts.Create("Segoe UI", 7))
-                    Drawing.Text(g, member.Known ? "No opponents" : Suggestion != null ? SuggestionGraphic.Title(Suggestion) : "Choose elements", font, Theme.Muted, new RectangleF(compact ? 80 : 10, compact ? 33 : h - 27, compact ? w - 90 : w - 20, 20), false);
+                    Drawing.Text(g, member.Known ? Language.T("No opponents") : Suggestion != null ? SuggestionGraphic.Title(Suggestion) : Language.T("Choose elements"), font, Theme.Muted, new RectangleF(compact ? 80 : 10, compact ? 33 : h - 27, compact ? w - 90 : w - 20, 20), false);
             FinishPaint(g, w, h);
         }
     }

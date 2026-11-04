@@ -304,6 +304,7 @@ namespace AniimoAffinities
             outside.Reset();
             Application.RemoveMessageFilter(this);
             bubble.Hide();
+            bubble.ReleaseContent();
             displayed = false;
             anchor = null;
             if (owner != null)
@@ -338,7 +339,10 @@ namespace AniimoAffinities
             applyActions.Clear();
             previewActions.Clear();
             hoverBubbles.Clear();
+            scrollableGraphics.Clear();
             graphicSizes.Clear();
+            SupportPlacement = null;
+            SupportBoundsChanged = null;
         }
     }
 }

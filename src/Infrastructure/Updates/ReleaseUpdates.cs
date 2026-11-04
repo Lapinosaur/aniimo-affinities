@@ -66,7 +66,7 @@ namespace AniimoAffinities
             foreach (var item in (System.Collections.IEnumerable)data["assets"])
             {
                 var asset = (Dictionary<string, object>)item;
-                string name = (string)asset["name"], url = (string)asset["browser_download_url"];
+                string name = (string)asset[Language.T("name")], url = (string)asset["browser_download_url"];
                 if (!url.StartsWith(Repository + Uri.EscapeDataString(tag) + "/", StringComparison.Ordinal))
                     continue;
                 if (name == "Affinisaur.exe" || (name == "AniimoAffinities.exe" && result.Download == null))
@@ -78,7 +78,7 @@ namespace AniimoAffinities
                     result.Checksums = url;
             }
             if (result.Download == null || result.Checksums == null)
-                throw new InvalidDataException("Release assets are incomplete.");
+                throw new InvalidDataException(Language.T("Release assets are incomplete."));
             return result;
         }
         private static byte[] Fetch(string url, int limit, Action<int> progress = null, System.Threading.CancellationToken cancellation = default(System.Threading.CancellationToken))
@@ -98,7 +98,7 @@ namespace AniimoAffinities
                 while ((count = input.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     if (output.Length + count > limit)
-                        throw new InvalidDataException("Download exceeds the size limit.");
+                        throw new InvalidDataException(Language.T("Download exceeds the size limit."));
                     cancellation.ThrowIfCancellationRequested();
                     output.Write(buffer, 0, count);
                     if (progress != null)
@@ -115,7 +115,7 @@ namespace AniimoAffinities
                 if (parts.Length == 2 && parts[1].TrimStart('*') == assetName && parts[0].Length == 64 && parts[0].All(Uri.IsHexDigit))
                     return parts[0];
             }
-            throw new InvalidDataException("Release checksum is missing.");
+            throw new InvalidDataException(Language.T("Release checksum is missing."));
         }
         private static string Hash(byte[] bytes)
         {
@@ -133,9 +133,9 @@ namespace AniimoAffinities
         internal static void Stage(byte[] bytes, string expected, string version, string target)
         {
             if (!IsNewer(version))
-                throw new InvalidDataException("Update must be newer than the current version.");
+                throw new InvalidDataException(Language.T("Update must be newer than the current version."));
             if (!string.Equals(Hash(bytes), expected, StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Checksum mismatch.");
+                throw new InvalidDataException(Language.T("Checksum mismatch."));
             Directory.CreateDirectory(Folder);
             using (var updateLock = Lock())
             {
@@ -147,9 +147,9 @@ namespace AniimoAffinities
         private static void Validate(string[] plan)
         {
             if (plan.Length != 4 || !IsNewer(plan[3]) || !Path.IsPathRooted(plan[0]) || !plan[0].EndsWith(".exe", StringComparison.OrdinalIgnoreCase) || !string.Equals(Path.GetDirectoryName(Path.GetFullPath(plan[1])), Path.GetFullPath(Folder), StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Invalid update plan.");
+                throw new InvalidDataException(Language.T("Invalid update plan."));
             if (!string.Equals(Hash(File.ReadAllBytes(plan[1])), plan[2], StringComparison.OrdinalIgnoreCase))
-                throw new InvalidDataException("Update verification failed.");
+                throw new InvalidDataException(Language.T("Update verification failed."));
         }
     }
 }

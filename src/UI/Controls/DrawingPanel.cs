@@ -9,6 +9,15 @@ namespace AniimoAffinities
     internal class DrawingPanel : Panel
     {
         internal Func<string> AccessibleText;
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+            {
+                AccessibleText = null;
+                Events.Dispose();
+            }
+        }
         protected override AccessibleObject CreateAccessibilityInstance()
         {
             return new PanelAccess(this);

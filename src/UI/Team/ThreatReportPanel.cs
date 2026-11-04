@@ -39,10 +39,10 @@ namespace AniimoAffinities
             BackColor = Theme.Background;
             Padding = new Padding(16);
             var bar = new Panel { Dock = DockStyle.Top, Height = 40, BackColor = Theme.Surface };
-            tabs = new[] { "Single types", "Dual types", "Members" }.Select((text, index) => new SettingsButton
+            tabs = new[] { Language.T("Single types"), Language.T("Dual types"), Language.T("Members") }.Select((text, index) => new SettingsButton
             {
                 Text = text,
-                AccessibleName = text + " threat report",
+                AccessibleName = text + Language.T(" threat report"),
                 Location = new Point(index * 150, 0),
                 Size = new Size(150, 30),
                 TabIndex = index,
@@ -55,9 +55,9 @@ namespace AniimoAffinities
                 tabs[i].Click += (s, e) => { mode = selected; Rebuild(); };
                 bar.Controls.Add(tabs[i]);
             }
-            var info = new SettingsButton { Glyph = "info", Quiet = true, AccessibleName = "Show matchup legend", Size = new Size(30, 30), Location = new Point(bar.Width - 30, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Surround = Theme.Surface };
+            var info = new SettingsButton { Glyph = "info", Quiet = true, AccessibleName = Language.T("Show matchup legend"), Size = new Size(30, 30), Location = new Point(bar.Width - 30, 0), Anchor = AnchorStyles.Top | AnchorStyles.Right, Surround = Theme.Surface };
             info.Click += (s, e) => tips.ShowTip(info);
-            tips.SetGraphicTip(info, "Matchup legend. Shield: received. Swords: dealt. Red: unfavorable. Green: favorable. Disadvantaged: take more, deal less. Pressured: take more, deal normal damage. Trade blows: both deal more.", new Size(280, 250), DrawLegend);
+            tips.SetGraphicTip(info, Language.T("Matchup legend. Shield: received. Swords: dealt. Red: unfavorable. Green: favorable. Disadvantaged: take more, deal less. Pressured: take more, deal normal damage. Trade blows: both deal more."), new Size(280, 250), DrawLegend);
             bar.Controls.Add(info);
             context.BackColor = Theme.Surface;
             context.Dock = DockStyle.Bottom;
@@ -83,7 +83,7 @@ namespace AniimoAffinities
             table.RowTemplate.Height = 44;
             table.DefaultCellStyle = new DataGridViewCellStyle { BackColor = Theme.Surface, ForeColor = Theme.TextColor, SelectionBackColor = Theme.HoverSurface, SelectionForeColor = Theme.TextColor, Padding = new Padding(5, 0, 5, 0) };
             table.ColumnHeadersDefaultCellStyle = new DataGridViewCellStyle { BackColor = Theme.InsetSurface, ForeColor = Theme.Muted, SelectionBackColor = Theme.InsetSurface, Padding = new Padding(5, 0, 5, 0) };
-            foreach (var column in new[] { new DataGridViewTextBoxColumn { Name = "type", HeaderText = "Threat", Width = 130 }, new DataGridViewTextBoxColumn { Name = "weak", HeaderText = "Weak allies", Width = 82 }, new DataGridViewTextBoxColumn { Name = "resist", HeaderText = "Resist", Width = 80 }, new DataGridViewTextBoxColumn { Name = "max", HeaderText = "Damage", Width = 70 }, new DataGridViewTextBoxColumn { Name = "detail", HeaderText = "Exposed members", AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill } })
+            foreach (var column in new[] { new DataGridViewTextBoxColumn { Name = "type", HeaderText = Language.T("Threat"), Width = 130 }, new DataGridViewTextBoxColumn { Name = "weak", HeaderText = Language.T("Weak allies"), Width = 82 }, new DataGridViewTextBoxColumn { Name = "resist", HeaderText = Language.T("Resist"), Width = 80 }, new DataGridViewTextBoxColumn { Name = "max", HeaderText = Language.T("Damage"), Width = 70 }, new DataGridViewTextBoxColumn { Name = "detail", HeaderText = Language.T("Exposed members"), AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill } })
             {
                 column.SortMode = DataGridViewColumnSortMode.NotSortable;
                 if (column.Name == "detail")
@@ -96,7 +96,7 @@ namespace AniimoAffinities
 
             table.Scroll += (s, e) => tips.SetRegionTip(table, "", Rectangle.Empty);
             table.CellEnter += (s, e) => { if (table.Focused) ShowCellTip(e.ColumnIndex, e.RowIndex); };
-            table.AccessibleName = "Team threat table";
+            table.AccessibleName = Language.T("Team threat table");
             Controls.Add(table);
             Controls.Add(bar);
             Controls.Add(context);
@@ -148,7 +148,7 @@ namespace AniimoAffinities
                 tips.SetRegionTip(table, text, table.GetCellDisplayRectangle(column, row, true), (g, bounds) =>
                 {
                     Glyphs.Draw(g, "def", new RectangleF(bounds.X + 8, bounds.Y + 9, 16, 16), Theme.Muted);
-                    Drawing.Text(g, column == 2 ? "No resistant member" : "No vulnerable member", Font, Theme.Muted, new RectangleF(bounds.X + 34, bounds.Y + 3, 210, 28), false);
+                    Drawing.Text(g, column == 2 ? Language.T("No resistant member") : Language.T("No vulnerable member"), Font, Theme.Muted, new RectangleF(bounds.X + 34, bounds.Y + 3, 210, 28), false);
                 }, new Size(250, 34));
                 return;
             }
@@ -156,10 +156,10 @@ namespace AniimoAffinities
         }
         internal void DrawLegend(Graphics graphics, RectangleF bounds)
         {
-            string[] titles = { "Disadvantaged", "Pressured", "Trade blows" };
+            string[] titles = { Language.T("Disadvantaged"), Language.T("Pressured"), Language.T("Trade blows") };
             string[] replies = { "<1", "=1", ">1" };
             Color[] colors = { Theme.Unfavorable, Theme.Muted, Theme.Favorable };
-            Drawing.Text(graphics, "Received     /     Dealt", Font, Theme.Muted, new RectangleF(bounds.X + 10, bounds.Y, 250, 22), false);
+            Drawing.Text(graphics, Language.T("Received     /     Dealt"), Font, Theme.Muted, new RectangleF(bounds.X + 10, bounds.Y, 250, 22), false);
             for (int i = 0; i < 3; i++)
             {
                 float x = bounds.X, y = bounds.Y + 28 + i * 72;
@@ -183,7 +183,7 @@ namespace AniimoAffinities
         }
         private static string TypeName(TeamMember member)
         {
-            return Model.Names[member.Main] + (member.Sub < 0 ? "" : " + " + Model.Names[member.Sub]);
+            return Language.T(Model.Names[member.Main]) + (member.Sub < 0 ? "" : " + " + Language.T(Model.Names[member.Sub]));
         }
         private void Rebuild()
         {
@@ -216,24 +216,24 @@ namespace AniimoAffinities
             table.Columns[1].Width = 82;
             table.Columns[2].Width = 78;
             table.Columns[3].Width = 100;
-            table.Columns[0].HeaderText = mode == 2 ? "Member" : "Threat";
-            table.Columns[0].ToolTipText = mode == 1 ? "Common type + each following icon: one pair per icon. Grouped pairs have identical incoming AND outgoing damage for every known member." : "";
-            table.Columns[4].HeaderText = "Matchup";
-            table.Columns[1].HeaderText = mode == 2 ? "Weak to" : "Weak allies";
+            table.Columns[0].HeaderText = mode == 2 ? Language.T("Member") : Language.T("Threat");
+            table.Columns[0].ToolTipText = mode == 1 ? Language.T("Common type + each following icon: one pair per icon. Grouped pairs have identical incoming AND outgoing damage for every known member.") : "";
+            table.Columns[4].HeaderText = Language.T("Matchup");
+            table.Columns[1].HeaderText = mode == 2 ? Language.T("Weak to") : Language.T("Weak allies");
             table.Rows.Clear();
             foreach (var entry in entries)
             {
                 int row = table.Rows.Add(entry.Name, entry.Weak + "/" + entry.Total, entry.Resistant + "/" + entry.Total, Model.Factor(entry.Maximum), entry.Detail.Length == 0 ? "—" : entry.Detail);
                 table.Rows[row].Tag = entry;
                 foreach (DataGridViewCell cell in table.Rows[row].Cells)
-                    cell.ToolTipText = entry.Name + "\n" + entry.Weak + "/" + entry.Total + " vulnerable · " + entry.Resistant + "/" + entry.Total + " resistant · max " + Model.Factor(entry.Maximum) + "\n" + entry.Detail;
+                    cell.ToolTipText = entry.Name + "\n" + entry.Weak + "/" + entry.Total + Language.T(" vulnerable · ") + entry.Resistant + "/" + entry.Total + Language.T(" resistant · max ") + Model.Factor(entry.Maximum) + "\n" + entry.Detail;
                 table.Rows[row].Cells[1].ToolTipText = entry.WeakTip;
                 table.Rows[row].Cells[2].ToolTipText = entry.ResistTip;
                 table.Rows[row].Cells[3].ToolTipText = entry.ExchangeTip;
-                table.Rows[row].Cells[4].ToolTipText = "Left: received · Right: dealt\n\n" + entry.ExchangeTip;
+                table.Rows[row].Cells[4].ToolTipText = Language.T("Left: received · Right: dealt\n\n") + entry.ExchangeTip;
                 table.Rows[row].Cells[4].Value = entry.Summary;
             }
-            context.Text = members.Length == 0 ? "Choose elements to see the report." : entries.Length == 0 ? "No super-effective threat." : mode == 2 ? (opposite.Length > 0 ? "Against known opposing members" : "Against all 45 type combinations") + " · Types only" : members.Length + " known members · " + threatCount + " threats" + (mode == 1 ? " · " + entries.Length + " groups" : "");
+            context.Text = members.Length == 0 ? Language.T("Choose elements to see the report.") : entries.Length == 0 ? Language.T("No super-effective threat.") : mode == 2 ? (opposite.Length > 0 ? Language.T("Against known opposing members") : Language.T("Against all 45 type combinations")) + Language.T(" · Types only") : members.Length + Language.T(" known members · ") + threatCount + Language.T(" threats") + (mode == 1 ? " · " + entries.Length + Language.T(" groups") : "");
         }
         private static Entry BuildEntry(TeamMember types, string name, TeamMember[] others, string[] names, bool memberMode)
         {
@@ -251,7 +251,7 @@ namespace AniimoAffinities
                 double incoming = TeamPlan.Damage(attacker, defender), outgoing = TeamPlan.Damage(defender, attacker);
                 entry.Exchanges.Add(new Exchange { Name = names[i], Types = memberMode ? attacker : defender, TypeOnly = memberMode, Received = incoming, Dealt = outgoing });
                 entry.Maximum = Math.Max(entry.Maximum, incoming);
-                string description = names[i] + "\nDamage received: " + Model.Factor(incoming) + "\nDamage dealt: " + Model.Factor(outgoing);
+                string description = names[i] + Language.T("\nDamage received: ") + Model.Factor(incoming) + Language.T("\nDamage dealt: ") + Model.Factor(outgoing);
                 if (incoming > 1.0001)
                 {
                     entry.Weak++;
@@ -279,17 +279,17 @@ namespace AniimoAffinities
                 }
                 exchanges.Add(description);
             }
-            entry.WeakTip = "Receive increased damage (shield >1)\n" + (weak.Count == 0 ? "None" : string.Join("\n\n", weak));
-            entry.ResistTip = "Receive reduced damage (shield <1)\n" + (resistant.Count == 0 ? "None" : string.Join("\n\n", resistant));
+            entry.WeakTip = Language.T("Receive increased damage (shield >1)\n") + (weak.Count == 0 ? Language.T("None") : string.Join("\n\n", weak));
+            entry.ResistTip = Language.T("Receive reduced damage (shield <1)\n") + (resistant.Count == 0 ? Language.T("None") : string.Join("\n\n", resistant));
             entry.ExchangeTip = string.Join("\n\n", exchanges);
             var labels = new List<string>();
             if (entry.Disadvantaged > 0)
-                labels.Add(entry.Disadvantaged + " disadvantaged");
+                labels.Add(entry.Disadvantaged + Language.T(" disadvantaged"));
             if (pressured > 0)
-                labels.Add(pressured + " pressured");
+                labels.Add(pressured + Language.T(" pressured"));
             if (entry.Trading > 0)
-                labels.Add(entry.Trading + " trade blows");
-            entry.Summary = labels.Count == 0 ? "No weakness" : string.Join(" · ", labels);
+                labels.Add(entry.Trading + Language.T(" trade blows"));
+            entry.Summary = labels.Count == 0 ? Language.T("No weakness") : string.Join(" · ", labels);
             if (weak.Count == 0)
                 entry.Reply = entry.Exchanges.Count == 0 ? 1 : entry.Exchanges.Max(item => item.Dealt);
             entry.Threats = threats.ToArray();
@@ -331,7 +331,7 @@ namespace AniimoAffinities
                     e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
                     Drawing.Box(e.Graphics, new RectangleF(e.CellBounds.X + 7, e.CellBounds.Y + 6, 18, 18), Color.FromArgb(28, ink), Color.Transparent, 5);
                     Glyphs.Draw(e.Graphics, "def", new RectangleF(e.CellBounds.X + 9, e.CellBounds.Y + 8, 14, 14), ink);
-                    TextRenderer.DrawText(e.Graphics, e.ColumnIndex == 1 ? "Weak" : "Resist", Font, new Rectangle(e.CellBounds.X + 29, e.CellBounds.Y, e.CellBounds.Width - 31, e.CellBounds.Height), ink, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+                    TextRenderer.DrawText(e.Graphics, e.ColumnIndex == 1 ? Language.T("Weak") : Language.T("Resist"), Font, new Rectangle(e.CellBounds.X + 29, e.CellBounds.Y, e.CellBounds.Width - 31, e.CellBounds.Height), ink, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
                 }
                 else
                     TextRenderer.DrawText(e.Graphics, Convert.ToString(e.FormattedValue), Font, Rectangle.Inflate(e.CellBounds, -8, 0), Theme.Muted, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
@@ -358,7 +358,7 @@ namespace AniimoAffinities
             {
                 int category = entry.Disadvantaged > 0 ? -1 : entry.Weak > entry.Trading ? 0 : entry.Trading > 0 ? 1 : 2;
                 var involved = entry.Exchanges.Where(item => item.Received > 1.0001 && (category < 0 ? item.Dealt < .9999 : category == 0 ? item.Dealt >= .9999 && item.Dealt <= 1.0001 : item.Dealt > 1.0001)).ToArray();
-                string label = category < 0 ? "Disadvantage" : category == 0 ? "Under pressure" : category == 1 ? "Trade blows" : "No weakness";
+                string label = category < 0 ? Language.T("Disadvantage") : category == 0 ? Language.T("Under pressure") : category == 1 ? Language.T("Trade blows") : Language.T("No weakness");
                 if (involved.Length > 1)
                     label = involved.Length + " · " + label;
                 Color ink = category < 0 ? Theme.Unfavorable : Theme.TextColor;

@@ -34,7 +34,7 @@ namespace AniimoAffinities
         {
             bindings = (Keys[])(configuredBindings ?? KeyBindings.Load(KeyBindings.FilePath)).Clone();
             fixedType = initialBase;
-            Text = "Effectiveness matrix";
+            Text = Language.T("Effectiveness matrix");
             ClientSize = new Size(720, 592);
             StartPosition = FormStartPosition.CenterParent;
             MaximizeBox = false;
@@ -43,32 +43,32 @@ namespace AniimoAffinities
             BackColor = Theme.Background;
             ForeColor = Theme.TextColor;
             UiFonts.Assign(this, UiFonts.Create("Segoe UI", 9));
-            AddAxisLegend(20, "rows", "atk", "Rows: attacker");
-            AddAxisLegend(96, "columns", "def", "Columns: defender");
-            Controls.Add(new Label { Text = "× Damage multiplier", ForeColor = Theme.Muted, Location = new Point(176, 46), Size = new Size(180, 20) });
+            AddAxisLegend(20, "rows", "atk", Language.T("Rows: attacker"));
+            AddAxisLegend(96, "columns", "def", Language.T("Columns: defender"));
+            Controls.Add(new Label { Text = Language.T("× Damage multiplier"), ForeColor = Theme.Muted, Location = new Point(176, 46), Size = new Size(180, 20) });
             selector.Location = new Point(8, 66);
             selector.Height = 54;
             Controls.Add(selector);
-            tips.SetToolTip(selector, "Select a type to compare dual-type defenders.");
-            single = new IconButton { Glyph = "reset", Shortcut = KeyBindings.Label(bindings[0]), TabIndex = 9, AccessibleName = "Single types" };
+            tips.SetToolTip(selector, Language.T("Select a type to compare dual-type defenders."));
+            single = new IconButton { Glyph = "reset", Shortcut = KeyBindings.Label(bindings[0]), TabIndex = 9, AccessibleName = Language.T("Single types") };
             single.Click += (s, e) => SelectBase(-1);
             selector.Controls.Add(single);
-            SetShortcutTip(single, "Single-type matrix");
+            SetShortcutTip(single, Language.T("Single-type matrix"));
             for (int i = 0; i < 9; i++)
             {
                 int type = Array.IndexOf(Model.Names, KeyBindings.Actions[i + 1]);
-                var button = new IconButton { Type = type, Shortcut = KeyBindings.Label(bindings[i + 1]), TabIndex = i, AccessibleName = Model.Names[type] };
+                var button = new IconButton { Type = type, Shortcut = KeyBindings.Label(bindings[i + 1]), TabIndex = i, AccessibleName = Language.T(Model.Names[type]) };
                 button.Click += (s, e) => SelectBase(fixedType == type ? -1 : type);
                 selectors[i] = button;
                 selector.Controls.Add(button);
-                SetShortcutTip(button, Model.Names[type] + " + each defending column");
+                SetShortcutTip(button, Language.T(Model.Names[type]) + Language.T(" + each defending column"));
             }
-            highlight = new SettingsButton { Text = "Best matchups", Location = new Point(556, 80), Size = new Size(140, 30), TabIndex = 10 };
+            highlight = new SettingsButton { Text = Language.T("Best matchups"), Location = new Point(556, 80), Size = new Size(140, 30), TabIndex = 10 };
             highlight.Click += (s, e) => { bestPinned = !bestPinned; RefreshGrid(); };
             highlight.MouseEnter += (s, e) => { bestPreview = true; RefreshGrid(); };
             highlight.MouseLeave += (s, e) => { bestPreview = false; RefreshGrid(); };
             Controls.Add(highlight);
-            tips.SetToolTip(highlight, "Highlight strongest attacking rows and resisting columns" + (bindings.Contains(Keys.H) ? "" : " · H"));
+            tips.SetToolTip(highlight, Language.T("Highlight strongest attacking rows and resisting columns") + (bindings.Contains(Keys.H) ? "" : " · H"));
             Activated += (s, e) => selector.Invalidate(true);
             Deactivate += (s, e) => selector.Invalidate(true);
             for (int row = 0; row < 10; row++)
@@ -103,7 +103,7 @@ namespace AniimoAffinities
         }
         private void SetShortcutTip(IconButton button, string label)
         {
-            button.AccessibleDescription = button.Shortcut.Length > 0 ? "Shortcut: " + button.Shortcut : "No shortcut";
+            button.AccessibleDescription = button.Shortcut.Length > 0 ? Language.T("Shortcut: ") + button.Shortcut : Language.T("No shortcut");
             tips.SetToolTip(button, label + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
         }
         private double Factor(int attack, int defense)
@@ -128,18 +128,18 @@ namespace AniimoAffinities
                         continue;
                     string label;
                     if (row == 0 && column == 0)
-                        label = "Rows attack · Columns defend";
+                        label = Language.T("Rows attack · Columns defend");
                     else if (column == 0)
-                        label = Model.Names[MatrixRenderer.Order[row - 1]] + " attack";
+                        label = Language.T(Model.Names[MatrixRenderer.Order[row - 1]]) + Language.T(" attack");
                     else
                     {
                         int defense = MatrixRenderer.Order[column - 1];
-                        string defenders = Model.Names[defense] + (fixedType >= 0 && fixedType != defense ? " + " + Model.Names[fixedType] : "");
-                        label = defenders + " defense";
+                        string defenders = Language.T(Model.Names[defense]) + (fixedType >= 0 && fixedType != defense ? " + " + Language.T(Model.Names[fixedType]) : "");
+                        label = defenders + Language.T(" defense");
                         if (row > 0)
                         {
                             int attack = MatrixRenderer.Order[row - 1];
-                            label = Model.Names[attack] + " → " + defenders + ": " + Model.Factor(Factor(attack, defense));
+                            label = Language.T(Model.Names[attack]) + " → " + defenders + ": " + Model.Factor(Factor(attack, defense));
                             if (fixedType >= 0 && fixedType != defense)
                                 label += " (" + Model.Factor(Model.Factors(defense, -1)[9 + attack]) + " × " + Model.Factor(Model.Factors(fixedType, -1)[9 + attack]) + ")";
                         }

@@ -23,6 +23,90 @@ namespace AniimoAffinities
             try
             {
                 ApplicationBootstrap.Initialize();
+                string previewLanguage = Environment.GetEnvironmentVariable("AFFINISAUR_PREVIEW_LANGUAGE");
+                if (!string.IsNullOrEmpty(previewLanguage))
+                    Language.Set(previewLanguage);
+                if (args.Length == 2 && args[0] == "--audit-lifetimes")
+                {
+                    LifetimeAudit.Run(args[1]);
+                    return 0;
+                }
+                if (args.Length == 2 && (args[0] == "--preview-support" || args[0] == "--preview-support-light"))
+                {
+                    if (args[0].EndsWith("-light"))
+                    {
+                        Theme.Appearance = 2;
+                        Theme.ApplyAppearance();
+                    }
+                    using (var support = new SupportWindow())
+                    {
+                        support.Show();
+                        Application.DoEvents();
+                        using (var bitmap = new Bitmap(support.Width, support.Height))
+                        {
+                            support.DrawToBitmap(bitmap, new Rectangle(Point.Empty, support.Size));
+                            bitmap.Save(args[1]);
+                        }
+                    }
+                    return 0;
+                }
+                if (args.Length == 2 && args[0].StartsWith("--preview-onboarding"))
+                {
+                    if (args[0].Contains("light"))
+                    {
+                        Theme.Appearance = 2;
+                        Theme.ApplyAppearance();
+                    }
+                    using (var welcome = new OnboardingWindow())
+                    {
+                        welcome.Show();
+                        int page = args[0].Contains("welcome") ? 3 : args[0].Contains("tour") ? 2 : args[0].Contains("comfort") ? 1 : 0;
+                        for (int i = 0; i < page; i++)
+                            welcome.Navigate(1);
+                        if (args[0].Contains("search"))
+                        {
+                            Application.DoEvents();
+                            var search = welcome.Controls.OfType<Panel>().SelectMany(panel => panel.Controls.OfType<LanguagePicker>()).Single().Search;
+                            search.Focus();
+                            search.Text = "Fr";
+                            search.SelectionStart = search.TextLength;
+                            search.SelectionLength = 0;
+                            search.Invalidate();
+                        }
+                        if (args[0].Contains("together"))
+                        {
+                            var preview = welcome.Controls.OfType<Panel>().SelectMany(panel => panel.Controls.OfType<ContentWindowPreview>()).Single();
+                            preview.Checked = false;
+                            typeof(Control).GetMethod("OnMouseLeave", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).Invoke(preview, new object[] { EventArgs.Empty });
+                        }
+                        Application.DoEvents();
+                        using (var bitmap = new Bitmap(welcome.Width, welcome.Height))
+                        {
+                            welcome.DrawToBitmap(bitmap, new Rectangle(Point.Empty, welcome.Size));
+                            bitmap.Save(args[1]);
+                        }
+                    }
+                    return 0;
+                }
+                if (args.Length == 2 && (args[0] == "--preview-update-tutorial" || args[0] == "--preview-update-tutorial-ready"))
+                {
+                    new TutorialProgress { Sections = 512 }.Save();
+                    using (var source = new MainForm())
+                    using (var tour = new TutorialOverlay(source, true))
+                    {
+                        tour.Show();
+                        if (args[0].EndsWith("-ready"))
+                            for (int step = 0; step < 3; step++)
+                                tour.NavigateStep(1);
+                        Application.DoEvents();
+                        using (var bitmap = new Bitmap(tour.Width, tour.Height))
+                        {
+                            tour.DrawToBitmap(bitmap, new Rectangle(Point.Empty, tour.Size));
+                            bitmap.Save(args[1]);
+                        }
+                    }
+                    return 0;
+                }
                 if (args.Length == 1 && args[0] == "--test-zoom")
                 {
                     ZoomTests.Run();
@@ -150,7 +234,7 @@ namespace AniimoAffinities
                         Version = "v0.7.0",
                         HistoryComplete = true,
                         Changes = new[] {
-                        new ReleaseChange { Version = "v0.7.0", Notes = "## Example release notes (preview fixture)\n- Individual tutorials and saved progress.\n- Shared keyboard focus and disabled states." },
+                        new ReleaseChange { Version = "v0.7.0", Notes = "## Clearer release notes\n- **Individual tutorials** and saved progress.\n- Shared keyboard focus and *disabled states*.\n\n| Feature | Result |\n| --- | --- |\n| Support | Clickable QR code |\n| GitHub | Star button |\n\n1. Download the update.\n2. Restart when ready.\n\n[Release details](https://github.com/Lapinosaur/aniimo-affinities/releases)" },
                         new ReleaseChange { Version = "v0.6.0", Notes = "## Example intermediate release\n- Improved panel transitions.\n- Clearer shortcut conflict feedback." }
                     }
                     }))

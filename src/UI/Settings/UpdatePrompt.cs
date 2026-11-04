@@ -14,13 +14,13 @@ namespace AniimoAffinities
         internal static void Track(SettingsButton button)
         {
             if (PackageIdentity.IsPackaged)
-                button.Text = "Updates managed by Microsoft Store";
+                button.Text = Language.T("Updates managed externally");
             buttons.Add(button);
             button.Disposed += (s, e) => buttons.Remove(button);
             if (busy)
-                button.BeginBusy("Checking…");
+                button.BeginBusy(Language.T("Checking…"));
         }
-        internal static void OnStartup(Form owner)
+        internal static void OnStartup(Form owner, Action check = null)
         {
             if (PackageIdentity.IsPackaged)
                 return;
@@ -28,11 +28,10 @@ namespace AniimoAffinities
             owner.Disposed += (s, e) => timer.Dispose();
             timer.Tick += (s, e) =>
             {
-                if (Application.OpenForms.Count > 1)
-                    return;
                 timer.Stop();
                 timer.Dispose();
-                Check(owner, false);
+                if (!owner.IsDisposed)
+                    (check ?? (() => Check(owner, false)))();
             };
             timer.Start();
         }
@@ -41,7 +40,7 @@ namespace AniimoAffinities
             if (PackageIdentity.IsPackaged)
             {
                 if (manual)
-                    MessageBox.Show(owner, "For the Store edition, open Microsoft Store > Library to check for updates. Locally installed test packages must be updated separately.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    MessageBox.Show(owner, Language.T("This installation is updated externally. The portable updater is unavailable."), Language.T("Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             foreach (Form form in Application.OpenForms)
@@ -64,7 +63,7 @@ namespace AniimoAffinities
                 resultOwner = owner;
             busy = true;
             foreach (var button in buttons)
-                button.BeginBusy("Checking…");
+                button.BeginBusy(Language.T("Checking…"));
             var worker = new BackgroundWorker();
             worker.DoWork += (s, e) => e.Result = ReleaseUpdates.Check();
             worker.RunWorkerCompleted += (s, e) =>
@@ -83,14 +82,14 @@ namespace AniimoAffinities
                 {
                     DiagnosticReport.Record(e.Error);
                     if (manual)
-                        MessageBox.Show(owner, "Unable to check for updates. Please try again later.", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(owner, Language.T("Unable to check for updates. Please try again later."), Language.T("Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 var update = (ReleaseUpdate)e.Result;
                 if (update == null)
                 {
                     if (manual)
-                        MessageBox.Show(owner, "You're up to date. Version " + ReleaseUpdates.CurrentVersion + ".", "Updates", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        MessageBox.Show(owner, Language.T("You're up to date. Version ") + ReleaseUpdates.CurrentVersion + ".", Language.T("Updates"), MessageBoxButtons.OK, MessageBoxIcon.Information);
                     return;
                 }
                 if (!manual)

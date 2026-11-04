@@ -47,7 +47,7 @@ namespace AniimoAffinities
         internal MainForm(bool remember = false, bool child = false)
         {
             childView = child;
-            Text = "Affinisaur · Unofficial";
+            Text = Language.T("Affinisaur · Unofficial");
             ClientSize = new Size(902, 500);
             MinimumSize = new Size(878, 500);
             StartPosition = FormStartPosition.CenterScreen;
@@ -61,18 +61,18 @@ namespace AniimoAffinities
             EnableWindowDrag(this);
             EnableWindowDrag(row);
             EnableWindowDrag(canvas);
-            var reset = new IconButton { Glyph = "reset", Shortcut = "0", TabIndex = 9, Segment = true, SegmentEnd = true, Width = 40, Height = 36, AccessibleName = "Clear types" };
+            var reset = new IconButton { Glyph = "reset", Shortcut = "0", TabIndex = 9, Segment = true, SegmentEnd = true, Width = 40, Height = 36, AccessibleName = Language.T("Clear types") };
             reset.Location = new Point(13, 11);
             reset.Click += (s, e) => { hovered = -1; selection.Clear(); RefreshSelection(); };
-            tips.SetToolTip(reset, "All elements");
+            tips.SetToolTip(reset, Language.T("All elements"));
             row.Controls.Add(reset);
             string[] order = { "Dark", "Earth", "Fire", "Grass", "Ice", "Light", "Lightning", "Water", "Wind" };
             foreach (string name in order)
             {
                 int type = Array.IndexOf(Model.Names, name);
-                var button = new IconButton { Type = type, Shortcut = (Array.IndexOf(order, name) + 1).ToString(), Segment = true, SegmentStart = name == "Dark", Height = 36, AccessibleName = name, TabIndex = Array.IndexOf(order, name) };
+                var button = new IconButton { Type = type, Shortcut = (Array.IndexOf(order, name) + 1).ToString(), Segment = true, SegmentStart = name == "Dark", Height = 36, AccessibleName = Language.T(name), TabIndex = Array.IndexOf(order, name) };
                 button.Click += (s, e) => { hovered = -1; selection.Toggle(type); RefreshSelection(); };
-                tips.SetToolTip(button, name);
+                tips.SetToolTip(button, Language.T(name));
                 types[type] = button;
                 row.Controls.Add(button);
                 button.MouseEnter += (s, e) => { hovered = type; canvas.Invalidate(); };
@@ -80,7 +80,7 @@ namespace AniimoAffinities
                 // Focus indicates keyboard position; only actual pointer hover previews a type.
                 button.GotFocus += (s, e) => button.Invalidate();
                 button.LostFocus += (s, e) => button.Invalidate();
-                button.AccessibleDescription = "Shortcut: " + button.Shortcut;
+                button.AccessibleDescription = Language.T("Shortcut: ") + button.Shortcut;
             }
             row.Resize += (s, e) => LayoutRow();
             canvas.Paint += PaintAffinities;
@@ -125,7 +125,7 @@ namespace AniimoAffinities
                 teamPlan.Visible = false;
                 ApplyTeamLayout();
                 teamToolbar.Visible = false;
-                Text = "Affinity diagrams";
+                Text = Language.T("Affinity diagrams");
                 ShowInTaskbar = false;
                 StartPosition = FormStartPosition.CenterParent;
             }
@@ -345,21 +345,20 @@ namespace AniimoAffinities
             hovered = -1;
             canvas.Invalidate();
             if (view == "radar")
-                using (var dialog = new RadarDialog(selection.Main, selection.Sub, bindings))
-                    dialog.ShowDialog(this);
+                OpenContent(view, () => new RadarDialog(selection.Main, selection.Sub, bindings));
             else if (view == "matrix")
-                using (var dialog = new MatrixDialog(selection.Sub >= 0 ? selection.Main : -1, bindings, selection.Main, selection.Sub))
-                    dialog.ShowDialog(this);
+                OpenContent(view, () => new MatrixDialog(selection.Sub >= 0 ? selection.Main : -1, bindings, selection.Main, selection.Sub));
             else
-                using (var dialog = new MainForm(false, true))
+                OpenContent(view, () =>
                 {
+                    var dialog = new MainForm(false, true);
                     dialog.selection.Main = selection.Main;
                     dialog.selection.Sub = selection.Sub;
                     dialog.bindings = (Keys[])bindings.Clone();
                     dialog.RefreshSelection();
                     dialog.RefreshShortcuts();
-                    dialog.ShowDialog(this);
-                }
+                    return dialog;
+                });
         }
         protected override void OnOverlayLockChanged()
         {
@@ -382,8 +381,8 @@ namespace AniimoAffinities
             foreach (var button in row.Controls.OfType<IconButton>())
             {
                 button.Shortcut = KeyBindings.Label(bindings[button.Type < 0 ? 0 : Array.IndexOf(KeyBindings.Actions, Model.Names[button.Type])]);
-                button.AccessibleDescription = button.Shortcut.Length > 0 ? "Shortcut: " + button.Shortcut : "No shortcut";
-                tips.SetToolTip(button, (button.Type < 0 ? "All elements" : Model.Names[button.Type]) + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
+                button.AccessibleDescription = button.Shortcut.Length > 0 ? Language.T("Shortcut: ") + button.Shortcut : Language.T("No shortcut");
+                tips.SetToolTip(button, (button.Type < 0 ? Language.T("All elements") : Language.T(Model.Names[button.Type])) + (button.Shortcut.Length > 0 ? " · " + ShortcutText.Mark(button.Shortcut) : ""));
                 button.Invalidate();
             }
         }
@@ -459,13 +458,13 @@ namespace AniimoAffinities
             affinityColumn = -1;
             foreach (var button in types)
             {
-                button.Badge = button.Type == selection.Main ? "Main" : button.Type == selection.Sub ? "Sub" : "";
+                button.Badge = button.Type == selection.Main ? Language.T("Main") : button.Type == selection.Sub ? Language.T("Sub") : "";
                 button.Active = button.Badge.Length > 0;
-                button.AccessibleName = Model.Names[button.Type] + (button.Active ? " · " + button.Badge : "");
+                button.AccessibleName = Language.T(Model.Names[button.Type]) + (button.Active ? " · " + button.Badge : "");
                 button.Invalidate();
             }
             LayoutRow();
-            canvas.AccessibleName = "Type affinities";
+            canvas.AccessibleName = Language.T("Type affinities");
             canvas.AccessibleRole = AccessibleRole.Graphic;
             canvas.AccessibleText = () =>
             {

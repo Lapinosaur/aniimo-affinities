@@ -6,6 +6,31 @@ namespace AniimoAffinities
     internal sealed class ThemePreview : RadioButton
     {
         internal int Mode;
+        internal string Shortcut = "";
+        internal bool ShowShortcut;
+        private bool movingFocus;
+        internal void FocusPreview()
+        {
+            bool autoCheck = AutoCheck;
+            movingFocus = true;
+            AutoCheck = false;
+            try
+            {
+                Focus();
+            }
+            finally { AutoCheck = autoCheck; movingFocus = false; }
+        }
+        protected override void OnClick(System.EventArgs e)
+        {
+            if (!movingFocus)
+                base.OnClick(e);
+        }
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+            if (disposing)
+                Events.Dispose();
+        }
         internal ThemePreview()
         {
             SetStyle(ControlStyles.UserPaint | ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer, true);
@@ -41,6 +66,8 @@ namespace AniimoAffinities
                 using (var font = UiFonts.Create("Segoe UI", 8, FontStyle.Bold))
                     Drawing.Text(g, "Aa", font, ink, new RectangleF(28 + i * cell, 18, cell - 30, h - 24), false);
             }
+            if (ShowShortcut && Shortcut.Length > 0)
+                ShortcutText.DrawBadge(g, Shortcut, w);
         }
     }
 }

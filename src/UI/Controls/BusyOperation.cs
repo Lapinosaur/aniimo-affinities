@@ -8,7 +8,7 @@ namespace AniimoAffinities
     {
         internal static void OpenLink(Control owner, SettingsButton button, string url, Action<Exception> completed)
         {
-            Run(owner, button, "Opening…", () =>
+            Run(owner, button, Language.T("Opening…"), () =>
             {
                 System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(url) { UseShellExecute = true });
                 return true;

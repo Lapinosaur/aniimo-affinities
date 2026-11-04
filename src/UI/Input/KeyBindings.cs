@@ -15,11 +15,11 @@ namespace AniimoAffinities
         }
         internal static Keys[] Choices()
         {
-            return Enumerable.Range(0, 10).Select(i => (Keys)((int)Keys.D0 + i)).Concat(Enumerable.Range((int)Keys.A, 26).Select(i => (Keys)i)).Concat(Enumerable.Range((int)Keys.F1, 12).Select(i => (Keys)i)).ToArray();
+            return Enumerable.Range(0, 10).Select(i => (Keys)((int)Keys.D0 + i)).Concat(Enumerable.Range((int)Keys.A, 26).Select(i => (Keys)i)).Concat(Enumerable.Range((int)Keys.F1, 12).Select(i => (Keys)i)).Where(key => key != Keys.F11).ToArray();
         }
         internal static bool IsChoice(Keys key)
         {
-            return key >= Keys.D0 && key <= Keys.D9 || key >= Keys.A && key <= Keys.Z || key >= Keys.F1 && key <= Keys.F12;
+            return key != Keys.F11 && (key >= Keys.D0 && key <= Keys.D9 || key >= Keys.A && key <= Keys.Z || key >= Keys.F1 && key <= Keys.F12);
         }
         internal static Keys NormalizeNumber(Keys key)
         {
@@ -57,7 +57,26 @@ namespace AniimoAffinities
                 var keys = File.ReadAllLines(path).Select(value => (Keys)int.Parse(value)).ToArray();
                 if (keys.Length == 10 || keys.Length == 14 || keys.Length == 15)
                     keys = keys.Concat(Defaults().Skip(keys.Length).Select(key => keys.Contains(key) ? Keys.None : key)).ToArray();
-                return Valid(keys) ? keys : Defaults();
+                bool migrated = false;
+                for (int i = 0; i < keys.Length; i++)
+                    if ((keys[i] & Keys.KeyCode) == Keys.F11)
+                    {
+                        migrated = true;
+                        Keys modifiers = keys[i] & Keys.Modifiers;
+                        keys[i] = new[] { Keys.F12, Keys.F5, Keys.F4, Keys.F3, Keys.F2, Keys.F1 }.Concat(Choices()).Select(key => key | modifiers).FirstOrDefault(key => !keys.Contains(key));
+                    }
+                if (!Valid(keys))
+                    return Defaults();
+                if (migrated)
+                {
+                    try
+                    {
+                        PreferenceFiles.WriteLines(path, keys.Select(key => ((int)key).ToString()).ToArray());
+                    }
+                    catch (IOException) { }
+                    catch (UnauthorizedAccessException) { }
+                }
+                return keys;
             }
             catch (IOException) { return Defaults(); }
             catch (UnauthorizedAccessException) { return Defaults(); }
@@ -68,7 +87,7 @@ namespace AniimoAffinities
         internal static void Save(string path, Keys[] keys)
         {
             if (!Valid(keys))
-                throw new ArgumentException("Each action must have a different key.");
+                throw new ArgumentException(Language.T("Each action must have a different key."));
             PreferenceFiles.WriteLines(path, keys.Select(key => ((int)key).ToString()).ToArray());
         }
         internal static int Resolve(Keys[] keys, Keys input)

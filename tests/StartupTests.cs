@@ -12,6 +12,61 @@ namespace AniimoAffinities
     {
         internal static void Run()
         {
+            foreach (int closeMessage in new[] { 0x10, 0x112 })
+                using (var host = new Form())
+                using (var surface = new LockedGlass.GlassWindow())
+                {
+                    host.Show();
+                    surface.CloseOwner = host;
+                    NativeMethods.SendMessage(surface.Handle, closeMessage, new IntPtr(0xf060), IntPtr.Zero);
+                    Application.DoEvents();
+                    if (!host.IsDisposed)
+                        throw new Exception("Closing an auxiliary glass surface must close its real host.");
+                }
+            using (var main = new MainForm())
+            using (var child = new Form())
+            using (var closeTimer = new Timer { Interval = 100 })
+            {
+                main.Show();
+                int ticks = 0;
+                closeTimer.Tick += (s, e) =>
+                {
+                    if (++ticks == 1)
+                        NativeMethods.SendMessage(main.Handle, 0x112, new IntPtr(0xf060), IntPtr.Zero);
+                    else if (ticks > 20)
+                        child.Close();
+                };
+                closeTimer.Start();
+                child.ShowDialog(main);
+                Application.DoEvents();
+                if (!main.IsDisposed || child.Visible)
+                    throw new Exception("Taskbar close must close the main window and its modal child. Main disposed=" + main.IsDisposed + ", visible=" + main.Visible + ", enabled=" + main.Enabled + ", child visible=" + child.Visible + ", ticks=" + ticks);
+            }
+            using (var notes = new RichTextBox())
+            {
+                notes.Rtf = MarkdownRtf.Render("# Heading\n- **Bold** and `code`\n\n| Type | Result |\n| --- | ---: |\n| Fire | Better |\n\n<!-- hidden -->\n[Link](https://github.com)\n{literal}", 460);
+                if (notes.Text.Contains("**") || notes.Text.Contains("hidden") || !notes.Text.Contains("Fire") || !notes.Text.Contains("Better") || !notes.Text.Contains("{literal}"))
+                    throw new Exception("Markdown must render tables and inline formatting without leaking markup or comments.");
+                notes.Select(notes.Text.IndexOf("Bold", StringComparison.Ordinal), 4);
+                if (notes.SelectionFont == null || !notes.SelectionFont.Bold)
+                    throw new Exception("Strong Markdown must produce bold text.");
+            }
+            using (var owner = new Form())
+            using (var secondary = new Form())
+            {
+                owner.Show();
+                secondary.Show(owner);
+                int checks = 0;
+                UpdatePrompt.OnStartup(owner, () => checks++);
+                var clock = System.Diagnostics.Stopwatch.StartNew();
+                while (clock.ElapsedMilliseconds < 1600)
+                {
+                    Application.DoEvents();
+                    System.Threading.Thread.Sleep(5);
+                }
+                if (checks != 1)
+                    throw new Exception("Startup must check once even with a secondary window open.");
+            }
             using (var initialMain = new MainForm())
             {
                 initialMain.Show();
