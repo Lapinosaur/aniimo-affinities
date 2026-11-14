@@ -161,7 +161,7 @@ namespace AniimoAffinities
             CancelHold();
             OnOverlayLockChanged();
             Invalidate(true);
-            UpdateGlass(locked);
+            UpdateGlass();
         }
         private void PositionUnlockWindow()
         {
@@ -345,12 +345,13 @@ namespace AniimoAffinities
         // Keep the dark key equal to the painted background so antialiased text has no colored fringe.
         internal void SetPinned(bool pinned)
         {
-            UpdateGlass(false);
+            pinned |= OverlayLocked;
             TopMost = pinned;
             TransparencyKey = pinned ? Theme.Background : Color.Empty;
             RefreshWindowFrame();
             OnPinnedChanged();
             Invalidate(true);
+            UpdateGlass();
         }
         private readonly Icon applicationIcon;
         internal PortableWindow()

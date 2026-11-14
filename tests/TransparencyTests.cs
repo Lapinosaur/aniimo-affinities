@@ -68,6 +68,13 @@ namespace AniimoAffinities
                         throw new Exception("Disabling child glass must restore full opacity.");
                     typeof(PortableWindow).GetMethod("SetOverlayLocked", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(main, new object[] { true });
                     Pump();
+                    main.SetPinned(false);
+                    main.PreviewWindowGlass(main, true);
+                    Pump();
+                    if (!main.TopMost || main.TransparencyKey != Theme.Background ||
+                        typeof(PortableWindow).GetField("interactiveGlass", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(main) != null)
+                        throw new Exception("Lock must keep the main background transparent, including pin changes and glass previews.");
+                    main.EndWindowGlassPreview(main);
                     TransparencyPreferences.Save(false, false, true, path);
                     Pump();
                     if (main.Opacity != 1 || !main.OverlayLocked)

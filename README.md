@@ -12,7 +12,7 @@ A compact Windows companion for exploring Aniimo type matchups, by **Lapinosaur*
 
 ## Features
 
-Next release prepared locally: [v0.9.1](docs/releases/v0.9.1.md) fixes rapid tutorial navigation, theme previews, team-panel transitions and language-independent updates. It is not published yet.
+Latest published patch: [v0.9.1](https://github.com/Lapinosaur/aniimo-affinities/releases/tag/v0.9.1). Next release prepared locally: [v0.9.2](docs/releases/v0.9.2.md) keeps the main background transparent while the overlay is locked. v0.9.2 is not published yet.
 
 ![Tutorial navigation with independent skip actions](docs/images/tutorial-navigation.png)
 

@@ -32,7 +32,7 @@ namespace AniimoAffinities
             if (Opacity == 0 && !OverlayLocked && interactiveGlass == null)
                 return;
             if (!glassDisposed && TopLevel && IsHandleCreated && Visible)
-                UpdateGlass(OverlayLocked);
+                UpdateGlass();
         }
         private void StopGlass()
         {
@@ -52,12 +52,12 @@ namespace AniimoAffinities
             if (glassPool == null)
                 glassPool = new GlassPool(this);
         }
-        private void UpdateGlass(bool locked)
+        private void UpdateGlass()
         {
             StopGlass();
             if (glassDisposed || !TopLevel || TutorialSnapshot)
                 return;
-            if (locked)
+            if (OverlayLocked)
             {
                 if (TransparencyPreferences.Locked)
                     lockedGlass = new LockedGlass(this, glassPool);
